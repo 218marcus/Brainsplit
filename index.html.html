@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>左右腦極限對抗</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            background: #0b0b16;
+            font-family: 'Segoe UI', 'PingFang TC', 'Microsoft YaHei', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #e8e8f0;
+            padding: 16px;
+        }
+
+        .game-container {
+            width: 1100px;
+            max-width: 100%;
+            background: #12121f;
+            border-radius: 28px;
+            padding: 24px 28px 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+            border: 1px solid #2a2a44;
+        }
+
+        /* ===== 標題列 ===== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 14px;
+            border-bottom: 1px solid #2a2a44;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+            gap: 8px 16px;
+        }
+
+        .title {
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #a78bfa, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 40px rgba(96, 165, 250, 0.15);
+        }
+
+        .title-score {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .score-display {
+            font-size: 22px;
+            font-weight: 600;
+            background: #1c1c32;
+            padding: 6px 20px;
+            border-radius: 40px;
+            border: 1px solid #3a3a5a;
+            letter-spacing: 1px;
+        }
+        .score-display span {
+            color: #fcd34d;
+            font-size: 26px;
+            min-width: 60px;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 22px;
+            border: none;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            letter-spacing: 0.5px;
+            background: #2a2a4a;
+            color: #b0b0d0;
+            border: 1px solid #3a3a5a;
+        }
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+        .btn:active:not(:disabled) {
+            transform: translateY(0px);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: #fff;
+            border: none;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: linear-gradient(135deg, #818cf8, #a78bfa);
+            box-shadow: 0 6px 24px rgba(99, 102, 241, 0.35);
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: #fff;
+            border: none;
+        }
+        .btn-danger:hover:not(:disabled) {
+            background: linear-gradient(135deg, #f87171, #ef4444);
+            box-shadow: 0 6px 24px rgba(239, 68, 68, 0.35);
+        }
+        .btn:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        /* ===== 主體雙欄 ===== */
+        .game-body {
+            display: flex;
+            gap: 0;
+            min-height: 520px;
+            position: relative;
+        }
+
+        /* 分隔線 */
+        .divider {
+            width: 3px;
+            background: linear-gradient(to bottom, transparent, #6366f1, #8b5cf6, #a78bfa, transparent);
+            flex-shrink: 0;
+            margin: 0 4px;
+            position: relative;
+            border-radius: 4px;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+        }
+        .divider::after {
+            content: '⚡';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            color: #a78bfa;
+            text-shadow: 0 0 30px rgba(167, 139, 250, 0.6);
+            background: #12121f;
+            padding: 4px 2px;
+            border-radius: 50%;
+        }
+
+        /* ===== 左側區域 ===== */
+        .left-panel {
+            flex: 1;
+            padding: 10px 16px 10px 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 460px;
+            background: #141425;
+            border-radius: 20px;
+            border: 1px solid #22223e;
+            position: relative;
+        }
+
+        .panel-label {
+            position: absolute;
+            top: 12px;
+            left: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #6b6b9a;
+            letter-spacing: 2px;
+            background: #1a1a30;
+            padding: 2px 14px;
+            border-radius: 20px;
+            border: 1px solid #2a2a4e;
+        }
+
+        .stroop-prompt {
+            font-size: 18px;
+            font-weight: 500;
+            color: #c4c4e6;
+            background: #1e1e38;
+            padding: 8px 30px;
+            border-radius: 40px;
+            margin-bottom: 22px;
+            border: 1px solid #333358;
+            letter-spacing: 1px;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .stroop-prompt .highlight {
+            color: #fcd34d;
+            font-weight: 700;
+        }
+
+        .stroop-word {
+            font-size: 82px;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 30px;
+            text-shadow: 0 0 40px rgba(255, 255, 255, 0.04);
+            letter-spacing: 4px;
+            transition: all 0.15s ease;
+            min-height: 110px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 10px;
+        }
+
+        .stroop-options {
+            display: flex;
+            gap: 30px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .option-btn {
+            width: 140px;
+            padding: 16px 0;
+            border: 2px solid #3a3a5e;
+            border-radius: 16px;
+            background: #1a1a32;
+            color: #e0e0f0;
+            font-size: 22px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            font-family: inherit;
+            position: relative;
+        }
+        .option-btn .key-hint {
+            font-size: 13px;
+            font-weight: 400;
+            color: #6b6b9a;
+            background: #252545;
+            padding: 0 12px;
+            border-radius: 12px;
+            line-height: 22px;
+            letter-spacing: 0.5px;
+        }
+        .option-btn:hover:not(:disabled) {
+            border-color: #818cf8;
+            background: #22224a;
+            transform: scale(1.02);
+        }
+        .option-btn:active:not(:disabled) {
+            transform: scale(0.97);
+        }
+        .option-btn.correct {
+            border-color: #34d399;
+            background: #1a3a2e;
+            box-shadow: 0 0 30px rgba(52, 211, 153, 0.25);
+        }
+        .option-btn.wrong {
+            border-color: #f87171;
+            background: #3a1a1a;
+            box-shadow: 0 0 30px rgba(248, 113, 113, 0.25);
+        }
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        /* ===== 右側區域 ===== */
+        .right-panel {
+            flex: 1;
+            padding: 10px 6px 10px 16px;
+            display: flex;
+            flex-direction: column;
+            min-height: 460px;
+            background: #141425;
+            border-radius: 20px;
+            border: 1px solid #22223e;
+            position: relative;
+        }
+
+        .right-panel .panel-label {
+            left: 20px;
+        }
+
+        #gameCanvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 14px;
+            background: #0e0e1e;
+            display: block;
+            flex: 1;
+            min-height: 380px;
+            border: 1px solid #22223e;
+            cursor: default;
+        }
+
+        /* ===== 遊戲結束遮罩 ===== */
+        .gameover-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(6px);
+            border-radius: 20px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            padding: 30px;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        .gameover-overlay.show {
+            display: flex;
+        }
+
+        .gameover-title {
+            font-size: 52px;
+            font-weight: 800;
+            color: #f87171;
+            text-shadow: 0 0 60px rgba(239, 68, 68, 0.3);
+            letter-spacing: 4px;
+            margin-bottom: 6px;
+        }
+        .gameover-sub {
+            font-size: 20px;
+            color: #b0b0d0;
+            margin-bottom: 8px;
+        }
+        .gameover-score {
+            font-size: 32px;
+            font-weight: 700;
+            color: #fcd34d;
+            margin-bottom: 18px;
+        }
+        .gameover-score span {
+            font-size: 44px;
+        }
+        .gameover-btn {
+            padding: 12px 40px;
+            border: none;
+            border-radius: 40px;
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #8b5cf6, #6366f1);
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .gameover-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 30px rgba(99, 102, 241, 0.4);
+        }
+
+        /* ===== 狀態提示 ===== */
+        .status-badge {
+            position: absolute;
+            top: 12px;
+            right: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 2px 16px;
+            border-radius: 20px;
+            background: #1e1e3a;
+            border: 1px solid #333358;
+            color: #6b6b9a;
+            letter-spacing: 1px;
+        }
+        .status-badge.playing {
+            color: #34d399;
+            border-color: #34d399;
+            background: #0f2a1e;
+        }
+        .status-badge.gameover {
+            color: #f87171;
+            border-color: #f87171;
+            background: #2a1212;
+        }
+
+        /* ===== 響應式 ===== */
+        @media (max-width: 860px) {
+            .game-container {
+                padding: 16px;
+            }
+            .game-body {
+                flex-direction: column;
+                gap: 16px;
+            }
+            .divider {
+                width: auto;
+                height: 3px;
+                margin: 0 20px;
+                background: linear-gradient(to right, transparent, #6366f1, #8b5cf6, #a78bfa, transparent);
+            }
+            .divider::after {
+                top: auto;
+                left: 50%;
+                transform: translate(-50%, -50%);
+            }
+            .left-panel,
+            .right-panel {
+                padding: 14px;
+                min-height: 320px;
+            }
+            .left-panel {
+                padding-top: 36px;
+            }
+            .right-panel {
+                padding-top: 36px;
+            }
+            .stroop-word {
+                font-size: 56px;
+                min-height: 80px;
+            }
+            .option-btn {
+                width: 110px;
+                padding: 12px 0;
+                font-size: 18px;
+            }
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+            .title-score {
+                justify-content: space-between;
+            }
+            .btn-group {
+                justify-content: flex-end;
+            }
+            .gameover-title {
+                font-size: 36px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stroop-word {
+                font-size: 40px;
+                min-height: 60px;
+            }
+            .option-btn {
+                width: 90px;
+                padding: 10px 0;
+                font-size: 15px;
+            }
+            .stroop-prompt {
+                font-size: 15px;
+                padding: 6px 16px;
+            }
+            .score-display {
+                font-size: 18px;
+                padding: 4px 14px;
+            }
+            .btn {
+                font-size: 14px;
+                padding: 6px 16px;
+            }
+            .gameover-title {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container" id="app">
+        <!-- 標題列 -->
+        <div class="header">
+            <div class="title">🧠 左右腦極限對抗</div>
+            <div class="title-score">
+                <div class="score-display">🏆 得分 <span id="scoreDisplay">0</span></div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" id="btnStart">▶ 開始遊戲</button>
+                    <button class="btn btn-danger" id="btnReset">⟳ 重新開始</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主體 -->
+        <div class="game-body">
+            <!-- 左側：邏輯干擾 -->
+            <div class="left-panel" id="leftPanel">
+                <div class="panel-label">🧩 邏輯干擾</div>
+                <div class="status-badge" id="statusBadge">⏸ 待機</div>
+
+                <div class="stroop-prompt" id="stroopPrompt">
+                    按下 <span class="highlight">「開始遊戲」</span> 挑戰
+                </div>
+
+                <div class="stroop-word" id="stroopWord">——</div>
+
+                <div class="stroop-options" id="stroopOptions">
+                    <button class="option-btn" id="optA" disabled>
+                        <span class="key-hint">[ A ]</span>
+                        <span id="optALabel">—</span>
+                    </button>
+                    <button class="option-btn" id="optS" disabled>
+                        <span class="key-hint">[ S ]</span>
+                        <span id="optSLabel">—</span>
+                    </button>
+                </div>
+
+                <!-- 遊戲結束遮罩（左側內嵌） -->
+                <div class="gameover-overlay" id="gameoverOverlay">
+                    <div class="gameover-title">💀 GAME OVER</div>
+                    <div class="gameover-sub">左右腦同步失守</div>
+                    <div class="gameover-score">最終得分 <span id="finalScore">0</span></div>
+                    <button class="gameover-btn" id="btnGameoverRestart">🔄 重新挑戰</button>
+                </div>
+            </div>
+
+            <!-- 分隔線 -->
+            <div class="divider"></div>
+
+            <!-- 右側：空間物理 -->
+            <div class="right-panel">
+                <div class="panel-label">🎯 空間物理</div>
+                <div class="status-badge" id="statusBadgeRight">⏸ 待機</div>
+                <canvas id="gameCanvas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        //  左右腦極限對抗  —  完整遊戲邏輯
+        // ============================================================
+
+        (function() {
+            'use strict';
+
+            // ---------- DOM 參考 ----------
+            const scoreDisplay = document.getElementById('scoreDisplay');
+            const finalScore = document.getElementById('finalScore');
+            const btnStart = document.getElementById('btnStart');
+            const btnReset = document.getElementById('btnReset');
+            const btnGameoverRestart = document.getElementById('btnGameoverRestart');
+
+            const stroopPrompt = document.getElementById('stroopPrompt');
+            const stroopWord = document.getElementById('stroopWord');
+            const optA = document.getElementById('optA');
+            const optS = document.getElementById('optS');
+            const optALabel = document.getElementById('optALabel');
+            const optSLabel = document.getElementById('optSLabel');
+
+            const statusBadge = document.getElementById('statusBadge');
+            const statusBadgeRight = document.getElementById('statusBadgeRight');
+            const gameoverOverlay = document.getElementById('gameoverOverlay');
+
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+
+            // ---------- 顏色資料 ----------
+            const COLOR_MAP = {
+                '紅色': '#ff1744',
+                '藍色': '#2979ff',
+                '綠色': '#00e676',
+                '黃色': '#ffea00',
+                '紫色': '#d500f9',
+                '橙色': '#ff9100',
+                '粉色': '#f50057',
+                '青色': '#00bcd4',
+                '棕色': '#8d6e63',
+                '灰色': '#bdbdbd',
+            };
+            const COLOR_NAMES = Object.keys(COLOR_MAP);
+
+            // ---------- 遊戲狀態 ----------
+            const STATE = { IDLE: 'idle', PLAYING: 'playing', GAMEOVER: 'gameover' };
+            let gameState = STATE.IDLE;
+            let score = 0;
+            let timerInterval = null;
+            let animFrameId = null;
+            let frameCounter = 0;
+
+            // ---------- 左側 Stroop ----------
+            let stroopData = null; // { word, displayColor, task, correctAnswer, options }
+            let stroopLocked = false; // 防止連續點擊
+
+            // ---------- 右側 物理 ----------
+            let balls = [];
+            let paddle = { x: 0, y: 0, w: 100, h: 16 };
+            let canvasW = 0,
+                canvasH = 0;
+            let ballSpawnTimer = 0;
+            const BALL_RADIUS = 12;
+            const MAX_BALLS = 4;
+            const PADDLE_SPEED = 7;
+            const GRAVITY = 0.08;
+            const INITIAL_SPEED = 1.8;
+
+            // 鍵盤狀態
+            const keys = { left: false, right: false };
+
+            // ---------- 輔助函數 ----------
+            function randomItem(arr) {
+                return arr[Math.floor(Math.random() * arr.length)];
+            }
+
+            function randomInt(min, max) {
+                return Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+
+            function shuffleArray(arr) {
+                for (let i = arr.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                }
+                return arr;
+            }
+
+            // ---------- Stroop 題目生成 ----------
+            function generateStroopQuestion() {
+                const word = randomItem(COLOR_NAMES);
+                // 顯示顏色：隨機選一個，有 30% 機率與字義相同（增加變化）
+                let displayColorName;
+                if (Math.random() < 0.3) {
+                    displayColorName = word;
+                } else {
+                    const others = COLOR_NAMES.filter(c => c !== word);
+                    displayColorName = randomItem(others);
+                }
+                const displayColorHex = COLOR_MAP[displayColorName];
+
+                // 任務類型：點擊字的顏色 或 點擊字的意思
+                const task = Math.random() < 0.5 ? 'color' : 'meaning';
+                // 正確答案
+                let correctAnswer = (task === 'color') ? displayColorName : word;
+
+                // 干擾項：從其他顏色中選一個不等於 correctAnswer 的
+                let distractor;
+                const candidates = COLOR_NAMES.filter(c => c !== correctAnswer);
+                distractor = randomItem(candidates);
+
+                // 選項順序隨機
+                const options = shuffleArray([correctAnswer, distractor]);
+
+                return {
+                    word: word,
+                    displayColor: displayColorHex,
+                    displayColorName: displayColorName,
+                    task: task,
+                    correctAnswer: correctAnswer,
+                    options: options, // [optionA, optionS]
+                };
+            }
+
+            function renderStroop() {
+                if (!stroopData) {
+                    stroopPrompt.innerHTML = '按下 <span class="highlight">「開始遊戲」</span> 挑戰';
+                    stroopWord.textContent = '——';
+                    stroopWord.style.color = '#555';
+                    optALabel.textContent = '—';
+                    optSLabel.textContent = '—';
+                    optA.disabled = true;
+                    optS.disabled = true;
+                    return;
+                }
+
+                const d = stroopData;
+                const taskLabel = d.task === 'color' ? '點擊字的顏色' : '點擊字的意思';
+                stroopPrompt.innerHTML = `🎯 請 <span class="highlight">${taskLabel}</span>`;
+
+                stroopWord.textContent = d.word;
+                stroopWord.style.color = d.displayColor;
+
+                optALabel.textContent = d.options[0];
+                optSLabel.textContent = d.options[1];
+                optA.disabled = false;
+                optS.disabled = false;
+
+                // 清除按鈕樣式
+                optA.className = 'option-btn';
+                optS.className = 'option-btn';
+                optA.style.borderColor = '';
+                optS.style.borderColor = '';
+            }
+
+            // ---------- 刷新 Stroop 題目 ----------
+            function refreshStroop() {
+                if (gameState !== STATE.PLAYING) return;
+                stroopData = generateStroopQuestion();
+                stroopLocked = false;
+                renderStroop();
+            }
+
+            // ---------- 處理 Stroop 答案 ----------
+            function handleStroopAnswer(selectedIdx) {
+                if (gameState !== STATE.PLAYING) return;
+                if (stroopLocked) return;
+                if (!stroopData) return;
+
+                const d = stroopData;
+                const selected = d.options[selectedIdx];
+                const isCorrect = (selected === d.correctAnswer);
+
+                // 鎖定按鈕，防止連點
+                stroopLocked = true;
+                optA.disabled = true;
+                optS.disabled = true;
+
+                const btn = selectedIdx === 0 ? optA : optS;
+                const otherBtn = selectedIdx === 0 ? optS : optA;
+
+                if (isCorrect) {
+                    btn.classList.add('correct');
+                    // 加分
+                    score += 50;
+                    updateScore();
+
+                    // 短暫延遲後刷新
+                    setTimeout(() => {
+                        if (gameState === STATE.PLAYING) {
+                            refreshStroop();
+                        } else {
+                            // 如果遊戲已結束，解鎖並重置
+                            stroopLocked = false;
+                            renderStroop();
+                        }
+                    }, 280);
+                } else {
+                    btn.classList.add('wrong');
+                    // 答錯 → Game Over
+                    setTimeout(() => {
+                        triggerGameOver();
+                    }, 350);
+                }
+            }
+
+            // ---------- 右側物理 初始化 ----------
+            function initCanvas() {
+                const rect = canvas.getBoundingClientRect();
+                const dpr = window.devicePixelRatio || 1;
+                canvasW = canvas.clientWidth || rect.width || 400;
+                canvasH = canvas.clientHeight || rect.height || 400;
+                canvas.width = canvasW * dpr;
+                canvas.height = canvasH * dpr;
+                ctx.scale(dpr, dpr);
+                // 擋板初始位置
+                paddle.x = (canvasW - paddle.w) / 2;
+                paddle.y = canvasH - paddle.h - 20;
+            }
+
+            function resetPhysics() {
+                balls = [];
+                ballSpawnTimer = 0;
+                paddle.x = (canvasW - paddle.w) / 2;
+                paddle.y = canvasH - paddle.h - 20;
+            }
+
+            // ---------- 生成小球 ----------
+            function spawnBall() {
+                if (balls.length >= MAX_BALLS) return;
+                const x = randomInt(20 + BALL_RADIUS, canvasW - 20 - BALL_RADIUS);
+                const y = -BALL_RADIUS - randomInt(0, 20);
+                const vx = (Math.random() - 0.5) * 1.2;
+                const vy = INITIAL_SPEED + Math.random() * 0.6;
+                const color = randomItem(COLOR_NAMES);
+                balls.push({
+                    x,
+                    y,
+                    vx,
+                    vy,
+                    radius: BALL_RADIUS,
+                    color: COLOR_MAP[color],
+                    colorName: color,
+                });
+            }
+
+            // ---------- 更新物理 ----------
+            function updatePhysics() {
+                if (gameState !== STATE.PLAYING) return;
+
+                // 擋板移動
+                if (keys.left) paddle.x = Math.max(0, paddle.x - PADDLE_SPEED);
+                if (keys.right) paddle.x = Math.min(canvasW - paddle.w, paddle.x + PADDLE_SPEED);
+
+                // 生成小球
+                ballSpawnTimer++;
+                const spawnInterval = Math.max(40, 100 - Math.floor(score / 300) * 4);
+                if (ballSpawnTimer >= spawnInterval) {
+                    ballSpawnTimer = 0;
+                    spawnBall();
+                }
+
+                // 更新每個小球
+                for (let i = balls.length - 1; i >= 0; i--) {
+                    const b = balls[i];
+                    b.vy += GRAVITY;
+                    b.x += b.vx;
+                    b.y += b.vy;
+
+                    // 左右牆壁反彈
+                    if (b.x - b.radius < 0) { b.x = b.radius;
+                        b.vx = -b.vx; }
+                    if (b.x + b.radius > canvasW) { b.x = canvasW - b.radius;
+                        b.vx = -b.vx; }
+
+                    // 檢測與擋板碰撞
+                    const px = paddle.x,
+                        py = paddle.y,
+                        pw = paddle.w,
+                        ph = paddle.h;
+                    // 小球底部低於擋板頂部，且小球在擋板水平範圍內
+                    if (b.y + b.radius >= py && b.y + b.radius <= py + ph + 8) {
+                        if (b.x >= px - b.radius + 4 && b.x <= px + pw + b.radius - 4) {
+                            // 反彈
+                            b.vy = -Math.abs(b.vy) - 0.3;
+                            b.y = py - b.radius - 0.5;
+                            // 水平略微改變
+                            b.vx += (Math.random() - 0.5) * 0.8;
+                            // 限速
+                            const maxV = 6;
+                            if (Math.abs(b.vx) > maxV) b.vx = Math.sign(b.vx) * maxV;
+                            if (Math.abs(b.vy) > maxV) b.vy = Math.sign(b.vy) * maxV;
+                            continue;
+                        }
+                    }
+
+                    // 掉到底部 → Game Over
+                    if (b.y + b.radius > canvasH) {
+                        triggerGameOver();
+                        return;
+                    }
+                }
+
+                // 移除超出上邊界太遠的（安全清理）
+                balls = balls.filter(b => b.y < canvasH + 100);
+            }
+
+            // ---------- 渲染右側 ----------
+            function renderPhysics() {
+                const dpr = window.devicePixelRatio || 1;
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                ctx.clearRect(0, 0, canvasW, canvasH);
+
+                // 背景網格
+                ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+                ctx.lineWidth = 1;
+                for (let i = 0; i < canvasW; i += 30) {
+                    ctx.beginPath();
+                    ctx.moveTo(i, 0);
+                    ctx.lineTo(i, canvasH);
+                    ctx.stroke();
+                }
+                for (let i = 0; i < canvasH; i += 30) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, i);
+                    ctx.lineTo(canvasW, i);
+                    ctx.stroke();
+                }
+
+                // 畫小球
+                for (const b of balls) {
+                    const grad = ctx.createRadialGradient(
+                        b.x - 4, b.y - 4, 2,
+                        b.x, b.y, b.radius
+                    );
+                    grad.addColorStop(0, lightenColor(b.color, 50));
+                    grad.addColorStop(1, b.color);
+                    ctx.shadowColor = b.color;
+                    ctx.shadowBlur = 20;
+                    ctx.beginPath();
+                    ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+                    // 高光
+                    ctx.shadowBlur = 0;
+                    ctx.beginPath();
+                    ctx.arc(b.x - 4, b.y - 5, 4, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+                    ctx.fill();
+                }
+                ctx.shadowBlur = 0;
+
+                // 畫擋板
+                const gradP = ctx.createLinearGradient(paddle.x, paddle.y, paddle.x, paddle.y + paddle.h);
+                gradP.addColorStop(0, '#818cf8');
+                gradP.addColorStop(1, '#6366f1');
+                ctx.shadowColor = '#818cf8';
+                ctx.shadowBlur = 30;
+                ctx.fillStyle = gradP;
+                ctx.beginPath();
+                ctx.roundRect(paddle.x, paddle.y, paddle.w, paddle.h, 8);
+                ctx.fill();
+                // 擋板邊框
+                ctx.shadowBlur = 0;
+                ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.roundRect(paddle.x, paddle.y, paddle.w, paddle.h, 8);
+                ctx.stroke();
+
+                // 擋板高光
+                ctx.fillStyle = 'rgba(255,255,255,0.08)';
+                ctx.beginPath();
+                ctx.roundRect(paddle.x + 12, paddle.y + 3, paddle.w - 24, 4, 4);
+                ctx.fill();
+            }
+
+            // 輔助：roundRect
+            CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+                if (r > w / 2) r = w / 2;
+                if (r > h / 2) r = h / 2;
+                this.moveTo(x + r, y);
+                this.arcTo(x + w, y, x + w, y + h, r);
+                this.arcTo(x + w, y + h, x, y + h, r);
+                this.arcTo(x, y + h, x, y, r);
+                this.arcTo(x, y, x + w, y, r);
+                return this;
+            };
+
+            function lightenColor(hex, amt) {
+                let r = parseInt(hex.slice(1, 3), 16),
+                    g = parseInt(hex.slice(3, 5), 16),
+                    b = parseInt(hex.slice(5, 7), 16);
+                r = Math.min(255, r + amt);
+                g = Math.min(255, g + amt);
+                b = Math.min(255, b + amt);
+                return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+            }
+
+            // ---------- 分數更新 ----------
+            function updateScore() {
+                scoreDisplay.textContent = Math.floor(score);
+            }
+
+            // ---------- 計時器（每秒 +10 分） ----------
+            function startTimer() {
+                if (timerInterval) clearInterval(timerInterval);
+                timerInterval = setInterval(() => {
+                    if (gameState === STATE.PLAYING) {
+                        score += 10;
+                        updateScore();
+                    }
+                }, 1000);
+            }
+
+            function stopTimer() {
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                }
+            }
+
+            // ---------- 遊戲循環 ----------
+            function gameLoop() {
+                if (gameState === STATE.PLAYING) {
+                    updatePhysics();
+                    renderPhysics();
+                    frameCounter++;
+                } else if (gameState === STATE.IDLE) {
+                    renderPhysics();
+                } else {
+                    // gameover 已停止更新，但保持渲染
+                }
+                animFrameId = requestAnimationFrame(gameLoop);
+            }
+
+            // ---------- 開始遊戲 ----------
+            function startGame() {
+                // 重置所有
+                stopTimer();
+                score = 0;
+                updateScore();
+                resetPhysics();
+                gameoverOverlay.classList.remove('show');
+
+                // 重置 Stroop
+                stroopData = null;
+                stroopLocked = false;
+                stroopPrompt.innerHTML = '🧠 準備挑戰...';
+                stroopWord.textContent = '——';
+                stroopWord.style.color = '#555';
+                optALabel.textContent = '—';
+                optSLabel.textContent = '—';
+                optA.disabled = true;
+                optS.disabled = true;
+                optA.className = 'option-btn';
+                optS.className = 'option-btn';
+
+                gameState = STATE.PLAYING;
+                updateUI();
+
+                // 生成第一題
+                setTimeout(() => {
+                    if (gameState === STATE.PLAYING) {
+                        refreshStroop();
+                    }
+                }, 200);
+
+                // 生成初始小球
+                for (let i = 0; i < 2; i++) {
+                    setTimeout(() => { if (gameState === STATE.PLAYING) spawnBall(); }, i * 300 + 100);
+                }
+                ballSpawnTimer = 0;
+
+                startTimer();
+            }
+
+            // ---------- Game Over ----------
+            function triggerGameOver() {
+                if (gameState === STATE.GAMEOVER) return;
+                gameState = STATE.GAMEOVER;
+                stopTimer();
+                updateUI();
+
+                // 顯示遮罩
+                finalScore.textContent = Math.floor(score);
+                gameoverOverlay.classList.add('show');
+
+                // 左側按鈕禁用
+                optA.disabled = true;
+                optS.disabled = true;
+
+                // 右側停止更新
+            }
+
+            // ---------- 重置到 IDLE ----------
+            function resetToIdle() {
+                stopTimer();
+                if (animFrameId) {
+                    cancelAnimationFrame(animFrameId);
+                    animFrameId = null;
+                }
+                gameState = STATE.IDLE;
+                score = 0;
+                updateScore();
+                resetPhysics();
+                balls = [];
+                stroopData = null;
+                stroopLocked = false;
+                gameoverOverlay.classList.remove('show');
+
+                stroopPrompt.innerHTML = '按下 <span class="highlight">「開始遊戲」</span> 挑戰';
+                stroopWord.textContent = '——';
+                stroopWord.style.color = '#555';
+                optALabel.textContent = '—';
+                optSLabel.textContent = '—';
+                optA.disabled = true;
+                optS.disabled = true;
+                optA.className = 'option-btn';
+                optS.className = 'option-btn';
+
+                updateUI();
+                // 重新啟動渲染循環
+                if (!animFrameId) {
+                    animFrameId = requestAnimationFrame(gameLoop);
+                }
+            }
+
+            // ---------- UI 更新 ----------
+            function updateUI() {
+                const isIdle = gameState === STATE.IDLE;
+                const isPlaying = gameState === STATE.PLAYING;
+                const isGameover = gameState === STATE.GAMEOVER;
+
+                btnStart.disabled = isPlaying;
+                btnStart.textContent = isGameover ? '▶ 再玩一次' : '▶ 開始遊戲';
+
+                // 狀態標籤
+                if (isIdle) {
+                    statusBadge.textContent = '⏸ 待機';
+                    statusBadge.className = 'status-badge';
+                    statusBadgeRight.textContent = '⏸ 待機';
+                    statusBadgeRight.className = 'status-badge';
+                } else if (isPlaying) {
+                    statusBadge.textContent = '▶ 進行中';
+                    statusBadge.className = 'status-badge playing';
+                    statusBadgeRight.textContent = '▶ 進行中';
+                    statusBadgeRight.className = 'status-badge playing';
+                } else {
+                    statusBadge.textContent = '💀 失守';
+                    statusBadge.className = 'status-badge gameover';
+                    statusBadgeRight.textContent = '💀 失守';
+                    statusBadgeRight.className = 'status-badge gameover';
+                }
+            }
+
+            // ---------- 鍵盤事件 ----------
+            function onKeyDown(e) {
+                const key = e.key;
+                // 左側 A / S
+                if (key === 'a' || key === 'A') {
+                    e.preventDefault();
+                    if (gameState === STATE.PLAYING && !optA.disabled) {
+                        handleStroopAnswer(0);
+                    }
+                    return;
+                }
+                if (key === 's' || key === 'S') {
+                    e.preventDefault();
+                    if (gameState === STATE.PLAYING && !optS.disabled) {
+                        handleStroopAnswer(1);
+                    }
+                    return;
+                }
+
+                // 右側方向鍵
+                if (key === 'ArrowLeft') {
+                    e.preventDefault();
+                    keys.left = true;
+                }
+                if (key === 'ArrowRight') {
+                    e.preventDefault();
+                    keys.right = true;
+                }
+
+                // 空白鍵快速開始
+                if (key === ' ' || key === 'Space') {
+                    e.preventDefault();
+                    if (gameState === STATE.IDLE || gameState === STATE.GAMEOVER) {
+                        startGame();
+                    }
+                }
+            }
+
+            function onKeyUp(e) {
+                const key = e.key;
+                if (key === 'ArrowLeft') {
+                    e.preventDefault();
+                    keys.left = false;
+                }
+                if (key === 'ArrowRight') {
+                    e.preventDefault();
+                    keys.right = false;
+                }
+            }
+
+            // ---------- 視窗尺寸調整 ----------
+            function onResize() {
+                const oldW = canvasW,
+                    oldH = canvasH;
+                initCanvas();
+                // 調整擋板位置
+                if (gameState === STATE.IDLE || gameState === STATE.PLAYING) {
+                    paddle.x = Math.min(paddle.x, canvasW - paddle.w);
+                    paddle.y = canvasH - paddle.h - 20;
+                }
+                // 調整小球位置（防止超出）
+                for (const b of balls) {
+                    b.x = Math.max(b.radius, Math.min(canvasW - b.radius, b.x));
+                    b.y = Math.min(canvasH + 20, b.y);
+                }
+                renderPhysics();
+            }
+
+            // ---------- 初始化 ----------
+            function init() {
+                initCanvas();
+                resetPhysics();
+                gameState = STATE.IDLE;
+                score = 0;
+                updateScore();
+                updateUI();
+                gameoverOverlay.classList.remove('show');
+
+                // 事件綁定
+                window.addEventListener('keydown', onKeyDown);
+                window.addEventListener('keyup', onKeyUp);
+                window.addEventListener('resize', onResize);
+
+                btnStart.addEventListener('click', startGame);
+                btnReset.addEventListener('click', resetToIdle);
+                btnGameoverRestart.addEventListener('click', startGame);
+
+                // 選項按鈕點擊
+                optA.addEventListener('click', () => {
+                    if (gameState === STATE.PLAYING && !optA.disabled) {
+                        handleStroopAnswer(0);
+                    }
+                });
+                optS.addEventListener('click', () => {
+                    if (gameState === STATE.PLAYING && !optS.disabled) {
+                        handleStroopAnswer(1);
+                    }
+                });
+
+                // 啟動渲染循環
+                animFrameId = requestAnimationFrame(gameLoop);
+
+                // 初始渲染
+                renderStroop();
+                renderPhysics();
+
+                console.log('🧠 左右腦極限對抗 已載入！');
+                console.log('🎮 A / S 回答左側，← → 控制擋板');
+            }
+
+            // 等待 DOM 完全載入
+            if (document.readyState === 'complete') {
+                init();
+            } else {
+                window.addEventListener('load', init);
+            }
+
+        })();
+    </script>
+</body>
+</html>
