@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>左右腦極限對抗</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; user-select:none; }
+body {
+    background: #0b0b16;
+    font-family: 'Segoe UI','PingFang TC','Microsoft YaHei',sans-serif;
+    display:flex; justify-content:center; align-items:center;
+    min-height:100vh; color:#e8e8f0; padding:16px;
+    touch-action: none; /* 防止触控时页面滚动 */
+}
+.game-container {
+    width:1100px; max-width:100%;
+    background:#12121f; border-radius:28px;
+    padding:24px 28px 20px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(255,255,255,0.04);
+    border:1px solid #2a2a44;
+}
+.header {
+    display:flex; justify-content:space-between; align-items:center;
+    padding-bottom:14px; border-bottom:1px solid #2a2a44;
+    margin-bottom:18px; flex-wrap:wrap; gap:8px 16px;
+}
+.title {
+    font-size:26px; font-weight:700; letter-spacing:2px;
+    background:linear-gradient(135deg,#a78bfa,#60a5fa,#34d399);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    background-clip:text;
+}
+.title-score { display:flex; align-items:center; gap:20px; flex-wrap:wrap; }
+.score-display {
+    font-size:22px; font-weight:600; background:#1c1c32;
+    padding:6px 20px; border-radius:40px; border:1px solid #3a3a5a;
+}
+.score-display span { color:#fcd34d; font-size:26px; min-width:60px; display:inline-block; text-align:center; }
+.btn-group { display:flex; gap:10px; }
+.btn {
+    padding:8px 22px; border:none; border-radius:40px; font-size:16px;
+    font-weight:600; cursor:pointer; transition:all 0.2s ease;
+    background:#2a2a4a; color:#b0b0d0; border:1px solid #3a3a5a;
+    touch-action: manipulation;
+}
+.btn:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.4); }
+.btn-primary { background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border:none; }
+.btn-primary:hover:not(:disabled) { background:linear-gradient(135deg,#818cf8,#a78bfa); box-shadow:0 6px 24px rgba(99,102,241,0.35); }
+.btn-danger { background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; border:none; }
+.btn-danger:hover:not(:disabled) { background:linear-gradient(135deg,#f87171,#ef4444); box-shadow:0 6px 24px rgba(239,68,68,0.35); }
+.btn:disabled { opacity:0.35; cursor:not-allowed; transform:none !important; box-shadow:none !important; }
+.game-body { display:flex; gap:0; min-height:520px; position:relative; }
+.divider {
+    width:3px; background:linear-gradient(to bottom, transparent,#6366f1,#8b5cf6,#a78bfa,transparent);
+    flex-shrink:0; margin:0 4px; position:relative; border-radius:4px;
+    box-shadow:0 0 20px rgba(99,102,241,0.3);
+}
+.divider::after {
+    content:'⚡'; position:absolute; top:50%; left:50%;
+    transform:translate(-50%,-50%); font-size:18px;
+    color:#a78bfa; text-shadow:0 0 30px rgba(167,139,250,0.6);
+    background:#12121f; padding:4px 2px; border-radius:50%;
+}
+.left-panel {
+    flex:1; padding:10px 16px 10px 6px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    min-height:460px; background:#141425; border-radius:20px;
+    border:1px solid #22223e; position:relative;
+}
+.panel-label {
+    position:absolute; top:12px; left:20px;
+    font-size:13px; font-weight:600; color:#6b6b9a;
+    background:#1a1a30; padding:2px 14px; border-radius:20px;
+    border:1px solid #2a2a4e;
+}
+.stroop-prompt {
+    font-size:18px; font-weight:500; color:#c4c4e6;
+    background:#1e1e38; padding:8px 30px; border-radius:40px;
+    margin-bottom:22px; border:1px solid #333358;
+    min-height:48px; display:flex; align-items:center; justify-content:center;
+    text-align:center;
+}
+.stroop-prompt .highlight { color:#fcd34d; font-weight:700; }
+.stroop-word {
+    font-size:82px; font-weight:800; line-height:1.2;
+    margin-bottom:30px; text-shadow:0 0 40px rgba(255,255,255,0.04);
+    letter-spacing:4px; min-height:110px;
+    display:flex; align-items:center; justify-content:center;
+    padding:0 10px;
+}
+.stroop-options { display:flex; gap:30px; margin-top:6px; flex-wrap:wrap; justify-content:center; }
+.option-btn {
+    width:140px; padding:16px 0; border:2px solid #3a3a5e;
+    border-radius:16px; background:#1a1a32; color:#e0e0f0;
+    font-size:22px; font-weight:700; cursor:pointer; transition:all 0.15s ease;
+    display:flex; flex-direction:column; align-items:center; gap:2px;
+    font-family:inherit; position:relative;
+    touch-action: manipulation;
+}
+.option-btn .key-hint { font-size:13px; font-weight:400; color:#6b6b9a; background:#252545; padding:0 12px; border-radius:12px; line-height:22px; }
+.option-btn:hover:not(:disabled) { border-color:#818cf8; background:#22224a; transform:scale(1.02); }
+.option-btn:active:not(:disabled) { transform:scale(0.97); }
+.option-btn.correct { border-color:#34d399; background:#1a3a2e; box-shadow:0 0 30px rgba(52,211,153,0.25); }
+.option-btn.wrong { border-color:#f87171; background:#3a1a1a; box-shadow:0 0 30px rgba(248,113,113,0.25); }
+.option-btn:disabled { cursor:not-allowed; opacity:0.6; }
+.right-panel {
+    flex:1; padding:10px 6px 10px 16px;
+    display:flex; flex-direction:column;
+    min-height:460px; background:#141425; border-radius:20px;
+    border:1px solid #22223e; position:relative;
+}
+.right-panel .panel-label { left:20px; }
+#gameCanvas {
+    width:100%; height:100%; border-radius:14px;
+    background:#0e0e1e; display:block; flex:1;
+    min-height:380px; border:1px solid #22223e;
+    touch-action: none; /* 防止触控时页面滚动/缩放 */
+}
+.gameover-overlay {
+    position:absolute; inset:0;
+    background:rgba(0,0,0,0.75); backdrop-filter:blur(6px);
+    border-radius:20px; display:none;
+    flex-direction:column; align-items:center; justify-content:center;
+    z-index:20; padding:30px; border:1px solid rgba(239,68,68,0.2);
+}
+.gameover-overlay.show { display:flex; }
+.gameover-title { font-size:52px; font-weight:800; color:#f87171; text-shadow:0 0 60px rgba(239,68,68,0.3); letter-spacing:4px; margin-bottom:6px; }
+.gameover-sub { font-size:20px; color:#b0b0d0; margin-bottom:8px; }
+.gameover-score { font-size:32px; font-weight:700; color:#fcd34d; margin-bottom:18px; }
+.gameover-score span { font-size:44px; }
+.gameover-btn {
+    padding:12px 40px; border:none; border-radius:40px;
+    font-size:20px; font-weight:700;
+    background:linear-gradient(135deg,#8b5cf6,#6366f1); color:#fff;
+    cursor:pointer; transition:all 0.2s ease; border:1px solid rgba(255,255,255,0.1);
+    touch-action: manipulation;
+}
+.gameover-btn:hover { transform:scale(1.05); box-shadow:0 8px 30px rgba(99,102,241,0.4); }
+.status-badge {
+    position:absolute; top:12px; right:20px;
+    font-size:12px; font-weight:600; padding:2px 16px;
+    border-radius:20px; background:#1e1e3a;
+    border:1px solid #333358; color:#6b6b9a; letter-spacing:1px;
+}
+.status-badge.playing { color:#34d399; border-color:#34d399; background:#0f2a1e; }
+.status-badge.gameover { color:#f87171; border-color:#f87171; background:#2a1212; }
+/* 移动端提示 */
+.mobile-touch-hint {
+    position:absolute; bottom:12px; left:50%; transform:translateX(-50%);
+    font-size:12px; color:#6b6b9a; background:rgba(20,20,37,0.8);
+    padding:4px 16px; border-radius:20px;
+    border:1px solid #2a2a4e;
+    pointer-events:none;
+    white-space:nowrap;
+    opacity:0.8;
+}
+@media (max-width:860px) {
+    .game-container { padding:16px; }
+    .game-body { flex-direction:column; gap:16px; }
+    .divider { width:auto; height:3px; margin:0 20px; background:linear-gradient(to right, transparent,#6366f1,#8b5cf6,#a78bfa,transparent); }
+    .divider::after { top:auto; left:50%; transform:translate(-50%,-50%); }
+    .left-panel, .right-panel { padding:14px; min-height:320px; }
+    .left-panel { padding-top:36px; }
+    .right-panel { padding-top:36px; }
+    .stroop-word { font-size:56px; min-height:80px; }
+    .option-btn { width:110px; padding:12px 0; font-size:18px; }
+    .header { flex-direction:column; align-items:stretch; gap:10px; }
+    .title-score { justify-content:space-between; }
+    .btn-group { justify-content:flex-end; }
+    .gameover-title { font-size:36px; }
+}
+@media (max-width:480px) {
+    .stroop-word { font-size:40px; min-height:60px; }
+    .option-btn { width:90px; padding:10px 0; font-size:15px; }
+    .stroop-prompt { font-size:15px; padding:6px 16px; }
+    .score-display { font-size:18px; padding:4px 14px; }
+    .btn { font-size:14px; padding:6px 16px; }
+    .gameover-title { font-size:28px; }
+}
+</style>
+</head>
+<body>
+<div class="game-container" id="app">
+    <div class="header">
+        <div class="title">🧠 左右腦極限對抗</div>
+        <div class="title-score">
+            <div class="score-display">🏆 得分 <span id="scoreDisplay">0</span></div>
+            <div class="btn-group">
+                <button class="btn btn-primary" id="btnStart">▶ 開始遊戲</button>
+                <button class="btn btn-danger" id="btnReset">⟳ 重新開始</button>
+            </div>
+        </div>
+    </div>
+    <div class="game-body">
+        <div class="left-panel" id="leftPanel">
+            <div class="panel-label">🧩 邏輯干擾</div>
+            <div class="status-badge" id="statusBadge">⏸ 待機</div>
+            <div class="stroop-prompt" id="stroopPrompt">按下 <span class="highlight">「開始遊戲」</span> 挑戰</div>
+            <div class="stroop-word" id="stroopWord">——</div>
+            <div class="stroop-options" id="stroopOptions">
+                <button class="option-btn" id="optA" disabled>
+                    <span class="key-hint">[ A ]</span>
+                    <span id="optALabel">—</span>
+                </button>
+                <button class="option-btn" id="optS" disabled>
+                    <span class="key-hint">[ S ]</span>
+                    <span id="optSLabel">—</span>
+                </button>
+            </div>
+            <div class="gameover-overlay" id="gameoverOverlay">
+                <div class="gameover-title">💀 GAME OVER</div>
+                <div class="gameover-sub">左右腦同步失守</div>
+                <div class="gameover-score">最終得分 <span id="finalScore">0</span></div>
+                <button class="gameover-btn" id="btnGameoverRestart">🔄 重新挑戰</button>
+            </div>
+        </div>
+        <div class="divider"></div>
+        <div class="right-panel">
+            <div class="panel-label">🎯 空間物理</div>
+            <div class="status-badge" id="statusBadgeRight">⏸ 待機</div>
+            <canvas id="gameCanvas"></canvas>
+            <div class="mobile-touch-hint" id="touchHint">👆 滑動控制擋板</div>
+        </div>
+    </div>
+</div>
+<script>
+(function(){
+    'use strict';
+
+    // ---------- DOM ----------
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    const finalScore = document.getElementById('finalScore');
+    const btnStart = document.getElementById('btnStart');
+    const btnReset = document.getElementById('btnReset');
+    const btnGameoverRestart = document.getElementById('btnGameoverRestart');
+    const stroopPrompt = document.getElementById('stroopPrompt');
+    const stroopWord = document.getElementById('stroopWord');
+    const optA = document.getElementById('optA');
+    const optS = document.getElementById('optS');
+    const optALabel = document.getElementById('optALabel');
+    const optSLabel = document.getElementById('optSLabel');
+    const statusBadge = document.getElementById('statusBadge');
+    const statusBadgeRight = document.getElementById('statusBadgeRight');
+    const gameoverOverlay = document.getElementById('gameoverOverlay');
+    const touchHint = document.getElementById('touchHint');
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // ---------- 顏色 ----------
+    const COLOR_MAP = {
+        '紅色':'#ff1744','藍色':'#2979ff','綠色':'#00e676','黃色':'#ffea00',
+        '紫色':'#d500f9','橙色':'#ff9100','粉色':'#f50057','青色':'#00bcd4',
+        '棕色':'#8d6e63','灰色':'#bdbdbd'
+    };
+    const COLOR_NAMES = Object.keys(COLOR_MAP);
+
+    // ---------- 狀態 ----------
+    const STATE = { IDLE:'idle', PLAYING:'playing', GAMEOVER:'gameover' };
+    let gameState = STATE.IDLE;
+    let score = 0;
+    let timerInterval = null;
+    let animFrameId = null;
+
+    // ---------- Stroop ----------
+    let stroopData = null;
+    let stroopLocked = false;
+
+    // ---------- 物理 ----------
+    let balls = [];
+    let paddle = { x:0, y:0, w:100, h:16 };
+    let canvasW = 0, canvasH = 0;
+    let ballSpawnTimer = 0;
+    const BALL_RADIUS = 12;
+    const MAX_BALLS = 4;
+    const PADDLE_SPEED = 7;
+    const GRAVITY = 0.08;
+    const INITIAL_SPEED = 1.8;
+    const keys = { left:false, right:false };
+
+    // ---------- 輔助 ----------
+    function randomItem(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+    function randomInt(min,max) { return Math.floor(Math.random()*(max-min+1))+min; }
+    function shuffleArray(arr) {
+        for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; }
+        return arr;
+    }
+
+    // ---------- 繪圖輔助 (圓角矩形) ----------
+    function roundRect(ctx, x, y, w, h, r) {
+        if (r > w/2) r = w/2;
+        if (r > h/2) r = h/2;
+        ctx.moveTo(x+r, y);
+        ctx.arcTo(x+w, y, x+w, y+h, r);
+        ctx.arcTo(x+w, y+h, x, y+h, r);
+        ctx.arcTo(x, y+h, x, y, r);
+        ctx.arcTo(x, y, x+w, y, r);
+        return ctx;
+    }
+
+    // ---------- Stroop 題目 ----------
+    function generateStroopQuestion() {
+        const word = randomItem(COLOR_NAMES);
+        let displayColorName;
+        if (Math.random() < 0.3) displayColorName = word;
+        else {
+            const others = COLOR_NAMES.filter(c=>c!==word);
+            displayColorName = randomItem(others);
+        }
+        const displayColorHex = COLOR_MAP[displayColorName];
+        const task = Math.random() < 0.5 ? 'color' : 'meaning';
+        const correctAnswer = (task === 'color') ? displayColorName : word;
+        let distractor;
+        const candidates = COLOR_NAMES.filter(c=>c!==correctAnswer);
+        distractor = randomItem(candidates);
+        const options = shuffleArray([correctAnswer, distractor]);
+        return { word, displayColor:displayColorHex, displayColorName, task, correctAnswer, options };
+    }
+
+    function renderStroop() {
+        if (!stroopData) {
+            stroopPrompt.innerHTML = '按下 <span class="highlight">「開始遊戲」</span> 挑戰';
+            stroopWord.textContent = '——';
+            stroopWord.style.color = '#555';
+            optALabel.textContent = '—';
+            optSLabel.textContent = '—';
+            optA.disabled = true;
+            optS.disabled = true;
+            return;
+        }
+        const d = stroopData;
+        const taskLabel = d.task === 'color' ? '點擊字的顏色' : '點擊字的意思';
+        stroopPrompt.innerHTML = `🎯 請 <span class="highlight">${taskLabel}</span>`;
+        stroopWord.textContent = d.word;
+        stroopWord.style.color = d.displayColor;
+        optALabel.textContent = d.options[0];
+        optSLabel.textContent = d.options[1];
+        optA.disabled = false;
+        optS.disabled = false;
+        optA.className = 'option-btn';
+        optS.className = 'option-btn';
+    }
+
+    function refreshStroop() {
+        if (gameState !== STATE.PLAYING) return;
+        stroopData = generateStroopQuestion();
+        stroopLocked = false;
+        renderStroop();
+    }
+
+    function handleStroopAnswer(selectedIdx) {
+        if (gameState !== STATE.PLAYING || stroopLocked || !stroopData) return;
+        const d = stroopData;
+        const selected = d.options[selectedIdx];
+        const isCorrect = (selected === d.correctAnswer);
+        stroopLocked = true;
+        optA.disabled = true;
+        optS.disabled = true;
+        const btn = selectedIdx===0 ? optA : optS;
+        if (isCorrect) {
+            btn.classList.add('correct');
+            score += 50;
+            updateScore();
+            setTimeout(()=>{
+                if (gameState === STATE.PLAYING) refreshStroop();
+                else { stroopLocked=false; renderStroop(); }
+            }, 280);
+        } else {
+            btn.classList.add('wrong');
+            setTimeout(()=>{ triggerGameOver(); }, 350);
+        }
+    }
+
+    // ---------- Canvas 初始化 ----------
+    function initCanvas() {
+        const rect = canvas.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        canvasW = canvas.clientWidth || rect.width || 400;
+        canvasH = canvas.clientHeight || rect.height || 400;
+        canvas.width = canvasW * dpr;
+        canvas.height = canvasH * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        paddle.x = (canvasW - paddle.w) / 2;
+        paddle.y = canvasH - paddle.h - 20;
+    }
+
+    function resetPhysics() {
+        balls = [];
+        ballSpawnTimer = 0;
+        paddle.x = (canvasW - paddle.w) / 2;
+        paddle.y = canvasH - paddle.h - 20;
+    }
+
+    // ---------- 小球 ----------
+    function spawnBall() {
+        if (balls.length >= MAX_BALLS) return;
+        const x = randomInt(20+BALL_RADIUS, canvasW-20-BALL_RADIUS);
+        const y = -BALL_RADIUS - randomInt(0,20);
+        const vx = (Math.random()-0.5)*1.2;
+        const vy = INITIAL_SPEED + Math.random()*0.6;
+        const color = randomItem(COLOR_NAMES);
+        balls.push({ x,y,vx,vy, radius:BALL_RADIUS, color:COLOR_MAP[color], colorName:color });
+    }
+
+    // ---------- 物理更新 ----------
+    function updatePhysics() {
+        if (gameState !== STATE.PLAYING) return;
+        // 鍵盤控制
+        if (keys.left) paddle.x = Math.max(0, paddle.x - PADDLE_SPEED);
+        if (keys.right) paddle.x = Math.min(canvasW - paddle.w, paddle.x + PADDLE_SPEED);
+
+        ballSpawnTimer++;
+        const spawnInterval = Math.max(40, 100 - Math.floor(score/300)*4);
+        if (ballSpawnTimer >= spawnInterval) { ballSpawnTimer=0; spawnBall(); }
+
+        for (let i=balls.length-1; i>=0; i--) {
+            const b = balls[i];
+            b.vy += GRAVITY;
+            b.x += b.vx;
+            b.y += b.vy;
+            if (b.x - b.radius < 0) { b.x = b.radius; b.vx = -b.vx; }
+            if (b.x + b.radius > canvasW) { b.x = canvasW - b.radius; b.vx = -b.vx; }
+            const px=paddle.x, py=paddle.y, pw=paddle.w, ph=paddle.h;
+            if (b.y + b.radius >= py && b.y + b.radius <= py + ph + 8) {
+                if (b.x >= px - b.radius + 4 && b.x <= px + pw + b.radius - 4) {
+                    b.vy = -Math.abs(b.vy) - 0.3;
+                    b.y = py - b.radius - 0.5;
+                    b.vx += (Math.random()-0.5)*0.8;
+                    const maxV=6;
+                    if (Math.abs(b.vx)>maxV) b.vx = Math.sign(b.vx)*maxV;
+                    if (Math.abs(b.vy)>maxV) b.vy = Math.sign(b.vy)*maxV;
+                    continue;
+                }
+            }
+            if (b.y + b.radius > canvasH) {
+                triggerGameOver();
+                return;
+            }
+        }
+        balls = balls.filter(b => b.y < canvasH + 100);
+    }
+
+    // ---------- 渲染 ----------
+    function renderPhysics() {
+        const dpr = window.devicePixelRatio || 1;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, canvasW, canvasH);
+
+        // 網格
+        ctx.strokeStyle='rgba(255,255,255,0.03)';
+        ctx.lineWidth=1;
+        for(let i=0;i<canvasW;i+=30){ ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvasH); ctx.stroke(); }
+        for(let i=0;i<canvasH;i+=30){ ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(canvasW,i); ctx.stroke(); }
+
+        // 球
+        for(const b of balls) {
+            const grad = ctx.createRadialGradient(b.x-4,b.y-4,2,b.x,b.y,b.radius);
+            grad.addColorStop(0, lightenColor(b.color,50));
+            grad.addColorStop(1, b.color);
+            ctx.shadowColor = b.color;
+            ctx.shadowBlur = 20;
+            ctx.beginPath(); ctx.arc(b.x,b.y,b.radius,0,Math.PI*2);
+            ctx.fillStyle = grad;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.beginPath(); ctx.arc(b.x-4,b.y-5,4,0,Math.PI*2);
+            ctx.fillStyle='rgba(255,255,255,0.25)';
+            ctx.fill();
+        }
+        ctx.shadowBlur=0;
+
+        // 擋板
+        const gradP = ctx.createLinearGradient(paddle.x,paddle.y,paddle.x,paddle.y+paddle.h);
+        gradP.addColorStop(0,'#818cf8');
+        gradP.addColorStop(1,'#6366f1');
+        ctx.shadowColor='#818cf8';
+        ctx.shadowBlur=30;
+        ctx.beginPath();
+        roundRect(ctx, paddle.x, paddle.y, paddle.w, paddle.h, 8);
+        ctx.fill();
+        ctx.shadowBlur=0;
+        ctx.strokeStyle='rgba(255,255,255,0.15)';
+        ctx.lineWidth=1.5;
+        ctx.beginPath();
+        roundRect(ctx, paddle.x, paddle.y, paddle.w, paddle.h, 8);
+        ctx.stroke();
+        ctx.fillStyle='rgba(255,255,255,0.08)';
+        ctx.beginPath();
+        roundRect(ctx, paddle.x+12, paddle.y+3, paddle.w-24, 4, 4);
+        ctx.fill();
+    }
+
+    function lightenColor(hex, amt) {
+        let r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+        r=Math.min(255,r+amt); g=Math.min(255,g+amt); b=Math.min(255,b+amt);
+        return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+    }
+
+    // ---------- 分數 ----------
+    function updateScore() { scoreDisplay.textContent = Math.floor(score); }
+
+    // ---------- 計時 ----------
+    function startTimer() {
+        if(timerInterval) clearInterval(timerInterval);
+        timerInterval = setInterval(()=>{
+            if(gameState===STATE.PLAYING){ score+=10; updateScore(); }
+        },1000);
+    }
+    function stopTimer() { if(timerInterval){ clearInterval(timerInterval); timerInterval=null; } }
+
+    // ---------- 遊戲迴圈 ----------
+    function gameLoop() {
+        if (gameState === STATE.PLAYING) {
+            updatePhysics();
+            renderPhysics();
+        } else if (gameState === STATE.IDLE) {
+            renderPhysics();
+        }
+        animFrameId = requestAnimationFrame(gameLoop);
+    }
+
+    // ---------- 開始遊戲 ----------
+    function startGame() {
+        console.log('▶ 開始遊戲被觸發');
+        try {
+            stopTimer();
+            score = 0;
+            updateScore();
+            resetPhysics();
+            gameoverOverlay.classList.remove('show');
+            stroopData = null;
+            stroopLocked = false;
+            stroopPrompt.innerHTML = '🧠 準備挑戰...';
+            stroopWord.textContent = '——';
+            stroopWord.style.color = '#555';
+            optALabel.textContent = '—';
+            optSLabel.textContent = '—';
+            optA.disabled = true;
+            optS.disabled = true;
+            optA.className = 'option-btn';
+            optS.className = 'option-btn';
+            gameState = STATE.PLAYING;
+            updateUI();
+
+            setTimeout(() => {
+                if (gameState === STATE.PLAYING) refreshStroop();
+            }, 200);
+
+            for (let i=0; i<2; i++) {
+                setTimeout(() => { if(gameState===STATE.PLAYING) spawnBall(); }, i*300+100);
+            }
+            ballSpawnTimer = 0;
+            startTimer();
+            console.log('✅ 遊戲已啟動');
+        } catch(e) {
+            console.error('❌ startGame 錯誤:', e);
+            alert('啟動失敗，請查看控制台錯誤訊息 (F12)');
+        }
+    }
+
+    // ---------- Game Over ----------
+    function triggerGameOver() {
+        if (gameState === STATE.GAMEOVER) return;
+        console.log('💀 Game Over');
+        gameState = STATE.GAMEOVER;
+        stopTimer();
+        updateUI();
+        finalScore.textContent = Math.floor(score);
+        gameoverOverlay.classList.add('show');
+        optA.disabled = true;
+        optS.disabled = true;
+    }
+
+    // ---------- 重置 ----------
+    function resetToIdle() {
+        stopTimer();
+        if(animFrameId) { cancelAnimationFrame(animFrameId); animFrameId=null; }
+        gameState = STATE.IDLE;
+        score = 0;
+        updateScore();
+        resetPhysics();
+        balls = [];
+        stroopData = null;
+        stroopLocked = false;
+        gameoverOverlay.classList.remove('show');
+        stroopPrompt.innerHTML = '按下 <span class="highlight">「開始遊戲」</span> 挑戰';
+        stroopWord.textContent = '——';
+        stroopWord.style.color = '#555';
+        optALabel.textContent = '—';
+        optSLabel.textContent = '—';
+        optA.disabled = true;
+        optS.disabled = true;
+        optA.className = 'option-btn';
+        optS.className = 'option-btn';
+        updateUI();
+        if(!animFrameId) animFrameId = requestAnimationFrame(gameLoop);
+    }
+
+    // ---------- UI ----------
+    function updateUI() {
+        const isIdle = gameState===STATE.IDLE;
+        const isPlaying = gameState===STATE.PLAYING;
+        const isGameover = gameState===STATE.GAMEOVER;
+        btnStart.disabled = isPlaying;
+        btnStart.textContent = isGameover ? '▶ 再玩一次' : '▶ 開始遊戲';
+        if(isIdle) {
+            statusBadge.textContent='⏸ 待機'; statusBadge.className='status-badge';
+            statusBadgeRight.textContent='⏸ 待機'; statusBadgeRight.className='status-badge';
+            touchHint.style.display = 'block';
+        } else if(isPlaying) {
+            statusBadge.textContent='▶ 進行中'; statusBadge.className='status-badge playing';
+            statusBadgeRight.textContent='▶ 進行中'; statusBadgeRight.className='status-badge playing';
+            touchHint.style.display = 'block';
+        } else {
+            statusBadge.textContent='💀 失守'; statusBadge.className='status-badge gameover';
+            statusBadgeRight.textContent='💀 失守'; statusBadgeRight.className='status-badge gameover';
+            touchHint.style.display = 'none';
+        }
+    }
+
+    // ---------- 觸控控制 (手機/平板) ----------
+    function handleTouchMove(e) {
+        e.preventDefault(); // 防止滚动
+        if (gameState !== STATE.PLAYING) return;
+        const touch = e.touches[0];
+        if (!touch) return;
+        const rect = canvas.getBoundingClientRect();
+        const touchX = touch.clientX - rect.left;
+        // 将挡板中心对齐到触摸点 X
+        let newX = touchX - paddle.w / 2;
+        newX = Math.max(0, Math.min(canvasW - paddle.w, newX));
+        paddle.x = newX;
+    }
+
+    function handleTouchStart(e) {
+        e.preventDefault();
+        if (gameState !== STATE.PLAYING) return;
+        // 首次触摸时也移动挡板
+        handleTouchMove(e);
+    }
+
+    // ---------- 鍵盤 ----------
+    function onKeyDown(e) {
+        const key=e.key;
+        if(key==='a'||key==='A'){ e.preventDefault(); if(gameState===STATE.PLAYING && !optA.disabled) handleStroopAnswer(0); return; }
+        if(key==='s'||key==='S'){ e.preventDefault(); if(gameState===STATE.PLAYING && !optS.disabled) handleStroopAnswer(1); return; }
+        if(key==='ArrowLeft'){ e.preventDefault(); keys.left=true; }
+        if(key==='ArrowRight'){ e.preventDefault(); keys.right=true; }
+        if(key===' '||key==='Space'){ e.preventDefault(); if(gameState===STATE.IDLE||gameState===STATE.GAMEOVER) startGame(); }
+    }
+    function onKeyUp(e) {
+        const key=e.key;
+        if(key==='ArrowLeft'){ e.preventDefault(); keys.left=false; }
+        if(key==='ArrowRight'){ e.preventDefault(); keys.right=false; }
+    }
+
+    // ---------- 尺寸 ----------
+    function onResize() {
+        initCanvas();
+        paddle.x = Math.min(paddle.x, canvasW-paddle.w);
+        paddle.y = canvasH-paddle.h-20;
+        for(const b of balls) {
+            b.x = Math.max(b.radius, Math.min(canvasW-b.radius, b.x));
+            b.y = Math.min(canvasH+20, b.y);
+        }
+        renderPhysics();
+    }
+
+    // ---------- 初始化 ----------
+    function init() {
+        console.log('🧠 初始化遊戲');
+        initCanvas();
+        resetPhysics();
+        gameState = STATE.IDLE;
+        score = 0;
+        updateScore();
+        updateUI();
+        gameoverOverlay.classList.remove('show');
+        window.addEventListener('keydown', onKeyDown);
+        window.addEventListener('keyup', onKeyUp);
+        window.addEventListener('resize', onResize);
+        btnStart.addEventListener('click', startGame);
+        btnReset.addEventListener('click', resetToIdle);
+        btnGameoverRestart.addEventListener('click', startGame);
+        optA.addEventListener('click', ()=>{ if(gameState===STATE.PLAYING && !optA.disabled) handleStroopAnswer(0); });
+        optS.addEventListener('click', ()=>{ if(gameState===STATE.PLAYING && !optS.disabled) handleStroopAnswer(1); });
+
+        // ---------- 觸控事件 ----------
+        canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+        canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+        canvas.addEventListener('touchend', (e) => { e.preventDefault(); }, { passive: false });
+        canvas.addEventListener('touchcancel', (e) => { e.preventDefault(); }, { passive: false });
+
+        animFrameId = requestAnimationFrame(gameLoop);
+        renderStroop();
+        renderPhysics();
+        console.log('✅ 初始化完成，請點擊「開始遊戲」');
+    }
+
+    if(document.readyState==='complete') init();
+    else window.addEventListener('load', init);
+})();
+</script>
+</body>
+</html>
