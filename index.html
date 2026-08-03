@@ -11,7 +11,7 @@ body {
     font-family: 'Segoe UI','PingFang TC','Microsoft YaHei',sans-serif;
     display:flex; justify-content:center; align-items:center;
     min-height:100vh; color:#e8e8f0; padding:16px;
-    touch-action: none; /* 防止触控时页面滚动 */
+    touch-action: none;
 }
 .game-container {
     width:1100px; max-width:100%;
@@ -98,9 +98,9 @@ body {
     font-family:inherit; position:relative;
     touch-action: manipulation;
 }
+.option-btn:active:not(:disabled) { transform:scale(0.95); background:#2a2a4a; }
 .option-btn .key-hint { font-size:13px; font-weight:400; color:#6b6b9a; background:#252545; padding:0 12px; border-radius:12px; line-height:22px; }
 .option-btn:hover:not(:disabled) { border-color:#818cf8; background:#22224a; transform:scale(1.02); }
-.option-btn:active:not(:disabled) { transform:scale(0.97); }
 .option-btn.correct { border-color:#34d399; background:#1a3a2e; box-shadow:0 0 30px rgba(52,211,153,0.25); }
 .option-btn.wrong { border-color:#f87171; background:#3a1a1a; box-shadow:0 0 30px rgba(248,113,113,0.25); }
 .option-btn:disabled { cursor:not-allowed; opacity:0.6; }
@@ -115,7 +115,7 @@ body {
     width:100%; height:100%; border-radius:14px;
     background:#0e0e1e; display:block; flex:1;
     min-height:380px; border:1px solid #22223e;
-    touch-action: none; /* 防止触控时页面滚动/缩放 */
+    touch-action: none;
 }
 .gameover-overlay {
     position:absolute; inset:0;
@@ -145,7 +145,6 @@ body {
 }
 .status-badge.playing { color:#34d399; border-color:#34d399; background:#0f2a1e; }
 .status-badge.gameover { color:#f87171; border-color:#f87171; background:#2a1212; }
-/* 移动端提示 */
 .mobile-touch-hint {
     position:absolute; bottom:12px; left:50%; transform:translateX(-50%);
     font-size:12px; color:#6b6b9a; background:rgba(20,20,37,0.8);
@@ -405,7 +404,6 @@ body {
     // ---------- 物理更新 ----------
     function updatePhysics() {
         if (gameState !== STATE.PLAYING) return;
-        // 鍵盤控制
         if (keys.left) paddle.x = Math.max(0, paddle.x - PADDLE_SPEED);
         if (keys.right) paddle.x = Math.min(canvasW - paddle.w, paddle.x + PADDLE_SPEED);
 
@@ -446,13 +444,11 @@ body {
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         ctx.clearRect(0, 0, canvasW, canvasH);
 
-        // 網格
         ctx.strokeStyle='rgba(255,255,255,0.03)';
         ctx.lineWidth=1;
         for(let i=0;i<canvasW;i+=30){ ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvasH); ctx.stroke(); }
         for(let i=0;i<canvasH;i+=30){ ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(canvasW,i); ctx.stroke(); }
 
-        // 球
         for(const b of balls) {
             const grad = ctx.createRadialGradient(b.x-4,b.y-4,2,b.x,b.y,b.radius);
             grad.addColorStop(0, lightenColor(b.color,50));
@@ -469,7 +465,6 @@ body {
         }
         ctx.shadowBlur=0;
 
-        // 擋板
         const gradP = ctx.createLinearGradient(paddle.x,paddle.y,paddle.x,paddle.y+paddle.h);
         gradP.addColorStop(0,'#818cf8');
         gradP.addColorStop(1,'#6366f1');
@@ -620,13 +615,12 @@ body {
 
     // ---------- 觸控控制 (手機/平板) ----------
     function handleTouchMove(e) {
-        e.preventDefault(); // 防止滚动
+        e.preventDefault();
         if (gameState !== STATE.PLAYING) return;
         const touch = e.touches[0];
         if (!touch) return;
         const rect = canvas.getBoundingClientRect();
         const touchX = touch.clientX - rect.left;
-        // 将挡板中心对齐到触摸点 X
         let newX = touchX - paddle.w / 2;
         newX = Math.max(0, Math.min(canvasW - paddle.w, newX));
         paddle.x = newX;
@@ -635,7 +629,6 @@ body {
     function handleTouchStart(e) {
         e.preventDefault();
         if (gameState !== STATE.PLAYING) return;
-        // 首次触摸时也移动挡板
         handleTouchMove(e);
     }
 
@@ -682,10 +675,20 @@ body {
         btnStart.addEventListener('click', startGame);
         btnReset.addEventListener('click', resetToIdle);
         btnGameoverRestart.addEventListener('click', startGame);
+
+        // 左右按鈕同時支援 click 與 touchstart（觸控即時反應）
         optA.addEventListener('click', ()=>{ if(gameState===STATE.PLAYING && !optA.disabled) handleStroopAnswer(0); });
         optS.addEventListener('click', ()=>{ if(gameState===STATE.PLAYING && !optS.disabled) handleStroopAnswer(1); });
+        optA.addEventListener('touchstart', function(e) {
+            e.preventDefault(); // 避免觸發 click 兩次，且立即反應
+            if (gameState===STATE.PLAYING && !optA.disabled) handleStroopAnswer(0);
+        });
+        optS.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            if (gameState===STATE.PLAYING && !optS.disabled) handleStroopAnswer(1);
+        });
 
-        // ---------- 觸控事件 ----------
+        // Canvas 觸控事件
         canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
         canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
         canvas.addEventListener('touchend', (e) => { e.preventDefault(); }, { passive: false });
