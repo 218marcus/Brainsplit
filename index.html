@@ -276,7 +276,8 @@ body {
     const MAX_BALLS = 3;
     const PADDLE_SPEED = 6;
     const GRAVITY = 0.06;
-    const INITIAL_SPEED = 1.5;
+    let baseSpeed = 1.2;          // 初始速度
+    let spawnIntervalBase = 110;   // 初始生成间隔（帧）
     const keys = { left:false, right:false };
 
     function randomItem(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
@@ -379,7 +380,6 @@ body {
         canvas.width = canvasW * dpr;
         canvas.height = canvasH * dpr;
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        // 挡板宽度：画布宽度的 22%~28%，限制在 50~140px
         let newW = canvasW * 0.25;
         newW = Math.min(140, Math.max(50, newW));
         paddle.w = newW;
@@ -398,8 +398,11 @@ body {
         if (balls.length >= MAX_BALLS) return;
         const x = randomInt(16+BALL_RADIUS, canvasW-16-BALL_RADIUS);
         const y = -BALL_RADIUS - randomInt(0,16);
-        const vx = (Math.random()-0.5)*1.0;
-        const vy = INITIAL_SPEED + Math.random()*0.5;
+        const vx = (Math.random()-0.5)*0.6;  // 轻微水平偏移
+        // 速度随分数缓慢增加
+        const speedBonus = Math.floor(score / 500) * 0.1;
+        const currentSpeed = Math.min(2.5, baseSpeed + speedBonus);
+        const vy = currentSpeed + (Math.random()-0.5)*0.2; // 微小随机，但基本一致
         const color = randomItem(COLOR_NAMES);
         balls.push({ x,y,vx,vy, radius:BALL_RADIUS, color:COLOR_MAP[color] });
     }
@@ -410,8 +413,13 @@ body {
         if (keys.right) paddle.x = Math.min(canvasW - paddle.w, paddle.x + PADDLE_SPEED);
 
         ballSpawnTimer++;
-        const spawnInterval = Math.max(30, 80 - Math.floor(score/300)*3);
-        if (ballSpawnTimer >= spawnInterval) { ballSpawnTimer=0; spawnBall(); }
+        // 生成间隔随分数缩短，但不低于60帧
+        const intervalReduction = Math.floor(score / 300) * 2;
+        const currentInterval = Math.max(60, spawnIntervalBase - intervalReduction);
+        if (ballSpawnTimer >= currentInterval) {
+            ballSpawnTimer = 0;
+            spawnBall();
+        }
 
         for (let i=balls.length-1; i>=0; i--) {
             const b = balls[i];
@@ -425,7 +433,7 @@ body {
                 if (b.x >= px - b.radius + 3 && b.x <= px + pw + b.radius - 3) {
                     b.vy = -Math.abs(b.vy) - 0.2;
                     b.y = py - b.radius - 0.5;
-                    b.vx += (Math.random()-0.5)*0.6;
+                    b.vx += (Math.random()-0.5)*0.4;
                     const maxV=5;
                     if (Math.abs(b.vx)>maxV) b.vx = Math.sign(b.vx)*maxV;
                     if (Math.abs(b.vy)>maxV) b.vy = Math.sign(b.vy)*maxV;
@@ -532,7 +540,7 @@ body {
 
             setTimeout(() => { if (gameState === STATE.PLAYING) refreshStroop(); }, 200);
             for (let i=0; i<2; i++) {
-                setTimeout(() => { if(gameState===STATE.PLAYING) spawnBall(); }, i*250+80);
+                setTimeout(() => { if(gameState===STATE.PLAYING) spawnBall(); }, i*300+100);
             }
             ballSpawnTimer = 0;
             startTimer();
