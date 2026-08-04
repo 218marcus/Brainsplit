@@ -90,6 +90,7 @@ body {
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     background:#141425; border-radius:16px;
     border:1px solid #22223e; position:relative;
+    order:1;  /* 由JS控制 */
 }
 .right-panel {
     flex:1 1 0; min-width:0;
@@ -97,6 +98,7 @@ body {
     display:flex; flex-direction:column;
     background:#141425; border-radius:16px;
     border:1px solid #22223e; position:relative;
+    order:2;
 }
 .panel-label {
     position:absolute; top:4px; left:10px;
@@ -279,7 +281,7 @@ body {
         </div>
     </div>
     <div class="game-body">
-        <div class="left-panel">
+        <div class="left-panel" id="leftPanel">
             <div class="panel-label" id="leftLabel">🧩 邏輯</div>
             <div class="status-badge" id="statusBadge">⏸</div>
             <div class="stroop-prompt" id="stroopPrompt">按 <span class="highlight">開始</span></div>
@@ -307,7 +309,7 @@ body {
             </div>
         </div>
         <div class="divider"></div>
-        <div class="right-panel">
+        <div class="right-panel" id="rightPanel">
             <div class="panel-label" id="rightLabel">🎯 物理</div>
             <div class="status-badge" id="statusBadgeRight">⏸</div>
             <canvas id="gameCanvas"></canvas>
@@ -343,6 +345,8 @@ body {
     const eventSub = document.getElementById('eventSub');
     const leftLabel = document.getElementById('leftLabel');
     const rightLabel = document.getElementById('rightLabel');
+    const leftPanel = document.getElementById('leftPanel');
+    const rightPanel = document.getElementById('rightPanel');
 
     // ---------- 顏色 ----------
     const COLOR_MAP = {
@@ -368,17 +372,16 @@ body {
 
     // ---------- 事件系統 ----------
     let maxBalls = 3;
-    let isControlSwapped = false;
+    let isControlSwapped = false;      // 現在用於控制面板order，不再交換按鍵
     let isGravityReversed = false;
-    let activeEvent = null; // 'swap', 'number', 'gravity', null
+    let activeEvent = null;            // 'swap', 'number', 'gravity', null
     let eventTimer = 0;
     let isNumberSort = false;
     let numberSortCorrectSide = 0;
     let numberSortNum1 = 0, numberSortNum2 = 0;
-    let numberSortType = 'larger'; // 'larger' 或 'smaller'
+    let numberSortType = 'larger';
     let lastEventScore = 0;
     const EVENT_INTERVAL = 500;
-    let eventTriggered = false;
 
     // ---------- 物理參數 ----------
     let balls = [];
@@ -398,7 +401,6 @@ body {
     const INTERVAL_REDUCTION = 2;
 
     const keys = { left:false, right:false };
-    let keysA = false, keysS = false;
 
     function randomItem(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
     function randomInt(min,max) { return Math.floor(Math.random()*(max-min+1))+min; }
@@ -536,7 +538,6 @@ body {
             n1 = randomInt(1, 50);
             n2 = randomInt(1, 50);
         } while (n1 === n2);
-        // 隨機決定選較大或較小
         const chooseLarger = Math.random() < 0.5;
         let correctSide;
         if (chooseLarger) {
@@ -550,7 +551,7 @@ body {
         numberSortType = chooseLarger ? 'larger' : 'smaller';
         isNumberSort = true;
         stroopLocked = false;
-        eventTimer = 5; // 5秒限時
+        eventTimer = 5;
         renderStroop();
         statusBadge.textContent = '🔢';
         statusBadge.className = 'status-badge event';
@@ -563,7 +564,7 @@ body {
         eventTimer = 0;
         statusBadge.textContent = '▶';
         statusBadge.className = 'status-badge playing';
-        leftLabel.textContent = '🧩 邏輯';
+        leftLabel.textContent = isControlSwapped ? '🎯 物理' : '🧩 邏輯';
         if (success) {
             stroopData = null;
             refreshStroop();
@@ -572,12 +573,13 @@ body {
         }
     }
 
-    // ---------- 事件觸發 ----------
-    function triggerRandomEvent() {
-        if (gameState !== STATE.PLAYING) return;
-        // 先結束舊的持續事件
+    // ---------- 清除舊事件（完整重置） ----------
+    function clearCurrentEvent() {
         if (activeEvent === 'swap') {
             isControlSwapped = false;
+            // 恢復面板順序
+            leftPanel.style.order = '1';
+            rightPanel.style.order = '2';
             activeEvent = null;
             statusBadge.textContent = '▶';
             statusBadge.className = 'status-badge playing';
@@ -590,15 +592,28 @@ body {
             activeEvent = null;
             statusBadgeRight.textContent = '▶';
             statusBadgeRight.className = 'status-badge playing';
-            paddle.y = canvasH - paddle.h - 12; // 恢復位置
+            paddle.y = canvasH - paddle.h - 12;
+            // 重置所有球的垂直速度方向（取反）
+            for (let b of balls) {
+                b.vy = -Math.sign(b.vy) * Math.abs(b.vy);
+            }
         }
         if (activeEvent === 'number') {
             if (isNumberSort) {
                 endNumberSort(false);
-                return; // 如果導致 Game Over，則結束
             }
+            activeEvent = null;
         }
+    }
 
+    // ---------- 事件觸發 ----------
+    function triggerRandomEvent() {
+        if (gameState !== STATE.PLAYING) return;
+
+        // 先清除所有舊事件
+        clearCurrentEvent();
+
+        // 隨機選擇新事件
         const eventType = randomInt(1, 4);
         let eventName = '', eventDesc = '';
 
@@ -611,14 +626,17 @@ body {
                 break;
             case 2:
                 isControlSwapped = true;
+                // 交換面板順序
+                leftPanel.style.order = '2';
+                rightPanel.style.order = '1';
                 activeEvent = 'swap';
-                eventName = '🔄 交換操控';
-                eventDesc = '左右腦操控互換！';
+                eventName = '🔄 交換位置';
+                eventDesc = '左右版塊互換！';
                 showEventOverlay(eventName, eventDesc);
                 statusBadge.textContent = '🔄';
                 statusBadge.className = 'status-badge event';
-                leftLabel.textContent = '🎯 物理 (操控)';
-                rightLabel.textContent = '🧩 邏輯 (操控)';
+                leftLabel.textContent = '🎯 物理';
+                rightLabel.textContent = '🧩 邏輯';
                 break;
             case 3:
                 activeEvent = 'number';
@@ -637,6 +655,10 @@ body {
                 statusBadgeRight.textContent = '🌀';
                 statusBadgeRight.className = 'status-badge event';
                 paddle.y = 10;
+                // 重置所有球的垂直速度方向（取反）
+                for (let b of balls) {
+                    b.vy = -Math.sign(b.vy) * Math.abs(b.vy);
+                }
                 break;
         }
         lastEventScore = Math.floor(score / EVENT_INTERVAL) * EVENT_INTERVAL;
@@ -660,8 +682,9 @@ body {
         canvas.width = canvasW * dpr;
         canvas.height = canvasH * dpr;
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        let newW = canvasW * 0.25;
-        newW = Math.min(140, Math.max(50, newW));
+        // 增加擋板寬度：28%，限制 60~160px
+        let newW = canvasW * 0.28;
+        newW = Math.min(160, Math.max(60, newW));
         paddle.w = newW;
         paddle.x = (canvasW - paddle.w) / 2;
         paddle.y = isGravityReversed ? 10 : canvasH - paddle.h - 12;
@@ -679,7 +702,8 @@ body {
         isNumberSort = false;
         maxBalls = 3;
         lastEventScore = 0;
-        eventTriggered = false;
+        leftPanel.style.order = '1';
+        rightPanel.style.order = '2';
         statusBadge.textContent = '⏸';
         statusBadge.className = 'status-badge';
         statusBadgeRight.textContent = '⏸';
@@ -704,16 +728,9 @@ body {
     function updatePhysics() {
         if (gameState !== STATE.PLAYING) return;
 
-        // 交換控制
-        if (isControlSwapped) {
-            if (keys.left) { if (!optA.disabled) handleStroopAnswer(0); keys.left = false; }
-            if (keys.right) { if (!optS.disabled) handleStroopAnswer(1); keys.right = false; }
-            if (keysA) paddle.x = Math.max(0, paddle.x - PADDLE_SPEED);
-            if (keysS) paddle.x = Math.min(canvasW - paddle.w, paddle.x + PADDLE_SPEED);
-        } else {
-            if (keys.left) paddle.x = Math.max(0, paddle.x - PADDLE_SPEED);
-            if (keys.right) paddle.x = Math.min(canvasW - paddle.w, paddle.x + PADDLE_SPEED);
-        }
+        // 控制擋板（始終用方向鍵或觸控，不因交換而改變）
+        if (keys.left) paddle.x = Math.max(0, paddle.x - PADDLE_SPEED);
+        if (keys.right) paddle.x = Math.min(canvasW - paddle.w, paddle.x + PADDLE_SPEED);
 
         // 擋板位置
         if (isGravityReversed) paddle.y = 10;
@@ -740,6 +757,7 @@ body {
 
             const px=paddle.x, py=paddle.y, pw=paddle.w, ph=paddle.h;
             if (isGravityReversed) {
+                // 擋板在頂部，球從下往上
                 if (b.y - b.radius <= py + ph && b.y - b.radius >= py - 5) {
                     if (b.x >= px - b.radius + 3 && b.x <= px + pw + b.radius - 3) {
                         b.vy = Math.abs(b.vy) + 0.5;
@@ -753,11 +771,13 @@ body {
                         continue;
                     }
                 }
-                if (b.y - b.radius > canvasH) {
+                // 判輸：球超出頂部 (y + radius < 0)
+                if (b.y + b.radius < 0) {
                     triggerGameOver();
                     return;
                 }
             } else {
+                // 正常：擋板在底部
                 if (b.y + b.radius >= py && b.y + b.radius <= py + ph + 6) {
                     if (b.x >= px - b.radius + 3 && b.x <= px + pw + b.radius - 3) {
                         b.vy = -Math.abs(b.vy) - 0.5;
@@ -869,7 +889,6 @@ body {
                         triggerGameOver();
                     }
                 } else {
-                    // 更新顯示倒數
                     const hint = numberSortType === 'larger' ? '較大' : '較小';
                     stroopPrompt.innerHTML = `🔢 選擇<span class="highlight">${hint}</span>的數字 (${Math.ceil(eventTimer)}s)`;
                 }
@@ -912,13 +931,14 @@ body {
             ballSpawnTimer = 0;
             lastTimestamp = 0;
             lastEventScore = 0;
-            eventTriggered = false;
             isControlSwapped = false;
             isGravityReversed = false;
             gravity = 0.06;
             activeEvent = null;
             isNumberSort = false;
             maxBalls = 3;
+            leftPanel.style.order = '1';
+            rightPanel.style.order = '2';
             statusBadge.textContent = '▶';
             statusBadge.className = 'status-badge playing';
             statusBadgeRight.textContent = '▶';
@@ -1009,28 +1029,26 @@ body {
             if (key===' '||key==='Space'){ e.preventDefault(); if(gameState===STATE.IDLE||gameState===STATE.GAMEOVER) startGame(); }
             return;
         }
+        // 邏輯區按鍵 A/S（不受交換影響，因為交換的是板塊位置，按鍵仍對應邏輯區）
         if (key==='a'||key==='A') {
             e.preventDefault();
-            if (isControlSwapped) { keysA = true; }
-            else { if (!optA.disabled) handleStroopAnswer(0); }
+            if (!optA.disabled) handleStroopAnswer(0);
             return;
         }
         if (key==='s'||key==='S') {
             e.preventDefault();
-            if (isControlSwapped) { keysS = true; }
-            else { if (!optS.disabled) handleStroopAnswer(1); }
+            if (!optS.disabled) handleStroopAnswer(1);
             return;
         }
+        // 方向鍵控制擋板（物理區）
         if (key==='ArrowLeft') {
             e.preventDefault();
-            if (isControlSwapped) { if (!optA.disabled) handleStroopAnswer(0); }
-            else { keys.left = true; }
+            keys.left = true;
             return;
         }
         if (key==='ArrowRight') {
             e.preventDefault();
-            if (isControlSwapped) { if (!optS.disabled) handleStroopAnswer(1); }
-            else { keys.right = true; }
+            keys.right = true;
             return;
         }
         if (key===' '||key==='Space'){ e.preventDefault(); }
@@ -1040,15 +1058,11 @@ body {
         const key=e.key;
         if (key==='ArrowLeft') { e.preventDefault(); keys.left = false; }
         if (key==='ArrowRight') { e.preventDefault(); keys.right = false; }
-        if (key==='a'||key==='A') { e.preventDefault(); keysA = false; }
-        if (key==='s'||key==='S') { e.preventDefault(); keysS = false; }
     }
 
     function resetKeys() {
         keys.left = false;
         keys.right = false;
-        keysA = false;
-        keysS = false;
     }
 
     function onResize() {
