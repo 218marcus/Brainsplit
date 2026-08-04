@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Brainduel</title>
 <style>
+/* ===== 样式（与上次相同，保持简洁） ===== */
 * { margin:0; padding:0; box-sizing:border-box; user-select:none; }
 body {
     background: #0b0b16;
@@ -267,7 +268,7 @@ body {
     let stroopData = null;
     let stroopLocked = false;
 
-    // ---------- 物理 ----------
+    // ---------- 物理參數 ----------
     let balls = [];
     let paddle = { x:0, y:0, w:80, h:14 };
     let canvasW = 0, canvasH = 0;
@@ -276,8 +277,16 @@ body {
     const MAX_BALLS = 3;
     const PADDLE_SPEED = 6;
     const GRAVITY = 0.06;
-    let baseSpeed = 1.2;          // 初始速度
-    let spawnIntervalBase = 110;   // 初始生成间隔（帧）
+
+    // ==== 可調參數（符合用戶要求） ====
+    const BASE_SPEED = 1.2;           // 初始速度
+    const BASE_INTERVAL = 110;        // 初始生成間隔（幀）
+    const SPEED_INCREMENT = 0.1;      // 每 N 分增加速度
+    const INCREMENT_STEP = 300;       // 每 300 分提升一次
+    const MAX_SPEED = 2.5;            // 速度上限
+    const MIN_INTERVAL = 60;          // 最短生成間隔
+    const INTERVAL_REDUCTION = 2;     // 每 300 分減少 2 幀
+
     const keys = { left:false, right:false };
 
     function randomItem(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
@@ -394,44 +403,56 @@ body {
         paddle.y = canvasH - paddle.h - 12;
     }
 
+    // ---------- 小球生成（速度依分數動態） ----------
     function spawnBall() {
         if (balls.length >= MAX_BALLS) return;
         const x = randomInt(16+BALL_RADIUS, canvasW-16-BALL_RADIUS);
         const y = -BALL_RADIUS - randomInt(0,16);
-        const vx = (Math.random()-0.5)*0.6;  // 轻微水平偏移
-        // 速度随分数缓慢增加
-        const speedBonus = Math.floor(score / 500) * 0.1;
-        const currentSpeed = Math.min(2.5, baseSpeed + speedBonus);
-        const vy = currentSpeed + (Math.random()-0.5)*0.2; // 微小随机，但基本一致
+        // 水平速度微小隨機
+        const vx = (Math.random()-0.5)*0.6;
+        // 計算當前速度：每 300 分 +0.1，上限 2.5
+        const speedBonus = Math.floor(score / INCREMENT_STEP) * SPEED_INCREMENT;
+        const currentSpeed = Math.min(MAX_SPEED, BASE_SPEED + speedBonus);
+        // 垂直速度：基礎速度加上微小隨機 (±0.1)，讓各球稍有不同
+        const vy = currentSpeed + (Math.random() - 0.5) * 0.2;
         const color = randomItem(COLOR_NAMES);
-        balls.push({ x,y,vx,vy, radius:BALL_RADIUS, color:COLOR_MAP[color] });
+        balls.push({ x, y, vx, vy, radius: BALL_RADIUS, color: COLOR_MAP[color] });
     }
 
+    // ---------- 物理更新（含生成間隔動態與隨機偏移） ----------
     function updatePhysics() {
         if (gameState !== STATE.PLAYING) return;
         if (keys.left) paddle.x = Math.max(0, paddle.x - PADDLE_SPEED);
         if (keys.right) paddle.x = Math.min(canvasW - paddle.w, paddle.x + PADDLE_SPEED);
 
         ballSpawnTimer++;
-        // 生成间隔随分数缩短，但不低于60帧
-        const intervalReduction = Math.floor(score / 300) * 2;
-        const currentInterval = Math.max(60, spawnIntervalBase - intervalReduction);
+        // 計算當前生成間隔：每 300 分減少 2 幀，最低 60 幀
+        const intervalReduction = Math.floor(score / INCREMENT_STEP) * INTERVAL_REDUCTION;
+        let currentInterval = Math.max(MIN_INTERVAL, BASE_INTERVAL - intervalReduction);
+        // 加入隨機偏移 ±20 幀，使生成時機不規律
+        const randomOffset = randomInt(-20, 20);
+        currentInterval = Math.max(MIN_INTERVAL, currentInterval + randomOffset);
+
         if (ballSpawnTimer >= currentInterval) {
             ballSpawnTimer = 0;
             spawnBall();
         }
 
+        // 更新所有球
         for (let i=balls.length-1; i>=0; i--) {
             const b = balls[i];
             b.vy += GRAVITY;
             b.x += b.vx;
             b.y += b.vy;
+            // 左右邊界反彈
             if (b.x - b.radius < 0) { b.x = b.radius; b.vx = -b.vx; }
             if (b.x + b.radius > canvasW) { b.x = canvasW - b.radius; b.vx = -b.vx; }
+            // 擋板碰撞
             const px=paddle.x, py=paddle.y, pw=paddle.w, ph=paddle.h;
             if (b.y + b.radius >= py && b.y + b.radius <= py + ph + 6) {
                 if (b.x >= px - b.radius + 3 && b.x <= px + pw + b.radius - 3) {
-                    b.vy = -Math.abs(b.vy) - 0.2;
+                    // === 提升彈跳高度：反彈速度增加 -0.5（原 -0.2） ===
+                    b.vy = -Math.abs(b.vy) - 0.5;
                     b.y = py - b.radius - 0.5;
                     b.vx += (Math.random()-0.5)*0.4;
                     const maxV=5;
@@ -440,6 +461,7 @@ body {
                     continue;
                 }
             }
+            // 掉落底部 → Game Over
             if (b.y + b.radius > canvasH) {
                 triggerGameOver();
                 return;
@@ -448,6 +470,7 @@ body {
         balls = balls.filter(b => b.y < canvasH + 100);
     }
 
+    // ---------- 渲染 ----------
     function renderPhysics() {
         const dpr = window.devicePixelRatio || 1;
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
