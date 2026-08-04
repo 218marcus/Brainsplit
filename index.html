@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Brainsplit</title>
 <style>
+/* ===== 原有样式 ===== */
 * { margin:0; padding:0; box-sizing:border-box; user-select:none; }
 body {
     background: #0b0b16;
@@ -78,6 +79,7 @@ body {
 }
 .btn-primary { background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border:none; }
 .btn-danger { background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; border:none; }
+.btn-info { background:linear-gradient(135deg,#34d399,#10b981); color:#fff; border:none; }
 .btn:disabled { opacity:0.35; cursor:not-allowed; }
 
 .game-body {
@@ -225,6 +227,72 @@ body {
     100% { transform:scale(1.05); opacity:1; }
 }
 
+/* ===== 说明模态框 ===== */
+.help-overlay {
+    position:fixed;
+    top:0; left:0; width:100%; height:100%;
+    background:rgba(0,0,0,0.7);
+    backdrop-filter:blur(8px);
+    display:none;
+    align-items:center; justify-content:center;
+    z-index:999;
+    padding:20px;
+}
+.help-overlay.show { display:flex; }
+.help-box {
+    background:#1a1a30;
+    max-width:560px;
+    width:100%;
+    border-radius:24px;
+    padding:28px 32px;
+    border:1px solid #3a3a5a;
+    box-shadow:0 20px 60px rgba(0,0,0,0.8);
+    position:relative;
+    max-height:80vh;
+    overflow-y:auto;
+}
+.help-box::-webkit-scrollbar { width:4px; }
+.help-box::-webkit-scrollbar-track { background:transparent; }
+.help-box::-webkit-scrollbar-thumb { background:#6366f1; border-radius:8px; }
+.help-title {
+    font-size:28px; font-weight:800;
+    background:linear-gradient(135deg,#a78bfa,#60a5fa,#34d399);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    background-clip:text;
+    margin-bottom:16px;
+    text-align:center;
+}
+.help-close {
+    position:absolute;
+    top:12px; right:16px;
+    font-size:28px;
+    color:#6b6b9a;
+    cursor:pointer;
+    background:none;
+    border:none;
+    transition:color 0.2s;
+}
+.help-close:hover { color:#e8e8f0; }
+.help-section {
+    margin:14px 0;
+    color:#c4c4e6;
+}
+.help-section h3 {
+    font-size:16px; font-weight:700;
+    color:#fcd34d;
+    margin-bottom:4px;
+}
+.help-section p, .help-section li {
+    font-size:14px; line-height:1.6;
+    color:#b0b0d0;
+}
+.help-section ul {
+    padding-left:18px;
+    list-style-type:disc;
+}
+.help-section ul li { margin:2px 0; }
+.help-section .highlight { color:#fcd34d; font-weight:600; }
+
 @media (max-width: 560px) {
     .game-container { padding:6px; border-radius:14px; }
     .brand { font-size:18px; }
@@ -253,6 +321,8 @@ body {
     .timer-display { font-size:12px; padding:1px 10px; }
     .event-title { font-size:24px; }
     .event-sub { font-size:14px; }
+    .help-box { padding:20px; }
+    .help-title { font-size:22px; }
 }
 @media (max-width: 400px) {
     .stroop-word { font-size:22px; min-height:34px; }
@@ -276,6 +346,8 @@ body {
             <div class="score-display">🏆 <span id="scoreDisplay">0</span></div>
             <div class="btn-group">
                 <button class="btn btn-primary" id="btnStart">▶ 開始</button>
+                <!-- 說明按鈕 -->
+                <button class="btn btn-info" id="btnHelp">📖 說明</button>
                 <button class="btn btn-danger" id="btnReset">⟳</button>
             </div>
         </div>
@@ -317,6 +389,48 @@ body {
         </div>
     </div>
 </div>
+
+<!-- ===== 說明模態框 ===== -->
+<div class="help-overlay" id="helpOverlay">
+    <div class="help-box">
+        <button class="help-close" id="helpClose">✕</button>
+        <div class="help-title">🧠 Brainsplit 遊戲說明</div>
+        <div class="help-section">
+            <h3>🎯 目標</h3>
+            <p>同時操控左右腦，維持得分並應付隨機事件，任一側失敗即遊戲結束。</p>
+        </div>
+        <div class="help-section">
+            <h3>🖱️ 操作方式</h3>
+            <ul>
+                <li><span class="highlight">左腦（邏輯）</span>：按 <kbd>A</kbd> / <kbd>S</kbd> 選擇答案（5秒限時）</li>
+                <li><span class="highlight">右腦（物理）</span>：按 <kbd>←</kbd> / <kbd>→</kbd> 或滑動螢幕控制擋板</li>
+                <li>手機/平板：直接點擊左側按鈕，右側滑動控制擋板</li>
+            </ul>
+        </div>
+        <div class="help-section">
+            <h3>🏆 得分機制</h3>
+            <ul>
+                <li>左腦答對：<span class="highlight">+50 分</span></li>
+                <li>右腦每次接住球：<span class="highlight">+10 分</span></li>
+                <li>生存無額外加分（秒數加分已移除）</li>
+            </ul>
+        </div>
+        <div class="help-section">
+            <h3>⚡ 隨機事件（每 500 分觸發）</h3>
+            <ul>
+                <li><strong>增加球</strong>：最大球數 +1（最高 6 顆）</li>
+                <li><strong>交換位置</strong>：左右版塊互換，2 秒倒數後生效</li>
+                <li><strong>數字排序</strong>：選較大/較小數字，5 秒限時，答對 +50 分並繼續，答錯/超時 Game Over</li>
+                <li><strong>重力反轉</strong>：擋板移至頂部，球向上運動，漏出頂部即失敗</li>
+            </ul>
+        </div>
+        <div class="help-section">
+            <h3>💡 特殊判定</h3>
+            <p>重力反轉時，球超出頂部 (y + radius &lt; 0) 即判輸，請留意！</p>
+        </div>
+    </div>
+</div>
+
 <script>
 (function(){
     'use strict';
@@ -326,6 +440,9 @@ body {
     const finalScore = document.getElementById('finalScore');
     const btnStart = document.getElementById('btnStart');
     const btnReset = document.getElementById('btnReset');
+    const btnHelp = document.getElementById('btnHelp');
+    const helpOverlay = document.getElementById('helpOverlay');
+    const helpClose = document.getElementById('helpClose');
     const btnGameoverRestart = document.getElementById('btnGameoverRestart');
     const stroopPrompt = document.getElementById('stroopPrompt');
     const stroopWord = document.getElementById('stroopWord');
@@ -347,6 +464,17 @@ body {
     const rightLabel = document.getElementById('rightLabel');
     const leftPanel = document.getElementById('leftPanel');
     const rightPanel = document.getElementById('rightPanel');
+
+    // 說明按鈕事件
+    btnHelp.addEventListener('click', ()=>{
+        helpOverlay.classList.add('show');
+    });
+    helpClose.addEventListener('click', ()=>{
+        helpOverlay.classList.remove('show');
+    });
+    helpOverlay.addEventListener('click', (e)=>{
+        if (e.target === helpOverlay) helpOverlay.classList.remove('show');
+    });
 
     // ---------- 顏色 ----------
     const COLOR_MAP = {
@@ -786,7 +914,6 @@ body {
             if (isGravityReversed) {
                 if (b.y - b.radius <= py + ph && b.y - b.radius >= py - 5) {
                     if (b.x >= px - b.radius + 3 && b.x <= px + pw + b.radius - 3) {
-                        // 反轉模式：彈跳向下，限制速度不超過 maxVy
                         let newVy = Math.abs(b.vy) + 0.5;
                         if (newVy > maxVy) newVy = maxVy;
                         b.vy = newVy;
@@ -807,7 +934,6 @@ body {
             } else {
                 if (b.y + b.radius >= py && b.y + b.radius <= py + ph + 6) {
                     if (b.x >= px - b.radius + 3 && b.x <= px + pw + b.radius - 3) {
-                        // 普通模式：彈跳向上，限制速度不超過 maxVy
                         let newVy = -Math.abs(b.vy) - 0.5;
                         if (Math.abs(newVy) > maxVy) newVy = -maxVy;
                         b.vy = newVy;
