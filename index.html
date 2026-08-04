@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Brainsplit</title>
 <style>
-/* ===== 原有样式 ===== */
+/* ===== 原有样式（保持不变）===== */
 * { margin:0; padding:0; box-sizing:border-box; user-select:none; }
 body {
     background: #0b0b16;
@@ -346,7 +346,6 @@ body {
             <div class="score-display">🏆 <span id="scoreDisplay">0</span></div>
             <div class="btn-group">
                 <button class="btn btn-primary" id="btnStart">▶ 開始</button>
-                <!-- 說明按鈕 -->
                 <button class="btn btn-info" id="btnHelp">📖 說明</button>
                 <button class="btn btn-danger" id="btnReset">⟳</button>
             </div>
@@ -511,7 +510,12 @@ body {
     let lastEventScore = 0;
     const EVENT_INTERVAL = 500;
 
-    // 用於交換事件的延遲計時
+    // 用於事件延遲的計時器
+    let eventTimeoutId = null;
+    const EVENT_DELAY = 1500;   // 一般事件延遲 1.5 秒
+    const SWAP_DELAY = 2000;    // 交換事件延遲 2 秒
+
+    // 用於交換事件的延遲計時（獨立，已存在）
     let swapPending = false;
     let swapTimeoutId = null;
 
@@ -709,12 +713,16 @@ body {
         refreshStroop();
     }
 
-    // ---------- 清除舊事件 ----------
+    // ---------- 清除舊事件（含計時器） ----------
     function clearCurrentEvent() {
         if (swapTimeoutId) {
             clearTimeout(swapTimeoutId);
             swapTimeoutId = null;
             swapPending = false;
+        }
+        if (eventTimeoutId) {
+            clearTimeout(eventTimeoutId);
+            eventTimeoutId = null;
         }
         if (activeEvent === 'swap') {
             isControlSwapped = false;
@@ -743,69 +751,95 @@ body {
         }
     }
 
-    // ---------- 事件觸發 ----------
+    // ---------- 事件觸發（含延遲） ----------
     function triggerRandomEvent() {
         if (gameState !== STATE.PLAYING) return;
 
-        // 先清除舊事件
+        // 先清除舊事件（包括計時器）
         clearCurrentEvent();
 
         const eventType = randomInt(1, 4);
         let eventName = '', eventDesc = '';
 
+        // 顯示事件名稱（立即）
         switch(eventType) {
             case 1:
-                maxBalls = Math.min(6, maxBalls + 1);
                 eventName = '⚡ 增加球';
-                eventDesc = `最大球數 +1 (目前 ${maxBalls})`;
-                showEventOverlay(eventName, eventDesc);
+                eventDesc = `最大球數即將 +1`;
                 break;
             case 2:
-                // 交換事件：延遲 2 秒後執行
-                activeEvent = 'swap';
                 eventName = '🔄 交換位置';
                 eventDesc = '左右版塊將在 2 秒後互換！';
-                showEventOverlay(eventName, eventDesc);
-                statusBadge.textContent = '⏳';
-                statusBadge.className = 'status-badge event';
-                if (swapTimeoutId) clearTimeout(swapTimeoutId);
-                swapPending = true;
-                swapTimeoutId = setTimeout(() => {
-                    if (gameState !== STATE.PLAYING) return;
-                    if (activeEvent === 'swap') {
-                        isControlSwapped = true;
-                        leftPanel.style.order = '2';
-                        rightPanel.style.order = '1';
-                        statusBadge.textContent = '🔄';
-                        statusBadge.className = 'status-badge event';
-                        leftLabel.textContent = '🎯 物理';
-                        rightLabel.textContent = '🧩 邏輯';
-                        swapPending = false;
-                        swapTimeoutId = null;
-                    }
-                }, 2000);
                 break;
             case 3:
-                activeEvent = 'number';
                 eventName = '🔢 數字排序';
                 eventDesc = '選擇較大/較小的數字 (5秒) 持續到下一回合';
-                showEventOverlay(eventName, eventDesc);
-                startNumberSort();
                 break;
             case 4:
-                isGravityReversed = true;
-                gravity = 0.06;
-                activeEvent = 'gravity';
                 eventName = '🌀 重力反轉';
-                eventDesc = '擋板移至頂部！';
-                showEventOverlay(eventName, eventDesc);
-                statusBadgeRight.textContent = '🌀';
-                statusBadgeRight.className = 'status-badge event';
-                paddle.y = 10;
-                for (let b of balls) {
-                    b.vy = -Math.sign(b.vy) * Math.abs(b.vy);
-                }
+                eventDesc = '擋板即將移至頂部！';
                 break;
+        }
+        showEventOverlay(eventName, eventDesc);
+
+        // 根據類型設定延遲執行
+        if (eventType === 2) {
+            // 交換事件：延遲 2 秒
+            activeEvent = 'swap';
+            statusBadge.textContent = '⏳';
+            statusBadge.className = 'status-badge event';
+            if (swapTimeoutId) clearTimeout(swapTimeoutId);
+            swapPending = true;
+            swapTimeoutId = setTimeout(() => {
+                if (gameState !== STATE.PLAYING) return;
+                if (activeEvent === 'swap') {
+                    isControlSwapped = true;
+                    leftPanel.style.order = '2';
+                    rightPanel.style.order = '1';
+                    statusBadge.textContent = '🔄';
+                    statusBadge.className = 'status-badge event';
+                    leftLabel.textContent = '🎯 物理';
+                    rightLabel.textContent = '🧩 邏輯';
+                    swapPending = false;
+                    swapTimeoutId = null;
+                }
+            }, SWAP_DELAY);
+        } else {
+            // 其他事件：延遲 EVENT_DELAY 後執行
+            activeEvent = eventType === 3 ? 'number' : (eventType === 4 ? 'gravity' : null);
+            // 對於增加球，activeEvent 設為 null，因為它不持續
+            if (eventType === 1) activeEvent = null; 
+            else if (eventType === 3) activeEvent = 'number';
+            else if (eventType === 4) activeEvent = 'gravity';
+
+            // 清除舊計時器
+            if (eventTimeoutId) clearTimeout(eventTimeoutId);
+            eventTimeoutId = setTimeout(() => {
+                if (gameState !== STATE.PLAYING) return;
+                switch(eventType) {
+                    case 1:
+                        maxBalls = Math.min(6, maxBalls + 1);
+                        // 增加球後更新狀態徽章（無持續事件）
+                        statusBadge.textContent = '▶';
+                        statusBadge.className = 'status-badge playing';
+                        // 顯示提示（可選）
+                        break;
+                    case 3:
+                        startNumberSort();
+                        break;
+                    case 4:
+                        isGravityReversed = true;
+                        gravity = 0.06;
+                        statusBadgeRight.textContent = '🌀';
+                        statusBadgeRight.className = 'status-badge event';
+                        paddle.y = 10;
+                        for (let b of balls) {
+                            b.vy = -Math.sign(b.vy) * Math.abs(b.vy);
+                        }
+                        break;
+                }
+                eventTimeoutId = null;
+            }, EVENT_DELAY);
         }
         lastEventScore = Math.floor(score / EVENT_INTERVAL) * EVENT_INTERVAL;
     }
@@ -864,6 +898,10 @@ body {
             clearTimeout(swapTimeoutId);
             swapTimeoutId = null;
             swapPending = false;
+        }
+        if (eventTimeoutId) {
+            clearTimeout(eventTimeoutId);
+            eventTimeoutId = null;
         }
         if (isNumberSort) endNumberSort();
     }
@@ -1102,6 +1140,10 @@ body {
                 swapTimeoutId = null;
                 swapPending = false;
             }
+            if (eventTimeoutId) {
+                clearTimeout(eventTimeoutId);
+                eventTimeoutId = null;
+            }
         } catch(e) { console.error(e); }
     }
 
@@ -1120,6 +1162,10 @@ body {
             clearTimeout(swapTimeoutId);
             swapTimeoutId = null;
             swapPending = false;
+        }
+        if (eventTimeoutId) {
+            clearTimeout(eventTimeoutId);
+            eventTimeoutId = null;
         }
         if (isNumberSort) endNumberSort();
     }
@@ -1153,6 +1199,10 @@ body {
             clearTimeout(swapTimeoutId);
             swapTimeoutId = null;
             swapPending = false;
+        }
+        if (eventTimeoutId) {
+            clearTimeout(eventTimeoutId);
+            eventTimeoutId = null;
         }
         if(!animFrameId) animFrameId = requestAnimationFrame(gameLoop);
     }
