@@ -555,7 +555,9 @@ body {
 
             setTimeout(() => { if (gameState === STATE.PLAYING) refreshStroop(); }, 200);
             // ★★★ 只生成一顆球 ★★★
-            setTimeout(() => { if(gameState===STATE.PLAYING) spawnBall(); }, 300);
+            for (let i=0; i<2; i++) {
+                setTimeout(() => { if(gameState===STATE.PLAYING) spawnBall(); }, i*300+100);
+            }
             ballSpawnTimer = 0;
             startTimer();
             console.log('✅ 遊戲啟動，MAX_BALLS =', MAX_BALLS);
