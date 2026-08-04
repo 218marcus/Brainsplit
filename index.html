@@ -24,7 +24,6 @@ body {
     padding-bottom:8px; border-bottom:1px solid #2a2a44;
     margin-bottom:10px; flex-wrap:wrap; gap:4px 8px;
 }
-/* ===== 新 LOGO + 標題 ===== */
 .title {
     display:flex; align-items:center; gap:10px;
 }
@@ -113,6 +112,7 @@ body {
 }
 .status-badge.playing { color:#34d399; border-color:#34d399; background:#0f2a1e; }
 .status-badge.gameover { color:#f87171; border-color:#f87171; background:#2a1212; }
+.status-badge.event { color:#fbbf24; border-color:#fbbf24; background:#2a2812; }
 
 .stroop-prompt {
     font-size:12px; font-weight:500; color:#c4c4e6;
@@ -194,6 +194,35 @@ body {
 }
 .timer-display.warning { color:#f87171; border-color:#f87171; }
 
+.event-overlay {
+    position:absolute;
+    top:0; left:0; width:100%; height:100%;
+    background:rgba(0,0,0,0.7);
+    backdrop-filter:blur(6px);
+    display:none;
+    align-items:center; justify-content:center;
+    flex-direction:column;
+    z-index:30;
+    border-radius:16px;
+    pointer-events:none;
+}
+.event-overlay.show { display:flex; }
+.event-title {
+    font-size:32px; font-weight:800;
+    background:linear-gradient(135deg,#fbbf24,#f59e0b);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    background-clip:text;
+    text-shadow:0 0 40px rgba(251,191,36,0.3);
+    animation:pulse 0.8s ease-in-out infinite alternate;
+}
+.event-sub {
+    font-size:18px; color:#e8e8f0; margin-top:8px;
+}
+@keyframes pulse {
+    0% { transform:scale(1); opacity:0.8; }
+    100% { transform:scale(1.05); opacity:1; }
+}
+
 @media (max-width: 560px) {
     .game-container { padding:6px; border-radius:14px; }
     .brand { font-size:18px; }
@@ -220,6 +249,8 @@ body {
     .gameover-score span { font-size:24px; }
     .gameover-btn { font-size:14px; padding:6px 20px; }
     .timer-display { font-size:12px; padding:1px 10px; }
+    .event-title { font-size:24px; }
+    .event-sub { font-size:14px; }
 }
 @media (max-width: 400px) {
     .stroop-word { font-size:22px; min-height:34px; }
@@ -231,7 +262,6 @@ body {
 <body>
 <div class="game-container">
     <div class="header">
-        <!-- 新 LOGO + 品牌名稱 -->
         <div class="title">
             <div class="logo-wrapper">
                 <div class="logo-brain">
@@ -250,7 +280,7 @@ body {
     </div>
     <div class="game-body">
         <div class="left-panel">
-            <div class="panel-label">🧩 邏輯</div>
+            <div class="panel-label" id="leftLabel">🧩 邏輯</div>
             <div class="status-badge" id="statusBadge">⏸</div>
             <div class="stroop-prompt" id="stroopPrompt">按 <span class="highlight">開始</span></div>
             <div class="timer-display" id="timerDisplay">⏱ 5s</div>
@@ -271,10 +301,14 @@ body {
                 <div class="gameover-score">得分 <span id="finalScore">0</span></div>
                 <button class="gameover-btn" id="btnGameoverRestart">🔄 再挑戰</button>
             </div>
+            <div class="event-overlay" id="eventOverlay">
+                <div class="event-title" id="eventTitle">⚡ 事件觸發</div>
+                <div class="event-sub" id="eventSub">增加一顆球</div>
+            </div>
         </div>
         <div class="divider"></div>
         <div class="right-panel">
-            <div class="panel-label">🎯 物理</div>
+            <div class="panel-label" id="rightLabel">🎯 物理</div>
             <div class="status-badge" id="statusBadgeRight">⏸</div>
             <canvas id="gameCanvas"></canvas>
             <div class="mobile-touch-hint" id="touchHint">👆 滑動</div>
@@ -304,6 +338,11 @@ body {
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const timerDisplay = document.getElementById('timerDisplay');
+    const eventOverlay = document.getElementById('eventOverlay');
+    const eventTitle = document.getElementById('eventTitle');
+    const eventSub = document.getElementById('eventSub');
+    const leftLabel = document.getElementById('leftLabel');
+    const rightLabel = document.getElementById('rightLabel');
 
     // ---------- 顏色 ----------
     const COLOR_MAP = {
@@ -327,15 +366,28 @@ body {
     const LEFT_TIME_LIMIT = 5;
     let lastTimestamp = 0;
 
+    // ---------- 事件系統 ----------
+    let maxBalls = 3;
+    let isControlSwapped = false;
+    let isGravityReversed = false;
+    let activeEvent = null; // 'swap', 'number', 'gravity', null
+    let eventTimer = 0;
+    let isNumberSort = false;
+    let numberSortCorrectSide = 0;
+    let numberSortNum1 = 0, numberSortNum2 = 0;
+    let numberSortType = 'larger'; // 'larger' 或 'smaller'
+    let lastEventScore = 0;
+    const EVENT_INTERVAL = 500;
+    let eventTriggered = false;
+
     // ---------- 物理參數 ----------
     let balls = [];
     let paddle = { x:0, y:0, w:80, h:14 };
     let canvasW = 0, canvasH = 0;
     let ballSpawnTimer = 0;
     const BALL_RADIUS = 10;
-    const MAX_BALLS = 3;
     const PADDLE_SPEED = 6;
-    const GRAVITY = 0.06;
+    let gravity = 0.06;
 
     const BASE_SPEED = 1.2;
     const BASE_INTERVAL = 110;
@@ -346,6 +398,7 @@ body {
     const INTERVAL_REDUCTION = 2;
 
     const keys = { left:false, right:false };
+    let keysA = false, keysS = false;
 
     function randomItem(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
     function randomInt(min,max) { return Math.floor(Math.random()*(max-min+1))+min; }
@@ -385,6 +438,18 @@ body {
     }
 
     function renderStroop() {
+        if (isNumberSort) {
+            const hint = numberSortType === 'larger' ? '較大' : '較小';
+            stroopPrompt.innerHTML = `🔢 選擇<span class="highlight">${hint}</span>的數字 (${Math.ceil(eventTimer)}s)`;
+            stroopWord.textContent = `${numberSortNum1}  vs  ${numberSortNum2}`;
+            optALabel.textContent = numberSortNum1;
+            optSLabel.textContent = numberSortNum2;
+            optA.disabled = false;
+            optS.disabled = false;
+            optA.className = 'option-btn';
+            optS.className = 'option-btn';
+            return;
+        }
         if (!stroopData) {
             stroopPrompt.innerHTML = '按 <span class="highlight">開始</span>';
             stroopWord.textContent = '——';
@@ -414,13 +479,29 @@ body {
 
     function refreshStroop() {
         if (gameState !== STATE.PLAYING) return;
+        if (isNumberSort) return;
         stroopData = generateStroopQuestion();
         stroopLocked = false;
         renderStroop();
     }
 
     function handleStroopAnswer(selectedIdx) {
-        if (gameState !== STATE.PLAYING || stroopLocked || !stroopData) return;
+        if (gameState !== STATE.PLAYING || stroopLocked) return;
+        if (isNumberSort) {
+            const isCorrect = (selectedIdx === numberSortCorrectSide);
+            stroopLocked = true;
+            optA.disabled = true;
+            optS.disabled = true;
+            if (isCorrect) {
+                score += 50;
+                updateScore();
+                endNumberSort(true);
+            } else {
+                triggerGameOver();
+            }
+            return;
+        }
+        if (!stroopData) return;
         const d = stroopData;
         const selected = d.options[selectedIdx];
         const isCorrect = (selected === d.correctAnswer);
@@ -448,6 +529,128 @@ body {
         timerDisplay.className = secs <= 1 ? 'timer-display warning' : 'timer-display';
     }
 
+    // ---------- 數字排序事件 ----------
+    function startNumberSort() {
+        let n1, n2;
+        do {
+            n1 = randomInt(1, 50);
+            n2 = randomInt(1, 50);
+        } while (n1 === n2);
+        // 隨機決定選較大或較小
+        const chooseLarger = Math.random() < 0.5;
+        let correctSide;
+        if (chooseLarger) {
+            correctSide = (n1 > n2) ? 0 : 1;
+        } else {
+            correctSide = (n1 < n2) ? 0 : 1;
+        }
+        numberSortNum1 = n1;
+        numberSortNum2 = n2;
+        numberSortCorrectSide = correctSide;
+        numberSortType = chooseLarger ? 'larger' : 'smaller';
+        isNumberSort = true;
+        stroopLocked = false;
+        eventTimer = 5; // 5秒限時
+        renderStroop();
+        statusBadge.textContent = '🔢';
+        statusBadge.className = 'status-badge event';
+        leftLabel.textContent = '🔢 數字排序';
+    }
+
+    function endNumberSort(success) {
+        isNumberSort = false;
+        activeEvent = null;
+        eventTimer = 0;
+        statusBadge.textContent = '▶';
+        statusBadge.className = 'status-badge playing';
+        leftLabel.textContent = '🧩 邏輯';
+        if (success) {
+            stroopData = null;
+            refreshStroop();
+        } else {
+            triggerGameOver();
+        }
+    }
+
+    // ---------- 事件觸發 ----------
+    function triggerRandomEvent() {
+        if (gameState !== STATE.PLAYING) return;
+        // 先結束舊的持續事件
+        if (activeEvent === 'swap') {
+            isControlSwapped = false;
+            activeEvent = null;
+            statusBadge.textContent = '▶';
+            statusBadge.className = 'status-badge playing';
+            leftLabel.textContent = '🧩 邏輯';
+            rightLabel.textContent = '🎯 物理';
+        }
+        if (activeEvent === 'gravity') {
+            isGravityReversed = false;
+            gravity = 0.06;
+            activeEvent = null;
+            statusBadgeRight.textContent = '▶';
+            statusBadgeRight.className = 'status-badge playing';
+            paddle.y = canvasH - paddle.h - 12; // 恢復位置
+        }
+        if (activeEvent === 'number') {
+            if (isNumberSort) {
+                endNumberSort(false);
+                return; // 如果導致 Game Over，則結束
+            }
+        }
+
+        const eventType = randomInt(1, 4);
+        let eventName = '', eventDesc = '';
+
+        switch(eventType) {
+            case 1:
+                maxBalls = Math.min(6, maxBalls + 1);
+                eventName = '⚡ 增加球';
+                eventDesc = `最大球數 +1 (目前 ${maxBalls})`;
+                showEventOverlay(eventName, eventDesc);
+                break;
+            case 2:
+                isControlSwapped = true;
+                activeEvent = 'swap';
+                eventName = '🔄 交換操控';
+                eventDesc = '左右腦操控互換！';
+                showEventOverlay(eventName, eventDesc);
+                statusBadge.textContent = '🔄';
+                statusBadge.className = 'status-badge event';
+                leftLabel.textContent = '🎯 物理 (操控)';
+                rightLabel.textContent = '🧩 邏輯 (操控)';
+                break;
+            case 3:
+                activeEvent = 'number';
+                eventName = '🔢 數字排序';
+                eventDesc = '選擇較大/較小的數字 (5秒)';
+                showEventOverlay(eventName, eventDesc);
+                startNumberSort();
+                break;
+            case 4:
+                isGravityReversed = true;
+                gravity = 0.06;
+                activeEvent = 'gravity';
+                eventName = '🌀 重力反轉';
+                eventDesc = '擋板移至頂部！';
+                showEventOverlay(eventName, eventDesc);
+                statusBadgeRight.textContent = '🌀';
+                statusBadgeRight.className = 'status-badge event';
+                paddle.y = 10;
+                break;
+        }
+        lastEventScore = Math.floor(score / EVENT_INTERVAL) * EVENT_INTERVAL;
+    }
+
+    function showEventOverlay(title, sub) {
+        eventTitle.textContent = title;
+        eventSub.textContent = sub;
+        eventOverlay.classList.add('show');
+        setTimeout(() => {
+            eventOverlay.classList.remove('show');
+        }, 1500);
+    }
+
     // ---------- Canvas ----------
     function initCanvas() {
         const rect = canvas.getBoundingClientRect();
@@ -461,71 +664,120 @@ body {
         newW = Math.min(140, Math.max(50, newW));
         paddle.w = newW;
         paddle.x = (canvasW - paddle.w) / 2;
-        paddle.y = canvasH - paddle.h - 12;
+        paddle.y = isGravityReversed ? 10 : canvasH - paddle.h - 12;
     }
 
     function resetPhysics() {
         balls = [];
         ballSpawnTimer = 0;
         paddle.x = (canvasW - paddle.w) / 2;
-        paddle.y = canvasH - paddle.h - 12;
+        paddle.y = isGravityReversed ? 10 : canvasH - paddle.h - 12;
+        isControlSwapped = false;
+        isGravityReversed = false;
+        gravity = 0.06;
+        activeEvent = null;
+        isNumberSort = false;
+        maxBalls = 3;
+        lastEventScore = 0;
+        eventTriggered = false;
+        statusBadge.textContent = '⏸';
+        statusBadge.className = 'status-badge';
+        statusBadgeRight.textContent = '⏸';
+        statusBadgeRight.className = 'status-badge';
+        leftLabel.textContent = '🧩 邏輯';
+        rightLabel.textContent = '🎯 物理';
+        if (isNumberSort) endNumberSort(false);
     }
 
     function spawnBall() {
-        if (balls.length >= MAX_BALLS) return;
+        if (balls.length >= maxBalls) return;
         const x = randomInt(16+BALL_RADIUS, canvasW-16-BALL_RADIUS);
-        const y = -BALL_RADIUS - randomInt(0,16);
+        const y = isGravityReversed ? canvasH - BALL_RADIUS - randomInt(0,20) : -BALL_RADIUS - randomInt(0,16);
         const vx = (Math.random()-0.5)*0.6;
         const speedBonus = Math.floor(score / INCREMENT_STEP) * SPEED_INCREMENT;
         const currentSpeed = Math.min(MAX_SPEED, BASE_SPEED + speedBonus);
-        const vy = currentSpeed + (Math.random() - 0.5) * 0.2;
+        const vy = isGravityReversed ? -(currentSpeed + (Math.random() - 0.5) * 0.2) : (currentSpeed + (Math.random() - 0.5) * 0.2);
         const color = randomItem(COLOR_NAMES);
         balls.push({ x, y, vx, vy, radius: BALL_RADIUS, color: COLOR_MAP[color] });
     }
 
     function updatePhysics() {
         if (gameState !== STATE.PLAYING) return;
-        if (keys.left) paddle.x = Math.max(0, paddle.x - PADDLE_SPEED);
-        if (keys.right) paddle.x = Math.min(canvasW - paddle.w, paddle.x + PADDLE_SPEED);
 
+        // 交換控制
+        if (isControlSwapped) {
+            if (keys.left) { if (!optA.disabled) handleStroopAnswer(0); keys.left = false; }
+            if (keys.right) { if (!optS.disabled) handleStroopAnswer(1); keys.right = false; }
+            if (keysA) paddle.x = Math.max(0, paddle.x - PADDLE_SPEED);
+            if (keysS) paddle.x = Math.min(canvasW - paddle.w, paddle.x + PADDLE_SPEED);
+        } else {
+            if (keys.left) paddle.x = Math.max(0, paddle.x - PADDLE_SPEED);
+            if (keys.right) paddle.x = Math.min(canvasW - paddle.w, paddle.x + PADDLE_SPEED);
+        }
+
+        // 擋板位置
+        if (isGravityReversed) paddle.y = 10;
+        else paddle.y = canvasH - paddle.h - 12;
+
+        // 生成球
         ballSpawnTimer++;
         const intervalReduction = Math.floor(score / INCREMENT_STEP) * INTERVAL_REDUCTION;
         let currentInterval = Math.max(MIN_INTERVAL, BASE_INTERVAL - intervalReduction);
-
         if (ballSpawnTimer >= currentInterval) {
             ballSpawnTimer = 0;
             spawnBall();
         }
 
+        // 更新球
         for (let i=balls.length-1; i>=0; i--) {
             const b = balls[i];
-            b.vy += GRAVITY;
+            b.vy += isGravityReversed ? -gravity : gravity;
             b.x += b.vx;
             b.y += b.vy;
+
             if (b.x - b.radius < 0) { b.x = b.radius; b.vx = -b.vx; }
             if (b.x + b.radius > canvasW) { b.x = canvasW - b.radius; b.vx = -b.vx; }
-            const px=paddle.x, py=paddle.y, pw=paddle.w, ph=paddle.h;
-            if (b.y + b.radius >= py && b.y + b.radius <= py + ph + 6) {
-                if (b.x >= px - b.radius + 3 && b.x <= px + pw + b.radius - 3) {
-                    // 碰撞加分 +10
-                    score += 10;
-                    updateScore();
 
-                    b.vy = -Math.abs(b.vy) - 0.5;
-                    b.y = py - b.radius - 0.5;
-                    b.vx += (Math.random()-0.5)*0.4;
-                    const maxV=5;
-                    if (Math.abs(b.vx)>maxV) b.vx = Math.sign(b.vx)*maxV;
-                    if (Math.abs(b.vy)>maxV) b.vy = Math.sign(b.vy)*maxV;
-                    continue;
+            const px=paddle.x, py=paddle.y, pw=paddle.w, ph=paddle.h;
+            if (isGravityReversed) {
+                if (b.y - b.radius <= py + ph && b.y - b.radius >= py - 5) {
+                    if (b.x >= px - b.radius + 3 && b.x <= px + pw + b.radius - 3) {
+                        b.vy = Math.abs(b.vy) + 0.5;
+                        b.y = py + ph + b.radius + 0.5;
+                        score += 10;
+                        updateScore();
+                        b.vx += (Math.random()-0.5)*0.4;
+                        const maxV=5;
+                        if (Math.abs(b.vx)>maxV) b.vx = Math.sign(b.vx)*maxV;
+                        if (Math.abs(b.vy)>maxV) b.vy = Math.sign(b.vy)*maxV;
+                        continue;
+                    }
+                }
+                if (b.y - b.radius > canvasH) {
+                    triggerGameOver();
+                    return;
+                }
+            } else {
+                if (b.y + b.radius >= py && b.y + b.radius <= py + ph + 6) {
+                    if (b.x >= px - b.radius + 3 && b.x <= px + pw + b.radius - 3) {
+                        b.vy = -Math.abs(b.vy) - 0.5;
+                        b.y = py - b.radius - 0.5;
+                        score += 10;
+                        updateScore();
+                        b.vx += (Math.random()-0.5)*0.4;
+                        const maxV=5;
+                        if (Math.abs(b.vx)>maxV) b.vx = Math.sign(b.vx)*maxV;
+                        if (Math.abs(b.vy)>maxV) b.vy = Math.sign(b.vy)*maxV;
+                        continue;
+                    }
+                }
+                if (b.y + b.radius > canvasH) {
+                    triggerGameOver();
+                    return;
                 }
             }
-            if (b.y + b.radius > canvasH) {
-                triggerGameOver();
-                return;
-            }
         }
-        balls = balls.filter(b => b.y < canvasH + 100);
+        balls = balls.filter(b => b.y < canvasH + 100 && b.y > -100);
     }
 
     function renderPhysics() {
@@ -581,16 +833,23 @@ body {
     }
 
     // ---------- 分數 ----------
-    function updateScore() { scoreDisplay.textContent = Math.floor(score); }
+    function updateScore() {
+        scoreDisplay.textContent = Math.floor(score);
+        const currentEventLevel = Math.floor(score / EVENT_INTERVAL);
+        if (currentEventLevel > 0 && currentEventLevel > Math.floor(lastEventScore / EVENT_INTERVAL)) {
+            triggerRandomEvent();
+        }
+    }
 
-    // ---------- 遊戲主迴圈 ----------
+    // ---------- 遊戲迴圈 ----------
     function gameLoop(timestamp) {
         if (!lastTimestamp) lastTimestamp = timestamp;
         const delta = (timestamp - lastTimestamp) / 1000;
         lastTimestamp = timestamp;
 
         if (gameState === STATE.PLAYING) {
-            if (stroopData && !stroopLocked) {
+            // 普通左腦計時
+            if (!isNumberSort && stroopData && !stroopLocked) {
                 leftTimer -= delta;
                 if (leftTimer <= 0) {
                     leftTimer = 0;
@@ -598,6 +857,21 @@ body {
                     triggerGameOver();
                 } else {
                     updateTimerDisplay();
+                }
+            }
+            // 數字題計時
+            if (isNumberSort) {
+                eventTimer -= delta;
+                if (eventTimer <= 0) {
+                    eventTimer = 0;
+                    endNumberSort(false);
+                    if (gameState === STATE.PLAYING) {
+                        triggerGameOver();
+                    }
+                } else {
+                    // 更新顯示倒數
+                    const hint = numberSortType === 'larger' ? '較大' : '較小';
+                    stroopPrompt.innerHTML = `🔢 選擇<span class="highlight">${hint}</span>的數字 (${Math.ceil(eventTimer)}s)`;
                 }
             }
             updatePhysics();
@@ -637,6 +911,20 @@ body {
             setTimeout(() => { if(gameState===STATE.PLAYING) spawnBall(); }, 300);
             ballSpawnTimer = 0;
             lastTimestamp = 0;
+            lastEventScore = 0;
+            eventTriggered = false;
+            isControlSwapped = false;
+            isGravityReversed = false;
+            gravity = 0.06;
+            activeEvent = null;
+            isNumberSort = false;
+            maxBalls = 3;
+            statusBadge.textContent = '▶';
+            statusBadge.className = 'status-badge playing';
+            statusBadgeRight.textContent = '▶';
+            statusBadgeRight.className = 'status-badge playing';
+            leftLabel.textContent = '🧩 邏輯';
+            rightLabel.textContent = '🎯 物理';
         } catch(e) { console.error(e); }
     }
 
@@ -650,6 +938,7 @@ body {
         gameoverOverlay.classList.add('show');
         optA.disabled = true;
         optS.disabled = true;
+        eventOverlay.classList.remove('show');
     }
 
     function resetToIdle() {
@@ -676,6 +965,7 @@ body {
         leftTimer = LEFT_TIME_LIMIT;
         updateTimerDisplay();
         updateUI();
+        eventOverlay.classList.remove('show');
         if(!animFrameId) animFrameId = requestAnimationFrame(gameLoop);
     }
 
@@ -690,8 +980,6 @@ body {
             statusBadgeRight.textContent='⏸'; statusBadgeRight.className='status-badge';
             touchHint.style.display='block';
         } else if(isPlaying) {
-            statusBadge.textContent='▶'; statusBadge.className='status-badge playing';
-            statusBadgeRight.textContent='▶'; statusBadgeRight.className='status-badge playing';
             touchHint.style.display='block';
         } else {
             statusBadge.textContent='💀'; statusBadge.className='status-badge gameover';
@@ -717,22 +1005,56 @@ body {
     // ---------- 鍵盤 ----------
     function onKeyDown(e) {
         const key=e.key;
-        if(key==='a'||key==='A'){ e.preventDefault(); if(gameState===STATE.PLAYING && !optA.disabled) handleStroopAnswer(0); return; }
-        if(key==='s'||key==='S'){ e.preventDefault(); if(gameState===STATE.PLAYING && !optS.disabled) handleStroopAnswer(1); return; }
-        if(key==='ArrowLeft'){ e.preventDefault(); keys.left=true; }
-        if(key==='ArrowRight'){ e.preventDefault(); keys.right=true; }
-        if(key===' '||key==='Space'){ e.preventDefault(); if(gameState===STATE.IDLE||gameState===STATE.GAMEOVER) startGame(); }
+        if (gameState !== STATE.PLAYING) {
+            if (key===' '||key==='Space'){ e.preventDefault(); if(gameState===STATE.IDLE||gameState===STATE.GAMEOVER) startGame(); }
+            return;
+        }
+        if (key==='a'||key==='A') {
+            e.preventDefault();
+            if (isControlSwapped) { keysA = true; }
+            else { if (!optA.disabled) handleStroopAnswer(0); }
+            return;
+        }
+        if (key==='s'||key==='S') {
+            e.preventDefault();
+            if (isControlSwapped) { keysS = true; }
+            else { if (!optS.disabled) handleStroopAnswer(1); }
+            return;
+        }
+        if (key==='ArrowLeft') {
+            e.preventDefault();
+            if (isControlSwapped) { if (!optA.disabled) handleStroopAnswer(0); }
+            else { keys.left = true; }
+            return;
+        }
+        if (key==='ArrowRight') {
+            e.preventDefault();
+            if (isControlSwapped) { if (!optS.disabled) handleStroopAnswer(1); }
+            else { keys.right = true; }
+            return;
+        }
+        if (key===' '||key==='Space'){ e.preventDefault(); }
     }
+
     function onKeyUp(e) {
         const key=e.key;
-        if(key==='ArrowLeft'){ e.preventDefault(); keys.left=false; }
-        if(key==='ArrowRight'){ e.preventDefault(); keys.right=false; }
+        if (key==='ArrowLeft') { e.preventDefault(); keys.left = false; }
+        if (key==='ArrowRight') { e.preventDefault(); keys.right = false; }
+        if (key==='a'||key==='A') { e.preventDefault(); keysA = false; }
+        if (key==='s'||key==='S') { e.preventDefault(); keysS = false; }
+    }
+
+    function resetKeys() {
+        keys.left = false;
+        keys.right = false;
+        keysA = false;
+        keysS = false;
     }
 
     function onResize() {
         initCanvas();
         paddle.x = Math.min(paddle.x, canvasW-paddle.w);
-        paddle.y = canvasH-paddle.h-12;
+        paddle.y = isGravityReversed ? 10 : canvasH - paddle.h - 12;
         for(const b of balls) {
             b.x = Math.max(b.radius, Math.min(canvasW-b.radius, b.x));
             b.y = Math.min(canvasH+20, b.y);
@@ -756,7 +1078,10 @@ body {
         window.addEventListener('keyup', onKeyUp);
         window.addEventListener('resize', onResize);
         btnStart.addEventListener('click', startGame);
-        btnReset.addEventListener('click', resetToIdle);
+        btnReset.addEventListener('click', function() {
+            resetKeys();
+            resetToIdle();
+        });
         btnGameoverRestart.addEventListener('click', startGame);
 
         optA.addEventListener('click', ()=>{ if(gameState===STATE.PLAYING && !optA.disabled) handleStroopAnswer(0); });
