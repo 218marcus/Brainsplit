@@ -16,8 +16,7 @@ body {
 .game-container {
     width:100%; max-width:900px;
     background:#12121f; border-radius:20px;
-    padding:12px 12px 12px;
-    box-shadow:0 12px 40px rgba(0,0,0,0.8);
+    padding:12px; box-shadow:0 12px 40px rgba(0,0,0,0.8);
     border:1px solid #2a2a44;
 }
 .header {
@@ -40,29 +39,27 @@ body {
 .btn-group { display:flex; gap:6px; }
 .btn {
     padding:4px 14px; border:none; border-radius:30px; font-size:13px;
-    font-weight:600; cursor:pointer; transition:all 0.2s ease;
-    background:#2a2a4a; color:#b0b0d0; border:1px solid #3a3a5a;
-    touch-action: manipulation;
+    font-weight:600; cursor:pointer; background:#2a2a4a; color:#b0b0d0;
+    border:1px solid #3a3a5a; touch-action: manipulation;
 }
 .btn-primary { background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border:none; }
 .btn-danger { background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; border:none; }
-.btn:disabled { opacity:0.35; cursor:not-allowed; transform:none !important; }
+.btn:disabled { opacity:0.35; cursor:not-allowed; }
 
-/* ===== 強制左右並排 ===== */
 .game-body {
     display:flex; gap:6px; min-height:380px; position:relative;
-    flex-direction:row !important; /* 強制左右 */
+    flex-direction:row !important;
 }
 .left-panel {
-    flex:1 1 0; min-width:0; /* 允許收縮 */
-    padding:8px 6px 6px 6px;
+    flex:1 1 0; min-width:0;
+    padding:8px 6px 6px;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     background:#141425; border-radius:16px;
     border:1px solid #22223e; position:relative;
 }
 .right-panel {
     flex:1 1 0; min-width:0;
-    padding:8px 6px 6px 6px;
+    padding:8px 6px 6px;
     display:flex; flex-direction:column;
     background:#141425; border-radius:16px;
     border:1px solid #22223e; position:relative;
@@ -82,7 +79,6 @@ body {
 .status-badge.playing { color:#34d399; border-color:#34d399; background:#0f2a1e; }
 .status-badge.gameover { color:#f87171; border-color:#f87171; background:#2a1212; }
 
-/* 左側 Stroop 縮小 */
 .stroop-prompt {
     font-size:12px; font-weight:500; color:#c4c4e6;
     background:#1e1e38; padding:4px 12px; border-radius:20px;
@@ -103,7 +99,7 @@ body {
     flex:1; min-width:60px; max-width:100px;
     padding:10px 0; border:2px solid #3a3a5e;
     border-radius:12px; background:#1a1a32; color:#e0e0f0;
-    font-size:16px; font-weight:700; cursor:pointer; transition:all 0.15s ease;
+    font-size:16px; font-weight:700; cursor:pointer;
     display:flex; flex-direction:column; align-items:center; gap:1px;
     font-family:inherit; touch-action: manipulation;
 }
@@ -113,7 +109,6 @@ body {
 .option-btn.wrong { border-color:#f87171; background:#3a1a1a; }
 .option-btn:disabled { cursor:not-allowed; opacity:0.5; }
 
-/* 右側 Canvas */
 #gameCanvas {
     width:100%; height:100%; border-radius:12px;
     background:#0e0e1e; display:block; flex:1;
@@ -127,7 +122,6 @@ body {
     border:1px solid #2a2a4e; pointer-events:none; white-space:nowrap;
 }
 
-/* 分隔線（垂直） */
 .divider {
     width:2px; background:linear-gradient(to bottom, transparent,#6366f1,#8b5cf6,#a78bfa,transparent);
     flex-shrink:0; border-radius:4px; margin:0 2px;
@@ -139,7 +133,6 @@ body {
     background:#12121f; padding:2px 2px; border-radius:50%;
 }
 
-/* GameOver 遮罩 */
 .gameover-overlay {
     position:absolute; inset:0;
     background:rgba(0,0,0,0.8); backdrop-filter:blur(4px);
@@ -159,7 +152,6 @@ body {
     cursor:pointer; touch-action: manipulation;
 }
 
-/* ===== 極小螢幕再壓縮 ===== */
 @media (max-width: 560px) {
     .game-container { padding:6px; border-radius:14px; }
     .title { font-size:16px; }
@@ -167,7 +159,7 @@ body {
     .score-display span { font-size:14px; min-width:30px; }
     .btn { font-size:11px; padding:3px 10px; }
     .game-body { min-height:300px; gap:4px; }
-    .left-panel, .right-panel { padding:4px 4px 4px 4px; border-radius:12px; }
+    .left-panel, .right-panel { padding:4px; border-radius:12px; }
     .panel-label { font-size:8px; top:2px; left:6px; padding:0 8px; }
     .status-badge { font-size:8px; top:2px; right:6px; padding:0 8px; }
     .stroop-prompt { font-size:10px; padding:2px 8px; min-height:24px; margin-bottom:4px; }
@@ -184,7 +176,6 @@ body {
     .gameover-score span { font-size:24px; }
     .gameover-btn { font-size:14px; padding:6px 20px; }
 }
-
 @media (max-width: 400px) {
     .stroop-word { font-size:22px; min-height:34px; }
     .option-btn { min-width:40px; max-width:60px; padding:4px 0; font-size:11px; }
@@ -205,8 +196,7 @@ body {
         </div>
     </div>
     <div class="game-body">
-        <!-- 左側 -->
-        <div class="left-panel" id="leftPanel">
+        <div class="left-panel">
             <div class="panel-label">🧩 邏輯</div>
             <div class="status-badge" id="statusBadge">⏸</div>
             <div class="stroop-prompt" id="stroopPrompt">按 <span class="highlight">開始</span></div>
@@ -228,10 +218,7 @@ body {
                 <button class="gameover-btn" id="btnGameoverRestart">🔄 再挑戰</button>
             </div>
         </div>
-
         <div class="divider"></div>
-
-        <!-- 右側 -->
         <div class="right-panel">
             <div class="panel-label">🎯 物理</div>
             <div class="status-badge" id="statusBadgeRight">⏸</div>
@@ -240,7 +227,6 @@ body {
         </div>
     </div>
 </div>
-
 <script>
 (function(){
     'use strict';
@@ -384,7 +370,7 @@ body {
         }
     }
 
-    // ---------- Canvas ----------
+    // ---------- Canvas 初始化（含挡板自适应） ----------
     function initCanvas() {
         const rect = canvas.getBoundingClientRect();
         const dpr = window.devicePixelRatio || 1;
@@ -393,7 +379,10 @@ body {
         canvas.width = canvasW * dpr;
         canvas.height = canvasH * dpr;
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        paddle.w = Math.min(80, canvasW * 0.4);
+        // 挡板宽度：画布宽度的 22%~28%，限制在 50~140px
+        let newW = canvasW * 0.25;
+        newW = Math.min(140, Math.max(50, newW));
+        paddle.w = newW;
         paddle.x = (canvasW - paddle.w) / 2;
         paddle.y = canvasH - paddle.h - 12;
     }
