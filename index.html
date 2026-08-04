@@ -936,7 +936,7 @@ body {
         }
 
         // 計算最大彈跳速度（目標高度為板塊高度的一半）
-        const targetHeight = canvasH / 4;   // 板塊高度為 canvasH/2，其一半為 canvasH/4
+        const targetHeight = canvasH * 0.4;   // 板塊高度為 canvasH/2，其一半為 canvasH/4
         const maxVy = Math.sqrt(2 * gravity * targetHeight);
 
         for (let i=balls.length-1; i>=0; i--) {
