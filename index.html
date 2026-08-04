@@ -383,6 +383,10 @@ body {
     let lastEventScore = 0;
     const EVENT_INTERVAL = 500;
 
+    // 用於交換事件的延遲計時
+    let swapPending = false;
+    let swapTimeoutId = null;
+
     // ---------- 物理參數 ----------
     let balls = [];
     let paddle = { x:0, y:0, w:80, h:14 };
@@ -497,11 +501,9 @@ body {
             if (isCorrect) {
                 score += 50;
                 updateScore();
-                // 答對 → 刷新數字題（不結束事件）
                 refreshNumberSort();
             } else {
-                // 答錯 → Game Over
-                endNumberSort();          // 清理事件狀態
+                endNumberSort();
                 triggerGameOver();
             }
             return;
@@ -536,7 +538,6 @@ body {
 
     // ---------- 數字排序事件 ----------
     function startNumberSort() {
-        // 首次啟動，設定狀態
         isNumberSort = true;
         activeEvent = 'number';
         stroopLocked = false;
@@ -544,11 +545,10 @@ body {
         statusBadge.textContent = '🔢';
         statusBadge.className = 'status-badge event';
         leftLabel.textContent = '🔢 數字排序';
-        refreshNumberSort(); // 生成第一題
+        refreshNumberSort();
     }
 
     function refreshNumberSort() {
-        // 生成新數字題，重置計時器
         let n1, n2;
         do {
             n1 = randomInt(1, 50);
@@ -565,13 +565,12 @@ body {
         numberSortNum2 = n2;
         numberSortCorrectSide = correctSide;
         numberSortType = chooseLarger ? 'larger' : 'smaller';
-        eventTimer = 5; // 重置計時
+        eventTimer = 5;
         stroopLocked = false;
         renderStroop();
     }
 
     function endNumberSort() {
-        // 純粹清理，不觸發 Game Over
         isNumberSort = false;
         activeEvent = null;
         eventTimer = 0;
@@ -579,11 +578,16 @@ body {
         statusBadge.className = 'status-badge playing';
         leftLabel.textContent = isControlSwapped ? '🎯 物理' : '🧩 邏輯';
         stroopData = null;
-        refreshStroop(); // 恢復普通題目
+        refreshStroop();
     }
 
-    // ---------- 清除舊事件（完整重置） ----------
+    // ---------- 清除舊事件 ----------
     function clearCurrentEvent() {
+        if (swapTimeoutId) {
+            clearTimeout(swapTimeoutId);
+            swapTimeoutId = null;
+            swapPending = false;
+        }
         if (activeEvent === 'swap') {
             isControlSwapped = false;
             leftPanel.style.order = '1';
@@ -606,9 +610,8 @@ body {
             }
         }
         if (activeEvent === 'number') {
-            // 數字事件被新事件取代，正常結束（不扣分）
             endNumberSort();
-            activeEvent = null; // endNumberSort 已設為 null
+            activeEvent = null;
         }
     }
 
@@ -619,7 +622,6 @@ body {
         // 先清除舊事件
         clearCurrentEvent();
 
-        // 隨機選擇新事件
         const eventType = randomInt(1, 4);
         let eventName = '', eventDesc = '';
 
@@ -631,17 +633,29 @@ body {
                 showEventOverlay(eventName, eventDesc);
                 break;
             case 2:
-                isControlSwapped = true;
-                leftPanel.style.order = '2';
-                rightPanel.style.order = '1';
+                // 交換事件：延遲 2 秒後執行
                 activeEvent = 'swap';
                 eventName = '🔄 交換位置';
-                eventDesc = '左右版塊互換！';
+                eventDesc = '左右版塊將在 2 秒後互換！';
                 showEventOverlay(eventName, eventDesc);
-                statusBadge.textContent = '🔄';
+                statusBadge.textContent = '⏳';
                 statusBadge.className = 'status-badge event';
-                leftLabel.textContent = '🎯 物理';
-                rightLabel.textContent = '🧩 邏輯';
+                if (swapTimeoutId) clearTimeout(swapTimeoutId);
+                swapPending = true;
+                swapTimeoutId = setTimeout(() => {
+                    if (gameState !== STATE.PLAYING) return;
+                    if (activeEvent === 'swap') {
+                        isControlSwapped = true;
+                        leftPanel.style.order = '2';
+                        rightPanel.style.order = '1';
+                        statusBadge.textContent = '🔄';
+                        statusBadge.className = 'status-badge event';
+                        leftLabel.textContent = '🎯 物理';
+                        rightLabel.textContent = '🧩 邏輯';
+                        swapPending = false;
+                        swapTimeoutId = null;
+                    }
+                }, 2000);
                 break;
             case 3:
                 activeEvent = 'number';
@@ -686,8 +700,13 @@ body {
         canvas.width = canvasW * dpr;
         canvas.height = canvasH * dpr;
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        let newW = canvasW * 0.28;
-        newW = Math.min(160, Math.max(60, newW));
+        // 動態調整擋板寬度
+        let ratio;
+        if (canvasW < 500) ratio = 0.22;
+        else if (canvasW < 800) ratio = 0.26;
+        else ratio = 0.30;
+        let newW = canvasW * ratio;
+        newW = Math.min(170, Math.max(60, newW));
         paddle.w = newW;
         paddle.x = (canvasW - paddle.w) / 2;
         paddle.y = isGravityReversed ? 10 : canvasH - paddle.h - 12;
@@ -713,6 +732,11 @@ body {
         statusBadgeRight.className = 'status-badge';
         leftLabel.textContent = '🧩 邏輯';
         rightLabel.textContent = '🎯 物理';
+        if (swapTimeoutId) {
+            clearTimeout(swapTimeoutId);
+            swapTimeoutId = null;
+            swapPending = false;
+        }
         if (isNumberSort) endNumberSort();
     }
 
@@ -745,6 +769,10 @@ body {
             spawnBall();
         }
 
+        // 計算最大彈跳速度（目標高度為板塊高度的一半）
+        const targetHeight = canvasH / 4;   // 板塊高度為 canvasH/2，其一半為 canvasH/4
+        const maxVy = Math.sqrt(2 * gravity * targetHeight);
+
         for (let i=balls.length-1; i>=0; i--) {
             const b = balls[i];
             b.vy += isGravityReversed ? -gravity : gravity;
@@ -758,7 +786,10 @@ body {
             if (isGravityReversed) {
                 if (b.y - b.radius <= py + ph && b.y - b.radius >= py - 5) {
                     if (b.x >= px - b.radius + 3 && b.x <= px + pw + b.radius - 3) {
-                        b.vy = Math.abs(b.vy) + 0.5;
+                        // 反轉模式：彈跳向下，限制速度不超過 maxVy
+                        let newVy = Math.abs(b.vy) + 0.5;
+                        if (newVy > maxVy) newVy = maxVy;
+                        b.vy = newVy;
                         b.y = py + ph + b.radius + 0.5;
                         score += 10;
                         updateScore();
@@ -776,7 +807,10 @@ body {
             } else {
                 if (b.y + b.radius >= py && b.y + b.radius <= py + ph + 6) {
                     if (b.x >= px - b.radius + 3 && b.x <= px + pw + b.radius - 3) {
-                        b.vy = -Math.abs(b.vy) - 0.5;
+                        // 普通模式：彈跳向上，限制速度不超過 maxVy
+                        let newVy = -Math.abs(b.vy) - 0.5;
+                        if (Math.abs(newVy) > maxVy) newVy = -maxVy;
+                        b.vy = newVy;
                         b.y = py - b.radius - 0.5;
                         score += 10;
                         updateScore();
@@ -864,7 +898,6 @@ body {
         lastTimestamp = timestamp;
 
         if (gameState === STATE.PLAYING) {
-            // 普通左腦計時（僅在非數字事件時）
             if (!isNumberSort && stroopData && !stroopLocked) {
                 leftTimer -= delta;
                 if (leftTimer <= 0) {
@@ -875,12 +908,10 @@ body {
                     updateTimerDisplay();
                 }
             }
-            // 數字題計時（事件內部）
             if (isNumberSort) {
                 eventTimer -= delta;
                 if (eventTimer <= 0) {
                     eventTimer = 0;
-                    // 超時 → Game Over
                     endNumberSort();
                     triggerGameOver();
                 } else {
@@ -940,6 +971,11 @@ body {
             statusBadgeRight.className = 'status-badge playing';
             leftLabel.textContent = '🧩 邏輯';
             rightLabel.textContent = '🎯 物理';
+            if (swapTimeoutId) {
+                clearTimeout(swapTimeoutId);
+                swapTimeoutId = null;
+                swapPending = false;
+            }
         } catch(e) { console.error(e); }
     }
 
@@ -954,7 +990,11 @@ body {
         optA.disabled = true;
         optS.disabled = true;
         eventOverlay.classList.remove('show');
-        // 確保事件狀態清理
+        if (swapTimeoutId) {
+            clearTimeout(swapTimeoutId);
+            swapTimeoutId = null;
+            swapPending = false;
+        }
         if (isNumberSort) endNumberSort();
     }
 
@@ -983,6 +1023,11 @@ body {
         updateTimerDisplay();
         updateUI();
         eventOverlay.classList.remove('show');
+        if (swapTimeoutId) {
+            clearTimeout(swapTimeoutId);
+            swapTimeoutId = null;
+            swapPending = false;
+        }
         if(!animFrameId) animFrameId = requestAnimationFrame(gameLoop);
     }
 
