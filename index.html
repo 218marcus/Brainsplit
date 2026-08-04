@@ -82,14 +82,14 @@ body {
 .stroop-prompt {
     font-size:12px; font-weight:500; color:#c4c4e6;
     background:#1e1e38; padding:4px 12px; border-radius:20px;
-    margin-bottom:8px; border:1px solid #333358;
+    margin-bottom:4px; border:1px solid #333358;
     min-height:30px; display:flex; align-items:center; justify-content:center;
     text-align:center; width:100%;
 }
 .stroop-prompt .highlight { color:#fcd34d; font-weight:700; }
 .stroop-word {
     font-size:42px; font-weight:800; line-height:1.1;
-    margin-bottom:10px; text-shadow:0 0 30px rgba(255,255,255,0.04);
+    margin-bottom:6px; text-shadow:0 0 30px rgba(255,255,255,0.04);
     letter-spacing:2px; min-height:60px;
     display:flex; align-items:center; justify-content:center;
     padding:0 4px; width:100%;
@@ -152,6 +152,14 @@ body {
     cursor:pointer; touch-action: manipulation;
 }
 
+/* 計時器顯示 */
+.timer-display {
+    font-size:14px; font-weight:600; color:#fcd34d;
+    background:#1e1e38; padding:2px 14px; border-radius:20px;
+    border:1px solid #333358; margin-bottom:6px;
+}
+.timer-display.warning { color:#f87171; border-color:#f87171; }
+
 @media (max-width: 560px) {
     .game-container { padding:6px; border-radius:14px; }
     .title { font-size:16px; }
@@ -175,6 +183,7 @@ body {
     .gameover-score { font-size:18px; }
     .gameover-score span { font-size:24px; }
     .gameover-btn { font-size:14px; padding:6px 20px; }
+    .timer-display { font-size:12px; padding:1px 10px; }
 }
 @media (max-width: 400px) {
     .stroop-word { font-size:22px; min-height:34px; }
@@ -200,6 +209,7 @@ body {
             <div class="panel-label">🧩 邏輯</div>
             <div class="status-badge" id="statusBadge">⏸</div>
             <div class="stroop-prompt" id="stroopPrompt">按 <span class="highlight">開始</span></div>
+            <div class="timer-display" id="timerDisplay">⏱ 5s</div>
             <div class="stroop-word" id="stroopWord">——</div>
             <div class="stroop-options">
                 <button class="option-btn" id="optA" disabled>
@@ -249,6 +259,7 @@ body {
     const touchHint = document.getElementById('touchHint');
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
+    const timerDisplay = document.getElementById('timerDisplay');
 
     // ---------- 顏色 ----------
     const COLOR_MAP = {
@@ -262,10 +273,15 @@ body {
     const STATE = { IDLE:'idle', PLAYING:'playing', GAMEOVER:'gameover' };
     let gameState = STATE.IDLE;
     let score = 0;
-    let timerInterval = null;
+    let timerInterval = null;          // 每秒計時器（已不使用，但保留）
     let animFrameId = null;
     let stroopData = null;
     let stroopLocked = false;
+
+    // ---------- 左腦計時器 ----------
+    let leftTimer = 0;                 // 剩餘秒數（浮點）
+    const LEFT_TIME_LIMIT = 5;         // 5 秒
+    let lastTimestamp = 0;             // 用於計算 delta time
 
     // ---------- 物理參數 ----------
     let balls = [];
@@ -273,7 +289,7 @@ body {
     let canvasW = 0, canvasH = 0;
     let ballSpawnTimer = 0;
     const BALL_RADIUS = 10;
-    const MAX_BALLS = 3;   // 最大球數設為 1
+    const MAX_BALLS = 3;
     const PADDLE_SPEED = 6;
     const GRAVITY = 0.06;
 
@@ -333,6 +349,8 @@ body {
             optSLabel.textContent = '—';
             optA.disabled = true;
             optS.disabled = true;
+            timerDisplay.textContent = '⏱ --';
+            timerDisplay.className = 'timer-display';
             return;
         }
         const d = stroopData;
@@ -346,6 +364,9 @@ body {
         optS.disabled = false;
         optA.className = 'option-btn';
         optS.className = 'option-btn';
+        // 重置計時器
+        leftTimer = LEFT_TIME_LIMIT;
+        updateTimerDisplay();
     }
 
     function refreshStroop() {
@@ -368,6 +389,7 @@ body {
             btn.classList.add('correct');
             score += 50;
             updateScore();
+            // 答對直接換題（重置計時）
             setTimeout(()=>{
                 if (gameState === STATE.PLAYING) refreshStroop();
                 else { stroopLocked=false; renderStroop(); }
@@ -375,6 +397,17 @@ body {
         } else {
             btn.classList.add('wrong');
             setTimeout(()=>{ triggerGameOver(); }, 300);
+        }
+    }
+
+    // ---------- 計時器顯示 ----------
+    function updateTimerDisplay() {
+        const secs = Math.ceil(leftTimer);
+        timerDisplay.textContent = `⏱ ${secs}s`;
+        if (secs <= 1) {
+            timerDisplay.className = 'timer-display warning';
+        } else {
+            timerDisplay.className = 'timer-display';
         }
     }
 
@@ -401,13 +434,9 @@ body {
         paddle.y = canvasH - paddle.h - 12;
     }
 
-    // ---------- 小球生成（含日志） ----------
+    // ---------- 小球生成 ----------
     function spawnBall() {
-        if (balls.length >= MAX_BALLS) {
-            console.log(`⚠️ 球数已达上限 (${MAX_BALLS})，跳过生成`);
-            return;
-        }
-        console.log(`✅ 生成新球，当前球数：${balls.length} (生成后为 ${balls.length+1})`);
+        if (balls.length >= MAX_BALLS) return;
         const x = randomInt(16+BALL_RADIUS, canvasW-16-BALL_RADIUS);
         const y = -BALL_RADIUS - randomInt(0,16);
         const vx = (Math.random()-0.5)*0.6;
@@ -418,7 +447,7 @@ body {
         balls.push({ x, y, vx, vy, radius: BALL_RADIUS, color: COLOR_MAP[color] });
     }
 
-    // ---------- 物理更新 ----------
+    // ---------- 物理更新（含碰撞加分） ----------
     function updatePhysics() {
         if (gameState !== STATE.PLAYING) return;
         if (keys.left) paddle.x = Math.max(0, paddle.x - PADDLE_SPEED);
@@ -430,7 +459,7 @@ body {
 
         if (ballSpawnTimer >= currentInterval) {
             ballSpawnTimer = 0;
-            spawnBall(); // 会检查上限
+            spawnBall();
         }
 
         for (let i=balls.length-1; i>=0; i--) {
@@ -443,6 +472,10 @@ body {
             const px=paddle.x, py=paddle.y, pw=paddle.w, ph=paddle.h;
             if (b.y + b.radius >= py && b.y + b.radius <= py + ph + 6) {
                 if (b.x >= px - b.radius + 3 && b.x <= px + pw + b.radius - 3) {
+                    // 碰撞加分 (每次碰撞 +10)
+                    score += 10;
+                    updateScore();
+
                     b.vy = -Math.abs(b.vy) - 0.5;
                     b.y = py - b.radius - 0.5;
                     b.vx += (Math.random()-0.5)*0.4;
@@ -457,7 +490,6 @@ body {
                 return;
             }
         }
-        // 移除超出画布太远的（已掉落到底部的已被 triggerGameOver 处理，但安全起见）
         balls = balls.filter(b => b.y < canvasH + 100);
     }
 
@@ -514,27 +546,45 @@ body {
         return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
     }
 
-    // ---------- 分數、計時 ----------
+    // ---------- 分數 ----------
     function updateScore() { scoreDisplay.textContent = Math.floor(score); }
-    function startTimer() {
-        if(timerInterval) clearInterval(timerInterval);
-        timerInterval = setInterval(()=>{
-            if(gameState===STATE.PLAYING){ score+=10; updateScore(); }
-        },1000);
-    }
-    function stopTimer() { if(timerInterval){ clearInterval(timerInterval); timerInterval=null; } }
 
-    // ---------- 遊戲控制 ----------
-    function gameLoop() {
-        if (gameState === STATE.PLAYING) { updatePhysics(); renderPhysics(); }
-        else if (gameState === STATE.IDLE) { renderPhysics(); }
+    // ---------- 遊戲主迴圈（含計時器更新） ----------
+    function gameLoop(timestamp) {
+        if (!lastTimestamp) lastTimestamp = timestamp;
+        const delta = (timestamp - lastTimestamp) / 1000; // 秒
+        lastTimestamp = timestamp;
+
+        if (gameState === STATE.PLAYING) {
+            // 更新左腦計時器
+            if (stroopData && !stroopLocked) {
+                leftTimer -= delta;
+                if (leftTimer <= 0) {
+                    leftTimer = 0;
+                    updateTimerDisplay();
+                    // 超時 → Game Over
+                    triggerGameOver();
+                    // 停止更新
+                } else {
+                    updateTimerDisplay();
+                }
+            }
+            // 更新物理
+            updatePhysics();
+            renderPhysics();
+        } else if (gameState === STATE.IDLE) {
+            renderPhysics();
+        }
         animFrameId = requestAnimationFrame(gameLoop);
     }
 
-    // ===== 修改重點：初始只生成一顆球 =====
+    // ---------- 開始遊戲 ----------
     function startGame() {
         try {
-            stopTimer();
+            // 清除舊計時
+            if(timerInterval) clearInterval(timerInterval);
+            timerInterval = null;
+
             score = 0;
             updateScore();
             resetPhysics();
@@ -550,22 +600,28 @@ body {
             optS.disabled = true;
             optA.className = 'option-btn';
             optS.className = 'option-btn';
+            leftTimer = LEFT_TIME_LIMIT;
+            updateTimerDisplay();
+
             gameState = STATE.PLAYING;
             updateUI();
 
             setTimeout(() => { if (gameState === STATE.PLAYING) refreshStroop(); }, 200);
-            // ★★★ 只生成一顆球 ★★★
+            // 初始生成一顆球
             setTimeout(() => { if(gameState===STATE.PLAYING) spawnBall(); }, 300);
+            // 第二顆由後續間隔自然補上
             ballSpawnTimer = 0;
-            startTimer();
+            lastTimestamp = 0; // 重置時間戳
             console.log('✅ 遊戲啟動，MAX_BALLS =', MAX_BALLS);
         } catch(e) { console.error(e); }
     }
 
+    // ---------- Game Over ----------
     function triggerGameOver() {
         if (gameState === STATE.GAMEOVER) return;
         gameState = STATE.GAMEOVER;
-        stopTimer();
+        if(timerInterval) clearInterval(timerInterval);
+        timerInterval = null;
         updateUI();
         finalScore.textContent = Math.floor(score);
         gameoverOverlay.classList.add('show');
@@ -573,8 +629,10 @@ body {
         optS.disabled = true;
     }
 
+    // ---------- 重置 ----------
     function resetToIdle() {
-        stopTimer();
+        if(timerInterval) clearInterval(timerInterval);
+        timerInterval = null;
         if(animFrameId) { cancelAnimationFrame(animFrameId); animFrameId=null; }
         gameState = STATE.IDLE;
         score = 0;
@@ -593,6 +651,8 @@ body {
         optS.disabled = true;
         optA.className = 'option-btn';
         optS.className = 'option-btn';
+        leftTimer = LEFT_TIME_LIMIT;
+        updateTimerDisplay();
         updateUI();
         if(!animFrameId) animFrameId = requestAnimationFrame(gameLoop);
     }
@@ -667,6 +727,8 @@ body {
         updateScore();
         updateUI();
         gameoverOverlay.classList.remove('show');
+        leftTimer = LEFT_TIME_LIMIT;
+        updateTimerDisplay();
 
         window.addEventListener('keydown', onKeyDown);
         window.addEventListener('keyup', onKeyUp);
@@ -694,7 +756,7 @@ body {
         animFrameId = requestAnimationFrame(gameLoop);
         renderStroop();
         renderPhysics();
-        console.log('✅ 初始化完成，MAX_BALLS =', MAX_BALLS);
+        console.log('✅ 初始化完成');
     }
 
     if(document.readyState==='complete') init();
