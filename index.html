@@ -422,9 +422,8 @@ body { background: #0b0b16; font-family: 'Segoe UI','PingFang TC','Microsoft YaH
 
             setTimeout(() => { if (gameState === STATE.PLAYING) refreshStroop(); }, 200);
             // 初始生成 2 颗球（因为 MAX_BALLS=2）
-            for (let i=0; i<2; i++) {
-                setTimeout(() => { if(gameState===STATE.PLAYING) spawnBall(); }, i*300+100);
-            }
+            // 只生成一颗球（如果 MAX_BALLS >= 1）
+            setTimeout(() => { if(gameState===STATE.PLAYING) spawnBall(); }, 300);
             ballSpawnTimer = 0;
             startTimer();
         } catch(e) { console.error(e); }
