@@ -864,9 +864,9 @@ body {
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         // 動態調整擋板寬度
         let ratio;
-        if (canvasW < 500) ratio = 0.22;
-        else if (canvasW < 800) ratio = 0.26;
-        else ratio = 0.30;
+        if (canvasW < 500) ratio = 0.26;
+        else if (canvasW < 800) ratio = 0.32;
+        else ratio = 0.36;
         let newW = canvasW * ratio;
         newW = Math.min(170, Math.max(60, newW));
         paddle.w = newW;
