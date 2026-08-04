@@ -24,8 +24,43 @@ body {
     padding-bottom:8px; border-bottom:1px solid #2a2a44;
     margin-bottom:10px; flex-wrap:wrap; gap:4px 8px;
 }
+/* ===== 新 LOGO + 標題 ===== */
 .title {
-    font-size:20px; font-weight:700; letter-spacing:1px;
+    display:flex; align-items:center; gap:10px;
+}
+.logo-wrapper {
+    width:36px; height:36px;
+    position:relative;
+    flex-shrink:0;
+}
+.logo-brain {
+    width:100%; height:100%;
+    border-radius:50%;
+    background: linear-gradient(to right, #6366f1 50%, #8b5cf6 50%);
+    position:relative;
+    overflow:hidden;
+    box-shadow: 0 0 20px rgba(99,102,241,0.3);
+}
+.logo-brain::after {
+    content:'';
+    position:absolute;
+    left:50%; top:0;
+    width:2px; height:100%;
+    background:#fff;
+    transform:translateX(-50%);
+    box-shadow: 0 0 8px rgba(255,255,255,0.4);
+}
+.logo-brain .lightning {
+    position:absolute;
+    top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    font-size:18px;
+    color:#fff;
+    text-shadow:0 0 12px rgba(255,255,255,0.6);
+    line-height:1;
+}
+.brand {
+    font-size:22px; font-weight:700; letter-spacing:1px;
     background:linear-gradient(135deg,#a78bfa,#60a5fa,#34d399);
     -webkit-background-clip:text; -webkit-text-fill-color:transparent;
     background-clip:text;
@@ -152,7 +187,6 @@ body {
     cursor:pointer; touch-action: manipulation;
 }
 
-/* 計時器顯示 */
 .timer-display {
     font-size:14px; font-weight:600; color:#fcd34d;
     background:#1e1e38; padding:2px 14px; border-radius:20px;
@@ -162,7 +196,9 @@ body {
 
 @media (max-width: 560px) {
     .game-container { padding:6px; border-radius:14px; }
-    .title { font-size:16px; }
+    .brand { font-size:18px; }
+    .logo-wrapper { width:28px; height:28px; }
+    .logo-brain .lightning { font-size:14px; }
     .score-display { font-size:13px; padding:2px 10px; }
     .score-display span { font-size:14px; min-width:30px; }
     .btn { font-size:11px; padding:3px 10px; }
@@ -195,7 +231,15 @@ body {
 <body>
 <div class="game-container">
     <div class="header">
-        <div class="title">🧠 Brainduel</div>
+        <!-- 新 LOGO + 品牌名稱 -->
+        <div class="title">
+            <div class="logo-wrapper">
+                <div class="logo-brain">
+                    <span class="lightning">⚡</span>
+                </div>
+            </div>
+            <span class="brand">Brainsplit</span>
+        </div>
         <div class="title-score">
             <div class="score-display">🏆 <span id="scoreDisplay">0</span></div>
             <div class="btn-group">
@@ -273,15 +317,15 @@ body {
     const STATE = { IDLE:'idle', PLAYING:'playing', GAMEOVER:'gameover' };
     let gameState = STATE.IDLE;
     let score = 0;
-    let timerInterval = null;          // 每秒計時器（已不使用，但保留）
+    let timerInterval = null;
     let animFrameId = null;
     let stroopData = null;
     let stroopLocked = false;
 
     // ---------- 左腦計時器 ----------
-    let leftTimer = 0;                 // 剩餘秒數（浮點）
-    const LEFT_TIME_LIMIT = 5;         // 5 秒
-    let lastTimestamp = 0;             // 用於計算 delta time
+    let leftTimer = 0;
+    const LEFT_TIME_LIMIT = 5;
+    let lastTimestamp = 0;
 
     // ---------- 物理參數 ----------
     let balls = [];
@@ -364,7 +408,6 @@ body {
         optS.disabled = false;
         optA.className = 'option-btn';
         optS.className = 'option-btn';
-        // 重置計時器
         leftTimer = LEFT_TIME_LIMIT;
         updateTimerDisplay();
     }
@@ -389,7 +432,6 @@ body {
             btn.classList.add('correct');
             score += 50;
             updateScore();
-            // 答對直接換題（重置計時）
             setTimeout(()=>{
                 if (gameState === STATE.PLAYING) refreshStroop();
                 else { stroopLocked=false; renderStroop(); }
@@ -400,15 +442,10 @@ body {
         }
     }
 
-    // ---------- 計時器顯示 ----------
     function updateTimerDisplay() {
         const secs = Math.ceil(leftTimer);
         timerDisplay.textContent = `⏱ ${secs}s`;
-        if (secs <= 1) {
-            timerDisplay.className = 'timer-display warning';
-        } else {
-            timerDisplay.className = 'timer-display';
-        }
+        timerDisplay.className = secs <= 1 ? 'timer-display warning' : 'timer-display';
     }
 
     // ---------- Canvas ----------
@@ -434,7 +471,6 @@ body {
         paddle.y = canvasH - paddle.h - 12;
     }
 
-    // ---------- 小球生成 ----------
     function spawnBall() {
         if (balls.length >= MAX_BALLS) return;
         const x = randomInt(16+BALL_RADIUS, canvasW-16-BALL_RADIUS);
@@ -447,7 +483,6 @@ body {
         balls.push({ x, y, vx, vy, radius: BALL_RADIUS, color: COLOR_MAP[color] });
     }
 
-    // ---------- 物理更新（含碰撞加分） ----------
     function updatePhysics() {
         if (gameState !== STATE.PLAYING) return;
         if (keys.left) paddle.x = Math.max(0, paddle.x - PADDLE_SPEED);
@@ -472,7 +507,7 @@ body {
             const px=paddle.x, py=paddle.y, pw=paddle.w, ph=paddle.h;
             if (b.y + b.radius >= py && b.y + b.radius <= py + ph + 6) {
                 if (b.x >= px - b.radius + 3 && b.x <= px + pw + b.radius - 3) {
-                    // 碰撞加分 (每次碰撞 +10)
+                    // 碰撞加分 +10
                     score += 10;
                     updateScore();
 
@@ -493,7 +528,6 @@ body {
         balls = balls.filter(b => b.y < canvasH + 100);
     }
 
-    // ---------- 渲染 ----------
     function renderPhysics() {
         const dpr = window.devicePixelRatio || 1;
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -549,27 +583,23 @@ body {
     // ---------- 分數 ----------
     function updateScore() { scoreDisplay.textContent = Math.floor(score); }
 
-    // ---------- 遊戲主迴圈（含計時器更新） ----------
+    // ---------- 遊戲主迴圈 ----------
     function gameLoop(timestamp) {
         if (!lastTimestamp) lastTimestamp = timestamp;
-        const delta = (timestamp - lastTimestamp) / 1000; // 秒
+        const delta = (timestamp - lastTimestamp) / 1000;
         lastTimestamp = timestamp;
 
         if (gameState === STATE.PLAYING) {
-            // 更新左腦計時器
             if (stroopData && !stroopLocked) {
                 leftTimer -= delta;
                 if (leftTimer <= 0) {
                     leftTimer = 0;
                     updateTimerDisplay();
-                    // 超時 → Game Over
                     triggerGameOver();
-                    // 停止更新
                 } else {
                     updateTimerDisplay();
                 }
             }
-            // 更新物理
             updatePhysics();
             renderPhysics();
         } else if (gameState === STATE.IDLE) {
@@ -581,10 +611,8 @@ body {
     // ---------- 開始遊戲 ----------
     function startGame() {
         try {
-            // 清除舊計時
             if(timerInterval) clearInterval(timerInterval);
             timerInterval = null;
-
             score = 0;
             updateScore();
             resetPhysics();
@@ -602,21 +630,16 @@ body {
             optS.className = 'option-btn';
             leftTimer = LEFT_TIME_LIMIT;
             updateTimerDisplay();
-
             gameState = STATE.PLAYING;
             updateUI();
 
             setTimeout(() => { if (gameState === STATE.PLAYING) refreshStroop(); }, 200);
-            // 初始生成一顆球
             setTimeout(() => { if(gameState===STATE.PLAYING) spawnBall(); }, 300);
-            // 第二顆由後續間隔自然補上
             ballSpawnTimer = 0;
-            lastTimestamp = 0; // 重置時間戳
-            console.log('✅ 遊戲啟動，MAX_BALLS =', MAX_BALLS);
+            lastTimestamp = 0;
         } catch(e) { console.error(e); }
     }
 
-    // ---------- Game Over ----------
     function triggerGameOver() {
         if (gameState === STATE.GAMEOVER) return;
         gameState = STATE.GAMEOVER;
@@ -629,7 +652,6 @@ body {
         optS.disabled = true;
     }
 
-    // ---------- 重置 ----------
     function resetToIdle() {
         if(timerInterval) clearInterval(timerInterval);
         timerInterval = null;
@@ -756,7 +778,6 @@ body {
         animFrameId = requestAnimationFrame(gameLoop);
         renderStroop();
         renderPhysics();
-        console.log('✅ 初始化完成');
     }
 
     if(document.readyState==='complete') init();
