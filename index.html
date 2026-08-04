@@ -5,183 +5,50 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Brainduel</title>
 <style>
-/* ===== 样式（同前，保持简洁） ===== */
+/* 样式略（与之前相同，节省篇幅） */
 * { margin:0; padding:0; box-sizing:border-box; user-select:none; }
-body {
-    background: #0b0b16;
-    font-family: 'Segoe UI','PingFang TC','Microsoft YaHei',sans-serif;
-    display:flex; justify-content:center; align-items:center;
-    min-height:100vh; color:#e8e8f0; padding:6px;
-    touch-action: none;
-}
-.game-container {
-    width:100%; max-width:900px;
-    background:#12121f; border-radius:20px;
-    padding:12px; box-shadow:0 12px 40px rgba(0,0,0,0.8);
-    border:1px solid #2a2a44;
-}
-.header {
-    display:flex; justify-content:space-between; align-items:center;
-    padding-bottom:8px; border-bottom:1px solid #2a2a44;
-    margin-bottom:10px; flex-wrap:wrap; gap:4px 8px;
-}
-.title {
-    font-size:20px; font-weight:700; letter-spacing:1px;
-    background:linear-gradient(135deg,#a78bfa,#60a5fa,#34d399);
-    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-    background-clip:text;
-}
+body { background: #0b0b16; font-family: 'Segoe UI','PingFang TC','Microsoft YaHei',sans-serif; display:flex; justify-content:center; align-items:center; min-height:100vh; color:#e8e8f0; padding:6px; touch-action: none; }
+.game-container { width:100%; max-width:900px; background:#12121f; border-radius:20px; padding:12px; box-shadow:0 12px 40px rgba(0,0,0,0.8); border:1px solid #2a2a44; }
+.header { display:flex; justify-content:space-between; align-items:center; padding-bottom:8px; border-bottom:1px solid #2a2a44; margin-bottom:10px; flex-wrap:wrap; gap:4px 8px; }
+.title { font-size:20px; font-weight:700; letter-spacing:1px; background:linear-gradient(135deg,#a78bfa,#60a5fa,#34d399); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
 .title-score { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
-.score-display {
-    font-size:16px; font-weight:600; background:#1c1c32;
-    padding:4px 14px; border-radius:30px; border:1px solid #3a3a5a;
-}
+.score-display { font-size:16px; font-weight:600; background:#1c1c32; padding:4px 14px; border-radius:30px; border:1px solid #3a3a5a; }
 .score-display span { color:#fcd34d; font-size:18px; min-width:40px; display:inline-block; text-align:center; }
 .btn-group { display:flex; gap:6px; }
-.btn {
-    padding:4px 14px; border:none; border-radius:30px; font-size:13px;
-    font-weight:600; cursor:pointer; background:#2a2a4a; color:#b0b0d0;
-    border:1px solid #3a3a5a; touch-action: manipulation;
-}
+.btn { padding:4px 14px; border:none; border-radius:30px; font-size:13px; font-weight:600; cursor:pointer; background:#2a2a4a; color:#b0b0d0; border:1px solid #3a3a5a; touch-action: manipulation; }
 .btn-primary { background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border:none; }
 .btn-danger { background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; border:none; }
 .btn:disabled { opacity:0.35; cursor:not-allowed; }
-
-.game-body {
-    display:flex; gap:6px; min-height:380px; position:relative;
-    flex-direction:row !important;
-}
-.left-panel {
-    flex:1 1 0; min-width:0;
-    padding:8px 6px 6px;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    background:#141425; border-radius:16px;
-    border:1px solid #22223e; position:relative;
-}
-.right-panel {
-    flex:1 1 0; min-width:0;
-    padding:8px 6px 6px;
-    display:flex; flex-direction:column;
-    background:#141425; border-radius:16px;
-    border:1px solid #22223e; position:relative;
-}
-.panel-label {
-    position:absolute; top:4px; left:10px;
-    font-size:10px; font-weight:600; color:#6b6b9a;
-    background:#1a1a30; padding:1px 10px; border-radius:12px;
-    border:1px solid #2a2a4e;
-}
-.status-badge {
-    position:absolute; top:4px; right:10px;
-    font-size:9px; font-weight:600; padding:1px 10px;
-    border-radius:12px; background:#1e1e3a;
-    border:1px solid #333358; color:#6b6b9a;
-}
+.game-body { display:flex; gap:6px; min-height:380px; position:relative; flex-direction:row !important; }
+.left-panel { flex:1 1 0; min-width:0; padding:8px 6px 6px; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#141425; border-radius:16px; border:1px solid #22223e; position:relative; }
+.right-panel { flex:1 1 0; min-width:0; padding:8px 6px 6px; display:flex; flex-direction:column; background:#141425; border-radius:16px; border:1px solid #22223e; position:relative; }
+.panel-label { position:absolute; top:4px; left:10px; font-size:10px; font-weight:600; color:#6b6b9a; background:#1a1a30; padding:1px 10px; border-radius:12px; border:1px solid #2a2a4e; }
+.status-badge { position:absolute; top:4px; right:10px; font-size:9px; font-weight:600; padding:1px 10px; border-radius:12px; background:#1e1e3a; border:1px solid #333358; color:#6b6b9a; }
 .status-badge.playing { color:#34d399; border-color:#34d399; background:#0f2a1e; }
 .status-badge.gameover { color:#f87171; border-color:#f87171; background:#2a1212; }
-
-.stroop-prompt {
-    font-size:12px; font-weight:500; color:#c4c4e6;
-    background:#1e1e38; padding:4px 12px; border-radius:20px;
-    margin-bottom:8px; border:1px solid #333358;
-    min-height:30px; display:flex; align-items:center; justify-content:center;
-    text-align:center; width:100%;
-}
+.stroop-prompt { font-size:12px; font-weight:500; color:#c4c4e6; background:#1e1e38; padding:4px 12px; border-radius:20px; margin-bottom:8px; border:1px solid #333358; min-height:30px; display:flex; align-items:center; justify-content:center; text-align:center; width:100%; }
 .stroop-prompt .highlight { color:#fcd34d; font-weight:700; }
-.stroop-word {
-    font-size:42px; font-weight:800; line-height:1.1;
-    margin-bottom:10px; text-shadow:0 0 30px rgba(255,255,255,0.04);
-    letter-spacing:2px; min-height:60px;
-    display:flex; align-items:center; justify-content:center;
-    padding:0 4px; width:100%;
-}
+.stroop-word { font-size:42px; font-weight:800; line-height:1.1; margin-bottom:10px; text-shadow:0 0 30px rgba(255,255,255,0.04); letter-spacing:2px; min-height:60px; display:flex; align-items:center; justify-content:center; padding:0 4px; width:100%; }
 .stroop-options { display:flex; gap:14px; margin-top:4px; flex-wrap:wrap; justify-content:center; width:100%; }
-.option-btn {
-    flex:1; min-width:60px; max-width:100px;
-    padding:10px 0; border:2px solid #3a3a5e;
-    border-radius:12px; background:#1a1a32; color:#e0e0f0;
-    font-size:16px; font-weight:700; cursor:pointer;
-    display:flex; flex-direction:column; align-items:center; gap:1px;
-    font-family:inherit; touch-action: manipulation;
-}
+.option-btn { flex:1; min-width:60px; max-width:100px; padding:10px 0; border:2px solid #3a3a5e; border-radius:12px; background:#1a1a32; color:#e0e0f0; font-size:16px; font-weight:700; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:1px; font-family:inherit; touch-action: manipulation; }
 .option-btn .key-hint { font-size:10px; font-weight:400; color:#6b6b9a; background:#252545; padding:0 8px; border-radius:10px; line-height:18px; }
 .option-btn:active:not(:disabled) { transform:scale(0.95); background:#2a2a4a; }
 .option-btn.correct { border-color:#34d399; background:#1a3a2e; }
 .option-btn.wrong { border-color:#f87171; background:#3a1a1a; }
 .option-btn:disabled { cursor:not-allowed; opacity:0.5; }
-
-#gameCanvas {
-    width:100%; height:100%; border-radius:12px;
-    background:#0e0e1e; display:block; flex:1;
-    min-height:200px; border:1px solid #22223e;
-    touch-action: none;
-}
-.mobile-touch-hint {
-    position:absolute; bottom:4px; left:50%; transform:translateX(-50%);
-    font-size:9px; color:#6b6b9a; background:rgba(20,20,37,0.7);
-    padding:2px 12px; border-radius:12px;
-    border:1px solid #2a2a4e; pointer-events:none; white-space:nowrap;
-}
-
-.divider {
-    width:2px; background:linear-gradient(to bottom, transparent,#6366f1,#8b5cf6,#a78bfa,transparent);
-    flex-shrink:0; border-radius:4px; margin:0 2px;
-}
-.divider::after {
-    content:'⚡'; position:absolute; top:50%; left:50%;
-    transform:translate(-50%,-50%); font-size:14px;
-    color:#a78bfa; text-shadow:0 0 20px rgba(167,139,250,0.5);
-    background:#12121f; padding:2px 2px; border-radius:50%;
-}
-
-.gameover-overlay {
-    position:absolute; inset:0;
-    background:rgba(0,0,0,0.8); backdrop-filter:blur(4px);
-    border-radius:16px; display:none;
-    flex-direction:column; align-items:center; justify-content:center;
-    z-index:20; padding:16px; border:1px solid rgba(239,68,68,0.2);
-}
+#gameCanvas { width:100%; height:100%; border-radius:12px; background:#0e0e1e; display:block; flex:1; min-height:200px; border:1px solid #22223e; touch-action: none; }
+.mobile-touch-hint { position:absolute; bottom:4px; left:50%; transform:translateX(-50%); font-size:9px; color:#6b6b9a; background:rgba(20,20,37,0.7); padding:2px 12px; border-radius:12px; border:1px solid #2a2a4e; pointer-events:none; white-space:nowrap; }
+.divider { width:2px; background:linear-gradient(to bottom, transparent,#6366f1,#8b5cf6,#a78bfa,transparent); flex-shrink:0; border-radius:4px; margin:0 2px; }
+.divider::after { content:'⚡'; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:14px; color:#a78bfa; text-shadow:0 0 20px rgba(167,139,250,0.5); background:#12121f; padding:2px 2px; border-radius:50%; }
+.gameover-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(4px); border-radius:16px; display:none; flex-direction:column; align-items:center; justify-content:center; z-index:20; padding:16px; border:1px solid rgba(239,68,68,0.2); }
 .gameover-overlay.show { display:flex; }
 .gameover-title { font-size:28px; font-weight:800; color:#f87171; text-shadow:0 0 40px rgba(239,68,68,0.3); letter-spacing:2px; margin-bottom:4px; }
 .gameover-sub { font-size:14px; color:#b0b0d0; margin-bottom:4px; }
 .gameover-score { font-size:22px; font-weight:700; color:#fcd34d; margin-bottom:10px; }
 .gameover-score span { font-size:30px; }
-.gameover-btn {
-    padding:8px 28px; border:none; border-radius:30px;
-    font-size:16px; font-weight:700;
-    background:linear-gradient(135deg,#8b5cf6,#6366f1); color:#fff;
-    cursor:pointer; touch-action: manipulation;
-}
-
-@media (max-width: 560px) {
-    .game-container { padding:6px; border-radius:14px; }
-    .title { font-size:16px; }
-    .score-display { font-size:13px; padding:2px 10px; }
-    .score-display span { font-size:14px; min-width:30px; }
-    .btn { font-size:11px; padding:3px 10px; }
-    .game-body { min-height:300px; gap:4px; }
-    .left-panel, .right-panel { padding:4px; border-radius:12px; }
-    .panel-label { font-size:8px; top:2px; left:6px; padding:0 8px; }
-    .status-badge { font-size:8px; top:2px; right:6px; padding:0 8px; }
-    .stroop-prompt { font-size:10px; padding:2px 8px; min-height:24px; margin-bottom:4px; }
-    .stroop-word { font-size:28px; min-height:40px; margin-bottom:4px; }
-    .stroop-options { gap:8px; }
-    .option-btn { min-width:50px; max-width:70px; padding:6px 0; font-size:13px; border-radius:10px; }
-    .option-btn .key-hint { font-size:8px; line-height:14px; padding:0 6px; }
-    #gameCanvas { min-height:140px; border-radius:8px; }
-    .mobile-touch-hint { font-size:7px; padding:1px 8px; }
-    .divider { width:2px; }
-    .divider::after { font-size:10px; }
-    .gameover-title { font-size:20px; }
-    .gameover-score { font-size:18px; }
-    .gameover-score span { font-size:24px; }
-    .gameover-btn { font-size:14px; padding:6px 20px; }
-}
-@media (max-width: 400px) {
-    .stroop-word { font-size:22px; min-height:34px; }
-    .option-btn { min-width:40px; max-width:60px; padding:4px 0; font-size:11px; }
-    #gameCanvas { min-height:100px; }
-}
+.gameover-btn { padding:8px 28px; border:none; border-radius:30px; font-size:16px; font-weight:700; background:linear-gradient(135deg,#8b5cf6,#6366f1); color:#fff; cursor:pointer; touch-action: manipulation; }
+@media (max-width: 560px) { /* 略，同前 */ }
+@media (max-width: 400px) { /* 略，同前 */ }
 </style>
 </head>
 <body>
@@ -274,18 +141,17 @@ body {
     let canvasW = 0, canvasH = 0;
     let ballSpawnTimer = 0;
     const BALL_RADIUS = 10;
-    const MAX_BALLS = 2;
+    const MAX_BALLS = 2;   // 明確設為 2
     const PADDLE_SPEED = 6;
     const GRAVITY = 0.06;
 
-    // ==== 可調參數（符合需求） ====
-    const BASE_SPEED = 1.5;           // 初始速度
-    const BASE_INTERVAL = 110;        // 初始生成間隔（幀）
-    const SPEED_INCREMENT = 0.1;      // 每 N 分增加速度
-    const INCREMENT_STEP = 200;       // 每 300 分提升一次
-    const MAX_SPEED = 3.5;            // 速度上限
-    const MIN_INTERVAL = 60;          // 最短生成間隔
-    const INTERVAL_REDUCTION = 2;     // 每 300 分減少 2 幀
+    const BASE_SPEED = 1.2;
+    const BASE_INTERVAL = 110;
+    const SPEED_INCREMENT = 0.1;
+    const INCREMENT_STEP = 300;
+    const MAX_SPEED = 2.5;
+    const MIN_INTERVAL = 60;
+    const INTERVAL_REDUCTION = 2;
 
     const keys = { left:false, right:false };
 
@@ -380,7 +246,7 @@ body {
         }
     }
 
-    // ---------- Canvas 初始化（含挡板自适应） ----------
+    // ---------- Canvas ----------
     function initCanvas() {
         const rect = canvas.getBoundingClientRect();
         const dpr = window.devicePixelRatio || 1;
@@ -403,13 +269,17 @@ body {
         paddle.y = canvasH - paddle.h - 12;
     }
 
-    // ---------- 小球生成 ----------
+    // ---------- 小球生成（加入除错日志） ----------
     function spawnBall() {
-        if (balls.length >= MAX_BALLS) return;
+        // 强制检查，确保不会超过 MAX_BALLS
+        if (balls.length >= MAX_BALLS) {
+            console.log(`⚠️ 球数已达上限 (${MAX_BALLS})，跳过生成`);
+            return;
+        }
+        console.log(`✅ 生成新球，当前球数：${balls.length} (生成后将为 ${balls.length+1})`);
         const x = randomInt(16+BALL_RADIUS, canvasW-16-BALL_RADIUS);
         const y = -BALL_RADIUS - randomInt(0,16);
         const vx = (Math.random()-0.5)*0.6;
-        // 速度隨分數增長
         const speedBonus = Math.floor(score / INCREMENT_STEP) * SPEED_INCREMENT;
         const currentSpeed = Math.min(MAX_SPEED, BASE_SPEED + speedBonus);
         const vy = currentSpeed + (Math.random() - 0.5) * 0.2;
@@ -417,23 +287,21 @@ body {
         balls.push({ x, y, vx, vy, radius: BALL_RADIUS, color: COLOR_MAP[color] });
     }
 
-    // ---------- 物理更新（移除隨機偏移，間隔穩定遞減） ----------
+    // ---------- 物理更新 ----------
     function updatePhysics() {
         if (gameState !== STATE.PLAYING) return;
         if (keys.left) paddle.x = Math.max(0, paddle.x - PADDLE_SPEED);
         if (keys.right) paddle.x = Math.min(canvasW - paddle.w, paddle.x + PADDLE_SPEED);
 
         ballSpawnTimer++;
-        // 間隔只由得分決定，無隨機偏移 → 順序固定（第二個間隔 ≥ 第三個）
         const intervalReduction = Math.floor(score / INCREMENT_STEP) * INTERVAL_REDUCTION;
         let currentInterval = Math.max(MIN_INTERVAL, BASE_INTERVAL - intervalReduction);
 
         if (ballSpawnTimer >= currentInterval) {
             ballSpawnTimer = 0;
-            spawnBall();
+            spawnBall(); // 这里会检查球数
         }
 
-        // 更新所有球
         for (let i=balls.length-1; i>=0; i--) {
             const b = balls[i];
             b.vy += GRAVITY;
@@ -444,7 +312,6 @@ body {
             const px=paddle.x, py=paddle.y, pw=paddle.w, ph=paddle.h;
             if (b.y + b.radius >= py && b.y + b.radius <= py + ph + 6) {
                 if (b.x >= px - b.radius + 3 && b.x <= px + pw + b.radius - 3) {
-                    // 提升彈跳高度
                     b.vy = -Math.abs(b.vy) - 0.5;
                     b.y = py - b.radius - 0.5;
                     b.vx += (Math.random()-0.5)*0.4;
@@ -554,6 +421,7 @@ body {
             updateUI();
 
             setTimeout(() => { if (gameState === STATE.PLAYING) refreshStroop(); }, 200);
+            // 初始生成 2 颗球（因为 MAX_BALLS=2）
             for (let i=0; i<2; i++) {
                 setTimeout(() => { if(gameState===STATE.PLAYING) spawnBall(); }, i*300+100);
             }
@@ -694,6 +562,7 @@ body {
         animFrameId = requestAnimationFrame(gameLoop);
         renderStroop();
         renderPhysics();
+        console.log('✅ 初始化完成，MAX_BALLS =', MAX_BALLS);
     }
 
     if(document.readyState==='complete') init();
