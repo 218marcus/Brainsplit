@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Brainsplit</title>
 <style>
-/* ===== 样式（与之前相同，略） ===== */
+/* ===== 样式（与之前完全相同，略） ===== */
 * { margin:0; padding:0; box-sizing:border-box; user-select:none; }
 body {
     background: #0b0b16;
@@ -515,10 +515,10 @@ body {
     let swapTimeoutId = null;
 
     // ---------- 慢動作相關 ----------
-    let timeScale = 1;                       // 當前時間縮放
-    let slowMoPhase = null;                 // 'active', 'recovering', null
-    let slowMoStart = null;                 // 慢動作開始時間
-    let slowMoRecoveryStart = null;         // 恢復開始時間
+    let timeScale = 1;
+    let slowMoPhase = null;
+    let slowMoStart = null;
+    let slowMoRecoveryStart = null;
 
     // ---------- 物理參數 ----------
     let balls = [];
@@ -528,11 +528,11 @@ body {
     const BALL_RADIUS = 10;
     const PADDLE_SPEED = 6;
 
-    const BASE_SPEED = 9.0;
+    const BASE_SPEED = 1.0;
     const BASE_INTERVAL = 110;
     const SPEED_INCREMENT = 0.1;
     const INCREMENT_STEP = 300;
-    const MAX_SPEED = 25.0;
+    const MAX_SPEED = 2.0;
     const MIN_INTERVAL = 60;
     const INTERVAL_REDUCTION = 2;
 
@@ -754,10 +754,9 @@ body {
     function triggerRandomEvent() {
         if (gameState !== STATE.PLAYING) return;
 
-        // 清除舊事件
         clearCurrentEvent();
 
-        // 啟動慢動作（1.5 秒）
+        // 慢動作
         timeScale = 0.3;
         slowMoPhase = 'active';
         slowMoStart = performance.now();
@@ -814,7 +813,6 @@ body {
             if (eventTimeoutId) clearTimeout(eventTimeoutId);
             eventTimeoutId = setTimeout(() => {
                 if (gameState !== STATE.PLAYING) return;
-                // 執行事件效果
                 switch(eventType) {
                     case 1:
                         maxBalls = Math.min(6, maxBalls + 1);
@@ -834,7 +832,7 @@ body {
                         }
                         break;
                 }
-                // 開始恢復（1 秒）
+                // 開始恢復
                 slowMoPhase = 'recovering';
                 slowMoRecoveryStart = performance.now();
                 eventTimeoutId = null;
@@ -900,7 +898,6 @@ body {
             clearTimeout(eventTimeoutId);
             eventTimeoutId = null;
         }
-        // 重置慢動作
         timeScale = 1;
         slowMoPhase = null;
         slowMoStart = null;
@@ -908,12 +905,13 @@ body {
         if (isNumberSort) endNumberSort();
     }
 
-    // ---------- 球生成 ----------
+    // ---------- 球生成（vx 範圍加大） ----------
     function spawnBall() {
         if (balls.length >= maxBalls) return;
         const x = randomInt(16 + BALL_RADIUS, canvasW - 16 - BALL_RADIUS);
         const y = isGravityReversed ? canvasH - BALL_RADIUS - randomInt(0, 20) : -BALL_RADIUS - randomInt(0, 16);
-        const vx = (Math.random() - 0.5) * 0.8;
+        // ★ 加大水平速度範圍：係數從 0.8 改為 1.2
+        const vx = (Math.random() - 0.5) * 1.2;
         const speedBonus = Math.floor(score / INCREMENT_STEP) * SPEED_INCREMENT;
         const currentSpeed = Math.min(MAX_SPEED, BASE_SPEED + speedBonus);
         const vy = isGravityReversed ? -currentSpeed : currentSpeed;
@@ -921,18 +919,16 @@ body {
         balls.push({ x, y, vx, vy, radius: BALL_RADIUS, color: COLOR_MAP[color] });
     }
 
-    // ---------- 物理更新（包含慢動作縮放） ----------
+    // ---------- 物理更新（邊界嚴格） ----------
     function updatePhysics() {
         if (gameState !== STATE.PLAYING) return;
 
-        // 擋板移動（速度乘以 timeScale）
         if (keys.left) paddle.x = Math.max(0, paddle.x - PADDLE_SPEED * timeScale);
         if (keys.right) paddle.x = Math.min(canvasW - paddle.w, paddle.x + PADDLE_SPEED * timeScale);
 
         if (isGravityReversed) paddle.y = 10;
         else paddle.y = canvasH - paddle.h - 12;
 
-        // 生成球計時（乘以 timeScale）
         ballSpawnTimer += timeScale;
         const intervalReduction = Math.floor(score / INCREMENT_STEP) * INTERVAL_REDUCTION;
         let currentInterval = Math.max(MIN_INTERVAL, BASE_INTERVAL - intervalReduction);
@@ -941,19 +937,19 @@ body {
             spawnBall();
         }
 
-        // 更新球（位置增量乘以 timeScale）
         for (let i = balls.length - 1; i >= 0; i--) {
             const b = balls[i];
             b.x += b.vx * timeScale;
             b.y += b.vy * timeScale;
 
-            // 左右牆壁反彈
+            // 左右邊界嚴格反彈（球邊緣觸及邊界）
             if (b.x - b.radius < 0) { b.x = b.radius; b.vx = -b.vx; }
             if (b.x + b.radius > canvasW) { b.x = canvasW - b.radius; b.vx = -b.vx; }
 
             const px = paddle.x, py = paddle.y, pw = paddle.w, ph = paddle.h;
 
             if (isGravityReversed) {
+                // 擋板在頂部
                 if (b.y - b.radius <= py + ph && b.y - b.radius >= py - 5) {
                     if (b.x >= px - b.radius + 3 && b.x <= px + pw + b.radius - 3) {
                         b.vy = -b.vy;
@@ -966,11 +962,13 @@ body {
                         continue;
                     }
                 }
-                if (b.y + b.radius < 0) {
+                // 判負：球超出頂部（嚴格邊界）
+                if (b.y - b.radius < 0) {
                     triggerGameOver();
                     return;
                 }
             } else {
+                // 正常模式
                 if (b.y + b.radius >= py && b.y + b.radius <= py + ph + 6) {
                     if (b.x >= px - b.radius + 3 && b.x <= px + pw + b.radius - 3) {
                         b.vy = -b.vy;
@@ -983,6 +981,7 @@ body {
                         continue;
                     }
                 }
+                // 判負：球超出底部（嚴格邊界）
                 if (b.y + b.radius > canvasH) {
                     triggerGameOver();
                     return;
@@ -1054,16 +1053,14 @@ body {
         }
     }
 
-    // ---------- 遊戲迴圈（含慢動作更新） ----------
+    // ---------- 遊戲迴圈（含慢動作） ----------
     function gameLoop(timestamp) {
         if (!lastTimestamp) lastTimestamp = timestamp;
         const delta = (timestamp - lastTimestamp) / 1000;
         lastTimestamp = timestamp;
 
-        // ---- 慢動作過渡 ----
+        // 慢動作過渡
         if (slowMoPhase === 'active') {
-            // 保持慢動作，直到1.5秒後（由事件延遲回調轉為 recovering）
-            // 但防止意外，如果超過2秒仍未恢復，強制恢復
             if (slowMoStart && performance.now() - slowMoStart > 2500) {
                 slowMoPhase = 'recovering';
                 slowMoRecoveryStart = performance.now();
@@ -1083,7 +1080,6 @@ body {
         const effectiveDelta = delta * timeScale;
 
         if (gameState === STATE.PLAYING) {
-            // 左腦計時（乘以 effectiveDelta）
             if (!isNumberSort && stroopData && !stroopLocked) {
                 leftTimer -= effectiveDelta;
                 if (leftTimer <= 0) {
@@ -1094,7 +1090,6 @@ body {
                     updateTimerDisplay();
                 }
             }
-            // 數字題計時
             if (isNumberSort) {
                 eventTimer -= effectiveDelta;
                 if (eventTimer <= 0) {
@@ -1157,7 +1152,6 @@ body {
             statusBadgeRight.className = 'status-badge playing';
             leftLabel.textContent = '🧩 邏輯';
             rightLabel.textContent = '🎯 物理';
-            // 重置慢動作
             timeScale = 1;
             slowMoPhase = null;
             slowMoStart = null;
@@ -1185,7 +1179,6 @@ body {
         optA.disabled = true;
         optS.disabled = true;
         eventOverlay.classList.remove('show');
-        // 重置慢動作
         timeScale = 1;
         slowMoPhase = null;
         slowMoStart = null;
