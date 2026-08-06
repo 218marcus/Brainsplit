@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Brainsplit</title>
 <style>
-/* ===== 原有样式（保持不变）===== */
+/* ===== 样式（与之前相同，略） ===== */
 * { margin:0; padding:0; box-sizing:border-box; user-select:none; }
 body {
     background: #0b0b16;
@@ -227,7 +227,6 @@ body {
     100% { transform:scale(1.05); opacity:1; }
 }
 
-/* ===== 说明模态框 ===== */
 .help-overlay {
     position:fixed;
     top:0; left:0; width:100%; height:100%;
@@ -389,7 +388,6 @@ body {
     </div>
 </div>
 
-<!-- ===== 說明模態框 ===== -->
 <div class="help-overlay" id="helpOverlay">
     <div class="help-box">
         <button class="help-close" id="helpClose">✕</button>
@@ -411,7 +409,7 @@ body {
             <ul>
                 <li>左腦答對：<span class="highlight">+50 分</span></li>
                 <li>右腦每次接住球：<span class="highlight">+10 分</span></li>
-                <li>生存無額外加分（秒數加分已移除）</li>
+                <li>生存無額外加分</li>
             </ul>
         </div>
         <div class="help-section">
@@ -501,7 +499,7 @@ body {
     let maxBalls = 3;
     let isControlSwapped = false;
     let isGravityReversed = false;
-    let activeEvent = null;            // 'swap', 'number', 'gravity', null
+    let activeEvent = null;
     let eventTimer = 0;
     let isNumberSort = false;
     let numberSortCorrectSide = 0;
@@ -510,12 +508,9 @@ body {
     let lastEventScore = 0;
     const EVENT_INTERVAL = 500;
 
-    // 用於事件延遲的計時器
     let eventTimeoutId = null;
-    const EVENT_DELAY = 1500;   // 一般事件延遲 1.5 秒
-    const SWAP_DELAY = 2000;    // 交換事件延遲 2 秒
-
-    // 用於交換事件的延遲計時（獨立，已存在）
+    const EVENT_DELAY = 1500;
+    const SWAP_DELAY = 2000;
     let swapPending = false;
     let swapTimeoutId = null;
 
@@ -526,13 +521,13 @@ body {
     let ballSpawnTimer = 0;
     const BALL_RADIUS = 10;
     const PADDLE_SPEED = 6;
-    let gravity = 0.04;
 
-    const BASE_SPEED = 1.0;
+    // 無重力，速度固定
+    const BASE_SPEED = 1.0;            // 降低初始速度
     const BASE_INTERVAL = 110;
     const SPEED_INCREMENT = 0.1;
     const INCREMENT_STEP = 300;
-    const MAX_SPEED = 2.5;
+    const MAX_SPEED = 2.0;             // 降低最大速度
     const MIN_INTERVAL = 60;
     const INTERVAL_REDUCTION = 2;
 
@@ -713,7 +708,7 @@ body {
         refreshStroop();
     }
 
-    // ---------- 清除舊事件（含計時器） ----------
+    // ---------- 清除舊事件 ----------
     function clearCurrentEvent() {
         if (swapTimeoutId) {
             clearTimeout(swapTimeoutId);
@@ -736,13 +731,13 @@ body {
         }
         if (activeEvent === 'gravity') {
             isGravityReversed = false;
-            gravity = 0.06;
             activeEvent = null;
             statusBadgeRight.textContent = '▶';
             statusBadgeRight.className = 'status-badge playing';
             paddle.y = canvasH - paddle.h - 12;
+            // 反轉球的速度方向（恢復正常）
             for (let b of balls) {
-                b.vy = -Math.sign(b.vy) * Math.abs(b.vy);
+                b.vy = -b.vy;
             }
         }
         if (activeEvent === 'number') {
@@ -751,17 +746,14 @@ body {
         }
     }
 
-    // ---------- 事件觸發（含延遲） ----------
+    // ---------- 事件觸發 ----------
     function triggerRandomEvent() {
         if (gameState !== STATE.PLAYING) return;
-
-        // 先清除舊事件（包括計時器）
         clearCurrentEvent();
 
         const eventType = randomInt(1, 4);
         let eventName = '', eventDesc = '';
 
-        // 顯示事件名稱（立即）
         switch(eventType) {
             case 1:
                 eventName = '⚡ 增加球';
@@ -782,9 +774,7 @@ body {
         }
         showEventOverlay(eventName, eventDesc);
 
-        // 根據類型設定延遲執行
         if (eventType === 2) {
-            // 交換事件：延遲 2 秒
             activeEvent = 'swap';
             statusBadge.textContent = '⏳';
             statusBadge.className = 'status-badge event';
@@ -805,36 +795,30 @@ body {
                 }
             }, SWAP_DELAY);
         } else {
-            // 其他事件：延遲 EVENT_DELAY 後執行
-            activeEvent = eventType === 3 ? 'number' : (eventType === 4 ? 'gravity' : null);
-            // 對於增加球，activeEvent 設為 null，因為它不持續
-            if (eventType === 1) activeEvent = null; 
+            if (eventType === 1) activeEvent = null;
             else if (eventType === 3) activeEvent = 'number';
             else if (eventType === 4) activeEvent = 'gravity';
 
-            // 清除舊計時器
             if (eventTimeoutId) clearTimeout(eventTimeoutId);
             eventTimeoutId = setTimeout(() => {
                 if (gameState !== STATE.PLAYING) return;
                 switch(eventType) {
                     case 1:
                         maxBalls = Math.min(6, maxBalls + 1);
-                        // 增加球後更新狀態徽章（無持續事件）
                         statusBadge.textContent = '▶';
                         statusBadge.className = 'status-badge playing';
-                        // 顯示提示（可選）
                         break;
                     case 3:
                         startNumberSort();
                         break;
                     case 4:
                         isGravityReversed = true;
-                        gravity = 0.06;
                         statusBadgeRight.textContent = '🌀';
                         statusBadgeRight.className = 'status-badge event';
                         paddle.y = 10;
+                        // 反轉所有球的垂直速度方向
                         for (let b of balls) {
-                            b.vy = -Math.sign(b.vy) * Math.abs(b.vy);
+                            b.vy = -b.vy;
                         }
                         break;
                 }
@@ -862,13 +846,13 @@ body {
         canvas.width = canvasW * dpr;
         canvas.height = canvasH * dpr;
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        // 動態調整擋板寬度
+        // 動態調整擋板寬度（可依喜好調整比例）
         let ratio;
-        if (canvasW < 500) ratio = 0.26;
-        else if (canvasW < 800) ratio = 0.32;
-        else ratio = 0.36;
+        if (canvasW < 500) ratio = 0.25;
+        else if (canvasW < 800) ratio = 0.30;
+        else ratio = 0.35;
         let newW = canvasW * ratio;
-        newW = Math.min(170, Math.max(60, newW));
+        newW = Math.min(200, Math.max(60, newW));
         paddle.w = newW;
         paddle.x = (canvasW - paddle.w) / 2;
         paddle.y = isGravityReversed ? 10 : canvasH - paddle.h - 12;
@@ -881,7 +865,6 @@ body {
         paddle.y = isGravityReversed ? 10 : canvasH - paddle.h - 12;
         isControlSwapped = false;
         isGravityReversed = false;
-        gravity = 0.06;
         activeEvent = null;
         isNumberSort = false;
         maxBalls = 3;
@@ -906,18 +889,24 @@ body {
         if (isNumberSort) endNumberSort();
     }
 
+    // ---------- 球生成（無重力） ----------
     function spawnBall() {
         if (balls.length >= maxBalls) return;
-        const x = randomInt(16+BALL_RADIUS, canvasW-16-BALL_RADIUS);
-        const y = isGravityReversed ? canvasH - BALL_RADIUS - randomInt(0,20) : -BALL_RADIUS - randomInt(0,16);
-        const vx = (Math.random()-0.5)*0.6;
+        const x = randomInt(16 + BALL_RADIUS, canvasW - 16 - BALL_RADIUS);
+        // 根據重力反轉決定初始 y 位置
+        const y = isGravityReversed ? canvasH - BALL_RADIUS - randomInt(0, 20) : -BALL_RADIUS - randomInt(0, 16);
+        // 水平隨機
+        const vx = (Math.random() - 0.5) * 0.8;  // 增加水平偏移範圍
+        // 速度增長
         const speedBonus = Math.floor(score / INCREMENT_STEP) * SPEED_INCREMENT;
         const currentSpeed = Math.min(MAX_SPEED, BASE_SPEED + speedBonus);
-        const vy = isGravityReversed ? -(currentSpeed + (Math.random() - 0.5) * 0.2) : (currentSpeed + (Math.random() - 0.5) * 0.2);
+        // 垂直速度固定（反轉時取負）
+        const vy = isGravityReversed ? -currentSpeed : currentSpeed;
         const color = randomItem(COLOR_NAMES);
         balls.push({ x, y, vx, vy, radius: BALL_RADIUS, color: COLOR_MAP[color] });
     }
 
+    // ---------- 物理更新（無重力，僅反彈） ----------
     function updatePhysics() {
         if (gameState !== STATE.PLAYING) return;
 
@@ -927,6 +916,7 @@ body {
         if (isGravityReversed) paddle.y = 10;
         else paddle.y = canvasH - paddle.h - 12;
 
+        // 生成球
         ballSpawnTimer++;
         const intervalReduction = Math.floor(score / INCREMENT_STEP) * INTERVAL_REDUCTION;
         let currentInterval = Math.max(MIN_INTERVAL, BASE_INTERVAL - intervalReduction);
@@ -935,53 +925,51 @@ body {
             spawnBall();
         }
 
-        // 計算最大彈跳速度（目標高度為板塊高度的一半）
-        const targetHeight = canvasH * 0.5;   // 板塊高度為 canvasH/2，其一半為 canvasH/4
-        const maxVy = Math.sqrt(2 * gravity * targetHeight);
-
-        for (let i=balls.length-1; i>=0; i--) {
+        // 更新球（無加速度）
+        for (let i = balls.length - 1; i >= 0; i--) {
             const b = balls[i];
-            b.vy += isGravityReversed ? -gravity : gravity;
             b.x += b.vx;
             b.y += b.vy;
 
+            // 左右牆壁反彈
             if (b.x - b.radius < 0) { b.x = b.radius; b.vx = -b.vx; }
             if (b.x + b.radius > canvasW) { b.x = canvasW - b.radius; b.vx = -b.vx; }
 
-            const px=paddle.x, py=paddle.y, pw=paddle.w, ph=paddle.h;
+            const px = paddle.x, py = paddle.y, pw = paddle.w, ph = paddle.h;
+
             if (isGravityReversed) {
+                // 擋板在頂部，球從下往上
                 if (b.y - b.radius <= py + ph && b.y - b.radius >= py - 5) {
                     if (b.x >= px - b.radius + 3 && b.x <= px + pw + b.radius - 3) {
-                        let newVy = Math.abs(b.vy) + 0.5;
-                        if (newVy > maxVy) newVy = maxVy;
-                        b.vy = newVy;
+                        // 反彈：垂直速度取反
+                        b.vy = -b.vy;
                         b.y = py + ph + b.radius + 0.5;
                         score += 10;
                         updateScore();
-                        b.vx += (Math.random()-0.5)*0.4;
-                        const maxV=5;
-                        if (Math.abs(b.vx)>maxV) b.vx = Math.sign(b.vx)*maxV;
-                        if (Math.abs(b.vy)>maxV) b.vy = Math.sign(b.vy)*maxV;
+                        // 水平微擾
+                        b.vx += (Math.random() - 0.5) * 0.3;
+                        const maxV = 3;
+                        if (Math.abs(b.vx) > maxV) b.vx = Math.sign(b.vx) * maxV;
                         continue;
                     }
                 }
+                // 判輸：球超出頂部
                 if (b.y + b.radius < 0) {
                     triggerGameOver();
                     return;
                 }
             } else {
+                // 正常模式，擋板在底部
                 if (b.y + b.radius >= py && b.y + b.radius <= py + ph + 6) {
                     if (b.x >= px - b.radius + 3 && b.x <= px + pw + b.radius - 3) {
-                        let newVy = -Math.abs(b.vy) - 0.5;
-                        if (Math.abs(newVy) > maxVy) newVy = -maxVy;
-                        b.vy = newVy;
+                        // 反彈
+                        b.vy = -b.vy;
                         b.y = py - b.radius - 0.5;
                         score += 10;
                         updateScore();
-                        b.vx += (Math.random()-0.5)*0.4;
-                        const maxV=5;
-                        if (Math.abs(b.vx)>maxV) b.vx = Math.sign(b.vx)*maxV;
-                        if (Math.abs(b.vy)>maxV) b.vy = Math.sign(b.vy)*maxV;
+                        b.vx += (Math.random() - 0.5) * 0.3;
+                        const maxV = 3;
+                        if (Math.abs(b.vx) > maxV) b.vx = Math.sign(b.vx) * maxV;
                         continue;
                     }
                 }
@@ -991,9 +979,11 @@ body {
                 }
             }
         }
+        // 清理超出範圍的球
         balls = balls.filter(b => b.y < canvasH + 100 && b.y > -100);
     }
 
+    // ---------- 渲染 ----------
     function renderPhysics() {
         const dpr = window.devicePixelRatio || 1;
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1123,7 +1113,6 @@ body {
             lastEventScore = 0;
             isControlSwapped = false;
             isGravityReversed = false;
-            gravity = 0.06;
             activeEvent = null;
             isNumberSort = false;
             maxBalls = 3;
