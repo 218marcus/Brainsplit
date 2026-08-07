@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Brainsplit</title>
     <style>
+        /* ===== 完整样式（与之前相同，略） ===== */
         * { margin:0; padding:0; box-sizing:border-box; user-select:none; }
         body { background:#0b0b16; font-family:'Segoe UI','PingFang TC','Microsoft YaHei',sans-serif; display:flex; justify-content:center; align-items:center; min-height:100vh; color:#e8e8f0; padding:6px; touch-action:none; }
         .game-container { width:100%; max-width:900px; background:#12121f; border-radius:20px; padding:12px; box-shadow:0 12px 40px rgba(0,0,0,0.8); border:1px solid #2a2a44; }
@@ -239,7 +240,7 @@
             // ★ 速度參數（像素/秒）★
             const PADDLE_SPEED = 360;
             const BASE_SPEED = 240.0;
-            const BASE_INTERVAL = 110;
+            const BASE_INTERVAL = 300;      // 原 110，增加至 300
             const SPEED_INCREMENT = 10;
             const INCREMENT_STEP = 300;
             const MAX_SPEED = 360.0;
@@ -482,7 +483,6 @@
                     endNumberSort();
                     activeEvent = null;
                 }
-                // 重置球速與暫停
                 speedScale = 1.0;
                 speedScaleTarget = 1.0;
                 speedScaleAnimating = false;
@@ -490,12 +490,11 @@
                 timersPaused = false;
             }
 
-            // ---------- 事件觸發（含球速動畫與計時暫停） ----------
+            // ---------- 事件觸發 ----------
             function triggerRandomEvent() {
                 if (gameState !== STATE.PLAYING) return;
                 clearCurrentEvent();
 
-                // 啟動球速下降動畫（1.5 秒降到 0.2）
                 startSpeedAnimation(0.2, 1.5, 1.0);
                 timersPaused = true;
 
@@ -532,14 +531,10 @@
                         }
                     }, SWAP_DELAY);
                 } else {
-                    // 針對重力反轉的特殊處理：如果當前已反轉，則只清除（恢復正常）而不重新開啟
                     if (eventType === 4 && isGravityReversed) {
-                        // 已經反轉，再次觸發反轉 → 清除並結束事件（不重新開啟）
-                        // 注意：clearCurrentEvent 已在上方執行，但此時 isGravityReversed 為 true，我們在 clearCurrentEvent 中已清除，
-                        // 但我們需要避免再次設置反轉，所以直接跳過設置，只恢復計時器。
+                        // 已反轉 → 清除，不重新開啟
                         startSpeedAnimation(1.0, 1.0, speedScale);
                         timersPaused = false;
-                        // 確保 activeEvent 為 null
                         activeEvent = null;
                         statusBadge.textContent = '▶';
                         statusBadge.className = 'status-badge playing';
@@ -547,7 +542,6 @@
                         statusBadgeRight.className = 'status-badge playing';
                         leftLabel.textContent = isControlSwapped ? '🎯 物理' : '🧩 邏輯';
                         rightLabel.textContent = isControlSwapped ? '🧩 邏輯' : '🎯 物理';
-                        // 清除事件計時器
                         if (eventTimeoutId) { clearTimeout(eventTimeoutId); eventTimeoutId = null; }
                         lastEventScore += EVENT_INTERVAL;
                         return;
@@ -592,7 +586,7 @@
                 setTimeout(() => { eventOverlay.classList.remove('show'); }, 1500);
             }
 
-            // ---------- Canvas 初始化 ----------
+            // ---------- Canvas ----------
             function initCanvas() {
                 const rect = canvas.getBoundingClientRect();
                 const dpr = window.devicePixelRatio || 1;
@@ -664,7 +658,7 @@
                 balls.push({ x, y, vx, vy, radius: BALL_RADIUS, color: COLOR_MAP[color] });
             }
 
-            // ---------- 物理更新（含正確邊界反彈與水平隨機偏移） ----------
+            // ---------- 物理更新（含速度保持與大幅隨機偏移） ----------
             function updatePhysics(dt) {
                 if (gameState !== STATE.PLAYING) return;
 
@@ -693,13 +687,12 @@
                     b.x += b.vx * dt * scale;
                     b.y += b.vy * dt * scale;
 
-                    // 左右邊界反彈
+                    // 邊界反彈（左右）
                     if (b.x - b.radius < 0) { b.x = b.radius; b.vx = -b.vx; }
                     if (b.x + b.radius > canvasW) { b.x = canvasW - b.radius; b.vx = -b.vx; }
 
-                    // 垂直邊界
+                    // 垂直邊界：正常模式頂部反彈、底部判負；反轉模式底部反彈、頂部判負
                     if (isGravityReversed) {
-                        // 反轉模式：頂部判負，底部反彈
                         if (b.y - b.radius < 0) {
                             triggerGameOver();
                             return;
@@ -709,7 +702,6 @@
                             b.vy = -b.vy;
                         }
                     } else {
-                        // 正常模式：底部判負，頂部反彈
                         if (b.y + b.radius > canvasH) {
                             triggerGameOver();
                             return;
@@ -720,33 +712,50 @@
                         }
                     }
 
-                    // 擋板碰撞（只反轉方向，保持速度大小）
+                    // 擋板碰撞（保持速度大小，增加水平隨機偏移）
                     const px = paddle.x, py = paddle.y, pw = paddle.w, ph = paddle.h;
+                    let hit = false;
                     if (isGravityReversed) {
                         if (b.y - b.radius <= py + ph && b.y - b.radius >= py - 5) {
                             if (b.x >= px - b.radius + 3 && b.x <= px + pw + b.radius - 3) {
-                                b.vy = -b.vy;  // 只反轉，不加減
+                                hit = true;
+                                // 計算當前總速度
+                                const speed = Math.sqrt(b.vx * b.vx + b.vy * b.vy);
+                                // 垂直反向
+                                b.vy = -b.vy;
+                                // 加入大幅水平隨機偏移（±12）
+                                b.vx += (Math.random() - 0.5) * 12;
+                                // 限制水平速度最大為總速度的 40%
+                                const maxVx = speed * 0.4;
+                                if (Math.abs(b.vx) > maxVx) b.vx = Math.sign(b.vx) * maxVx;
+                                // 重新調整垂直速度，使總速度保持不變
+                                const newVx = b.vx;
+                                const remaining = Math.sqrt(Math.max(0, speed * speed - newVx * newVx));
+                                b.vy = Math.sign(b.vy) * remaining;
+                                // 防止因浮點數導致速度為 NaN
+                                if (isNaN(b.vy)) b.vy = -Math.sign(b.vy) * speed * 0.6;
+                                // 位置修正
                                 b.y = py + ph + b.radius + 0.5;
                                 score += 10;
                                 updateScore();
-                                // 增加水平隨機偏移（幅度加大）
-                                b.vx += (Math.random() - 0.5) * 0.8;
-                                const maxV = 3;
-                                if (Math.abs(b.vx) > maxV) b.vx = Math.sign(b.vx) * maxV;
-                                continue;
                             }
                         }
                     } else {
                         if (b.y + b.radius >= py && b.y + b.radius <= py + ph + 6) {
                             if (b.x >= px - b.radius + 3 && b.x <= px + pw + b.radius - 3) {
-                                b.vy = -b.vy;  // 只反轉
+                                hit = true;
+                                const speed = Math.sqrt(b.vx * b.vx + b.vy * b.vy);
+                                b.vy = -b.vy;
+                                b.vx += (Math.random() - 0.5) * 12;
+                                const maxVx = speed * 0.4;
+                                if (Math.abs(b.vx) > maxVx) b.vx = Math.sign(b.vx) * maxVx;
+                                const newVx = b.vx;
+                                const remaining = Math.sqrt(Math.max(0, speed * speed - newVx * newVx));
+                                b.vy = Math.sign(b.vy) * remaining;
+                                if (isNaN(b.vy)) b.vy = Math.sign(b.vy) * speed * 0.6;
                                 b.y = py - b.radius - 0.5;
                                 score += 10;
                                 updateScore();
-                                b.vx += (Math.random() - 0.5) * 0.8;
-                                const maxV = 3;
-                                if (Math.abs(b.vx) > maxV) b.vx = Math.sign(b.vx) * maxV;
-                                continue;
                             }
                         }
                     }
@@ -754,7 +763,7 @@
                 balls = balls.filter(b => b.y < canvasH + 100 && b.y > -100);
             }
 
-            // ---------- 渲染物理 ----------
+            // ---------- 渲染 ----------
             function renderPhysics() {
                 const dpr = window.devicePixelRatio || 1;
                 ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -827,7 +836,6 @@
                 lastTimestamp = timestamp;
 
                 updateSpeedAnimation();
-
                 const effectiveDt = delta;
 
                 if (gameState === STATE.PLAYING) {
@@ -966,7 +974,7 @@
                 if (eventTimeoutId) { clearTimeout(eventTimeoutId); eventTimeoutId = null; }
             }
 
-            // ---------- 更新 UI 狀態 ----------
+            // ---------- UI ----------
             function updateUI() {
                 const isIdle = gameState === STATE.IDLE;
                 const isPlaying = gameState === STATE.PLAYING;
