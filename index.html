@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Brainsplit</title>
     <style>
-        /* ===== 完整样式（与之前相同，此处省略以节省篇幅） ===== */
-        /* 请直接复制您之前的全部样式，或使用下面压缩版（已包含完整样式） */
-        /* 为完整起见，我将重复全部样式，但因为篇幅长，请见谅 */
+        /* ===== 完整样式（与上一版相同，此处略以节省篇幅） ===== */
         * { margin:0; padding:0; box-sizing:border-box; user-select:none; }
         body { background:#0b0b16; font-family:'Segoe UI','PingFang TC','Microsoft YaHei',sans-serif; display:flex; justify-content:center; align-items:center; min-height:100vh; color:#e8e8f0; padding:6px; touch-action:none; }
         .game-container { width:100%; max-width:900px; background:#12121f; border-radius:20px; padding:12px; box-shadow:0 12px 40px rgba(0,0,0,0.8); border:1px solid #2a2a44; }
@@ -495,7 +493,7 @@
                             rightLabel.textContent = '🧩 邏輯';
                             swapPending = false;
                             swapTimeoutId = null;
-                            // ★ 交換事件後也開始恢復 ★
+                            // ★ 交換事件後開始恢復 ★
                             slowMoPhase = 'recovering';
                             slowMoRecoveryStart = performance.now();
                         }
@@ -752,10 +750,10 @@
                 const delta = Math.min((timestamp - lastTimestamp) / 1000, 0.05);
                 lastTimestamp = timestamp;
 
-                // ★ 慢動作過渡（確保最終恢復到 1） ★
+                // ★ 慢動作過渡（強化恢復） ★
                 if (slowMoPhase === 'active') {
-                    // 若超過 2.5 秒仍未恢復，強制恢復
-                    if (slowMoStart && performance.now() - slowMoStart > 2500) {
+                    // 若超過 1.5 秒仍未恢復，強制恢復（原為2.5，縮短為1.5）
+                    if (slowMoStart && performance.now() - slowMoStart > 1500) {
                         slowMoPhase = 'recovering';
                         slowMoRecoveryStart = performance.now();
                     }
@@ -846,6 +844,7 @@
                     statusBadgeRight.className = 'status-badge playing';
                     leftLabel.textContent = '🧩 邏輯';
                     rightLabel.textContent = '🎯 物理';
+                    // ★ 強制重置 timeScale ★
                     timeScale = 1;
                     slowMoPhase = null;
                     slowMoStart = null;
