@@ -5,702 +5,88 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Brainsplit</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            user-select: none;
-        }
-        body {
-            background: #0b0b16;
-            font-family: 'Segoe UI', 'PingFang TC', 'Microsoft YaHei', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            color: #e8e8f0;
-            padding: 6px;
-            touch-action: none;
-        }
-        .game-container {
-            width: 100%;
-            max-width: 900px;
-            background: #12121f;
-            border-radius: 20px;
-            padding: 12px;
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8);
-            border: 1px solid #2a2a44;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #2a2a44;
-            margin-bottom: 10px;
-            flex-wrap: wrap;
-            gap: 4px 8px;
-        }
-        .title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .logo-wrapper {
-            width: 36px;
-            height: 36px;
-            position: relative;
-            flex-shrink: 0;
-        }
-        .logo-brain {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            background: linear-gradient(to right, #6366f1 50%, #8b5cf6 50%);
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
-        }
-        .logo-brain::after {
-            content: '';
-            position: absolute;
-            left: 50%;
-            top: 0;
-            width: 2px;
-            height: 100%;
-            background: #fff;
-            transform: translateX(-50%);
-            box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
-        }
-        .logo-brain .lightning {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 18px;
-            color: #fff;
-            text-shadow: 0 0 12px rgba(255, 255, 255, 0.6);
-            line-height: 1;
-        }
-        .brand {
-            font-size: 22px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            background: linear-gradient(135deg, #a78bfa, #60a5fa, #34d399);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .title-score {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .score-display {
-            font-size: 16px;
-            font-weight: 600;
-            background: #1c1c32;
-            padding: 4px 14px;
-            border-radius: 30px;
-            border: 1px solid #3a3a5a;
-        }
-        .score-display span {
-            color: #fcd34d;
-            font-size: 18px;
-            min-width: 40px;
-            display: inline-block;
-            text-align: center;
-        }
-        .btn-group {
-            display: flex;
-            gap: 6px;
-        }
-        .btn {
-            padding: 4px 14px;
-            border: none;
-            border-radius: 30px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            background: #2a2a4a;
-            color: #b0b0d0;
-            border: 1px solid #3a3a5a;
-            touch-action: manipulation;
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            color: #fff;
-            border: none;
-        }
-        .btn-danger {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            color: #fff;
-            border: none;
-        }
-        .btn-info {
-            background: linear-gradient(135deg, #34d399, #10b981);
-            color: #fff;
-            border: none;
-        }
-        .btn:disabled {
-            opacity: 0.35;
-            cursor: not-allowed;
-        }
-
-        .game-body {
-            display: flex;
-            gap: 6px;
-            min-height: 380px;
-            position: relative;
-            flex-direction: row !important;
-        }
-        .left-panel {
-            flex: 1 1 0;
-            min-width: 0;
-            padding: 8px 6px 6px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: #141425;
-            border-radius: 16px;
-            border: 1px solid #22223e;
-            position: relative;
-            order: 1;
-        }
-        .right-panel {
-            flex: 1 1 0;
-            min-width: 0;
-            padding: 8px 6px 6px;
-            display: flex;
-            flex-direction: column;
-            background: #141425;
-            border-radius: 16px;
-            border: 1px solid #22223e;
-            position: relative;
-            order: 2;
-        }
-        .panel-label {
-            position: absolute;
-            top: 4px;
-            left: 10px;
-            font-size: 10px;
-            font-weight: 600;
-            color: #6b6b9a;
-            background: #1a1a30;
-            padding: 1px 10px;
-            border-radius: 12px;
-            border: 1px solid #2a2a4e;
-        }
-        .status-badge {
-            position: absolute;
-            top: 4px;
-            right: 10px;
-            font-size: 9px;
-            font-weight: 600;
-            padding: 1px 10px;
-            border-radius: 12px;
-            background: #1e1e3a;
-            border: 1px solid #333358;
-            color: #6b6b9a;
-        }
-        .status-badge.playing {
-            color: #34d399;
-            border-color: #34d399;
-            background: #0f2a1e;
-        }
-        .status-badge.gameover {
-            color: #f87171;
-            border-color: #f87171;
-            background: #2a1212;
-        }
-        .status-badge.event {
-            color: #fbbf24;
-            border-color: #fbbf24;
-            background: #2a2812;
-        }
-
-        .stroop-prompt {
-            font-size: 12px;
-            font-weight: 500;
-            color: #c4c4e6;
-            background: #1e1e38;
-            padding: 4px 12px;
-            border-radius: 20px;
-            margin-bottom: 4px;
-            border: 1px solid #333358;
-            min-height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            width: 100%;
-        }
-        .stroop-prompt .highlight {
-            color: #fcd34d;
-            font-weight: 700;
-        }
-        .stroop-word {
-            font-size: 42px;
-            font-weight: 800;
-            line-height: 1.1;
-            margin-bottom: 6px;
-            text-shadow: 0 0 30px rgba(255, 255, 255, 0.04);
-            letter-spacing: 2px;
-            min-height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 4px;
-            width: 100%;
-        }
-        .stroop-options {
-            display: flex;
-            gap: 14px;
-            margin-top: 4px;
-            flex-wrap: wrap;
-            justify-content: center;
-            width: 100%;
-        }
-        .option-btn {
-            flex: 1;
-            min-width: 60px;
-            max-width: 100px;
-            padding: 10px 0;
-            border: 2px solid #3a3a5e;
-            border-radius: 12px;
-            background: #1a1a32;
-            color: #e0e0f0;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1px;
-            font-family: inherit;
-            touch-action: manipulation;
-        }
-        .option-btn .key-hint {
-            font-size: 10px;
-            font-weight: 400;
-            color: #6b6b9a;
-            background: #252545;
-            padding: 0 8px;
-            border-radius: 10px;
-            line-height: 18px;
-        }
-        .option-btn:active:not(:disabled) {
-            transform: scale(0.95);
-            background: #2a2a4a;
-        }
-        .option-btn.correct {
-            border-color: #34d399;
-            background: #1a3a2e;
-        }
-        .option-btn.wrong {
-            border-color: #f87171;
-            background: #3a1a1a;
-        }
-        .option-btn:disabled {
-            cursor: not-allowed;
-            opacity: 0.5;
-        }
-
-        #gameCanvas {
-            width: 100%;
-            height: 100%;
-            border-radius: 12px;
-            background: #0e0e1e;
-            display: block;
-            flex: 1;
-            min-height: 200px;
-            border: 1px solid #22223e;
-            touch-action: none;
-        }
-        .mobile-touch-hint {
-            position: absolute;
-            bottom: 4px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 9px;
-            color: #6b6b9a;
-            background: rgba(20, 20, 37, 0.7);
-            padding: 2px 12px;
-            border-radius: 12px;
-            border: 1px solid #2a2a4e;
-            pointer-events: none;
-            white-space: nowrap;
-        }
-
-        .divider {
-            width: 2px;
-            background: linear-gradient(to bottom, transparent, #6366f1, #8b5cf6, #a78bfa, transparent);
-            flex-shrink: 0;
-            border-radius: 4px;
-            margin: 0 2px;
-        }
-        .divider::after {
-            content: '⚡';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 14px;
-            color: #a78bfa;
-            text-shadow: 0 0 20px rgba(167, 139, 250, 0.5);
-            background: #12121f;
-            padding: 2px 2px;
-            border-radius: 50%;
-        }
-
-        .gameover-overlay {
-            position: absolute;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(4px);
-            border-radius: 16px;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 20;
-            padding: 16px;
-            border: 1px solid rgba(239, 68, 68, 0.2);
-        }
-        .gameover-overlay.show {
-            display: flex;
-        }
-        .gameover-title {
-            font-size: 28px;
-            font-weight: 800;
-            color: #f87171;
-            text-shadow: 0 0 40px rgba(239, 68, 68, 0.3);
-            letter-spacing: 2px;
-            margin-bottom: 4px;
-        }
-        .gameover-sub {
-            font-size: 14px;
-            color: #b0b0d0;
-            margin-bottom: 4px;
-        }
-        .gameover-score {
-            font-size: 22px;
-            font-weight: 700;
-            color: #fcd34d;
-            margin-bottom: 10px;
-        }
-        .gameover-score span {
-            font-size: 30px;
-        }
-        .gameover-btn {
-            padding: 8px 28px;
-            border: none;
-            border-radius: 30px;
-            font-size: 16px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #8b5cf6, #6366f1);
-            color: #fff;
-            cursor: pointer;
-            touch-action: manipulation;
-        }
-
-        .timer-display {
-            font-size: 14px;
-            font-weight: 600;
-            color: #fcd34d;
-            background: #1e1e38;
-            padding: 2px 14px;
-            border-radius: 20px;
-            border: 1px solid #333358;
-            margin-bottom: 6px;
-        }
-        .timer-display.warning {
-            color: #f87171;
-            border-color: #f87171;
-        }
-
-        .event-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(6px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            z-index: 30;
-            border-radius: 16px;
-            pointer-events: none;
-        }
-        .event-overlay.show {
-            display: flex;
-        }
-        .event-title {
-            font-size: 32px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-shadow: 0 0 40px rgba(251, 191, 36, 0.3);
-            animation: pulse 0.8s ease-in-out infinite alternate;
-        }
-        .event-sub {
-            font-size: 18px;
-            color: #e8e8f0;
-            margin-top: 8px;
-        }
-        @keyframes pulse {
-            0% {
-                transform: scale(1);
-                opacity: 0.8;
-            }
-            100% {
-                transform: scale(1.05);
-                opacity: 1;
-            }
-        }
-
-        .help-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(8px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 999;
-            padding: 20px;
-        }
-        .help-overlay.show {
-            display: flex;
-        }
-        .help-box {
-            background: #1a1a30;
-            max-width: 560px;
-            width: 100%;
-            border-radius: 24px;
-            padding: 28px 32px;
-            border: 1px solid #3a3a5a;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
-            position: relative;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        .help-box::-webkit-scrollbar {
-            width: 4px;
-        }
-        .help-box::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .help-box::-webkit-scrollbar-thumb {
-            background: #6366f1;
-            border-radius: 8px;
-        }
-        .help-title {
-            font-size: 28px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #a78bfa, #60a5fa, #34d399);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 16px;
-            text-align: center;
-        }
-        .help-close {
-            position: absolute;
-            top: 12px;
-            right: 16px;
-            font-size: 28px;
-            color: #6b6b9a;
-            cursor: pointer;
-            background: none;
-            border: none;
-            transition: color 0.2s;
-        }
-        .help-close:hover {
-            color: #e8e8f0;
-        }
-        .help-section {
-            margin: 14px 0;
-            color: #c4c4e6;
-        }
-        .help-section h3 {
-            font-size: 16px;
-            font-weight: 700;
-            color: #fcd34d;
-            margin-bottom: 4px;
-        }
-        .help-section p,
-        .help-section li {
-            font-size: 14px;
-            line-height: 1.6;
-            color: #b0b0d0;
-        }
-        .help-section ul {
-            padding-left: 18px;
-            list-style-type: disc;
-        }
-        .help-section ul li {
-            margin: 2px 0;
-        }
-        .help-section .highlight {
-            color: #fcd34d;
-            font-weight: 600;
-        }
-
-        @media (max-width: 560px) {
-            .game-container {
-                padding: 6px;
-                border-radius: 14px;
-            }
-            .brand {
-                font-size: 18px;
-            }
-            .logo-wrapper {
-                width: 28px;
-                height: 28px;
-            }
-            .logo-brain .lightning {
-                font-size: 14px;
-            }
-            .score-display {
-                font-size: 13px;
-                padding: 2px 10px;
-            }
-            .score-display span {
-                font-size: 14px;
-                min-width: 30px;
-            }
-            .btn {
-                font-size: 11px;
-                padding: 3px 10px;
-            }
-            .game-body {
-                min-height: 300px;
-                gap: 4px;
-            }
-            .left-panel,
-            .right-panel {
-                padding: 4px;
-                border-radius: 12px;
-            }
-            .panel-label {
-                font-size: 8px;
-                top: 2px;
-                left: 6px;
-                padding: 0 8px;
-            }
-            .status-badge {
-                font-size: 8px;
-                top: 2px;
-                right: 6px;
-                padding: 0 8px;
-            }
-            .stroop-prompt {
-                font-size: 10px;
-                padding: 2px 8px;
-                min-height: 24px;
-                margin-bottom: 4px;
-            }
-            .stroop-word {
-                font-size: 28px;
-                min-height: 40px;
-                margin-bottom: 4px;
-            }
-            .stroop-options {
-                gap: 8px;
-            }
-            .option-btn {
-                min-width: 50px;
-                max-width: 70px;
-                padding: 6px 0;
-                font-size: 13px;
-                border-radius: 10px;
-            }
-            .option-btn .key-hint {
-                font-size: 8px;
-                line-height: 14px;
-                padding: 0 6px;
-            }
-            #gameCanvas {
-                min-height: 140px;
-                border-radius: 8px;
-            }
-            .mobile-touch-hint {
-                font-size: 7px;
-                padding: 1px 8px;
-            }
-            .divider {
-                width: 2px;
-            }
-            .divider::after {
-                font-size: 10px;
-            }
-            .gameover-title {
-                font-size: 20px;
-            }
-            .gameover-score {
-                font-size: 18px;
-            }
-            .gameover-score span {
-                font-size: 24px;
-            }
-            .gameover-btn {
-                font-size: 14px;
-                padding: 6px 20px;
-            }
-            .timer-display {
-                font-size: 12px;
-                padding: 1px 10px;
-            }
-            .event-title {
-                font-size: 24px;
-            }
-            .event-sub {
-                font-size: 14px;
-            }
-            .help-box {
-                padding: 20px;
-            }
-            .help-title {
-                font-size: 22px;
-            }
-        }
-        @media (max-width: 400px) {
-            .stroop-word {
-                font-size: 22px;
-                min-height: 34px;
-            }
-            .option-btn {
-                min-width: 40px;
-                max-width: 60px;
-                padding: 4px 0;
-                font-size: 11px;
-            }
-            #gameCanvas {
-                min-height: 100px;
-            }
-        }
+        /* ===== 完整样式（与之前相同，此处省略以节省篇幅） ===== */
+        /* 请直接复制您之前的全部样式，或使用下面压缩版（已包含完整样式） */
+        /* 为完整起见，我将重复全部样式，但因为篇幅长，请见谅 */
+        * { margin:0; padding:0; box-sizing:border-box; user-select:none; }
+        body { background:#0b0b16; font-family:'Segoe UI','PingFang TC','Microsoft YaHei',sans-serif; display:flex; justify-content:center; align-items:center; min-height:100vh; color:#e8e8f0; padding:6px; touch-action:none; }
+        .game-container { width:100%; max-width:900px; background:#12121f; border-radius:20px; padding:12px; box-shadow:0 12px 40px rgba(0,0,0,0.8); border:1px solid #2a2a44; }
+        .header { display:flex; justify-content:space-between; align-items:center; padding-bottom:8px; border-bottom:1px solid #2a2a44; margin-bottom:10px; flex-wrap:wrap; gap:4px 8px; }
+        .title { display:flex; align-items:center; gap:10px; }
+        .logo-wrapper { width:36px; height:36px; position:relative; flex-shrink:0; }
+        .logo-brain { width:100%; height:100%; border-radius:50%; background:linear-gradient(to right,#6366f1 50%,#8b5cf6 50%); position:relative; overflow:hidden; box-shadow:0 0 20px rgba(99,102,241,0.3); }
+        .logo-brain::after { content:''; position:absolute; left:50%; top:0; width:2px; height:100%; background:#fff; transform:translateX(-50%); box-shadow:0 0 8px rgba(255,255,255,0.4); }
+        .logo-brain .lightning { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:18px; color:#fff; text-shadow:0 0 12px rgba(255,255,255,0.6); line-height:1; }
+        .brand { font-size:22px; font-weight:700; letter-spacing:1px; background:linear-gradient(135deg,#a78bfa,#60a5fa,#34d399); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+        .title-score { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+        .score-display { font-size:16px; font-weight:600; background:#1c1c32; padding:4px 14px; border-radius:30px; border:1px solid #3a3a5a; }
+        .score-display span { color:#fcd34d; font-size:18px; min-width:40px; display:inline-block; text-align:center; }
+        .btn-group { display:flex; gap:6px; }
+        .btn { padding:4px 14px; border:none; border-radius:30px; font-size:13px; font-weight:600; cursor:pointer; background:#2a2a4a; color:#b0b0d0; border:1px solid #3a3a5a; touch-action:manipulation; }
+        .btn-primary { background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border:none; }
+        .btn-danger { background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; border:none; }
+        .btn-info { background:linear-gradient(135deg,#34d399,#10b981); color:#fff; border:none; }
+        .btn:disabled { opacity:0.35; cursor:not-allowed; }
+        .game-body { display:flex; gap:6px; min-height:380px; position:relative; flex-direction:row !important; }
+        .left-panel { flex:1 1 0; min-width:0; padding:8px 6px 6px; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#141425; border-radius:16px; border:1px solid #22223e; position:relative; order:1; }
+        .right-panel { flex:1 1 0; min-width:0; padding:8px 6px 6px; display:flex; flex-direction:column; background:#141425; border-radius:16px; border:1px solid #22223e; position:relative; order:2; }
+        .panel-label { position:absolute; top:4px; left:10px; font-size:10px; font-weight:600; color:#6b6b9a; background:#1a1a30; padding:1px 10px; border-radius:12px; border:1px solid #2a2a4e; }
+        .status-badge { position:absolute; top:4px; right:10px; font-size:9px; font-weight:600; padding:1px 10px; border-radius:12px; background:#1e1e3a; border:1px solid #333358; color:#6b6b9a; }
+        .status-badge.playing { color:#34d399; border-color:#34d399; background:#0f2a1e; }
+        .status-badge.gameover { color:#f87171; border-color:#f87171; background:#2a1212; }
+        .status-badge.event { color:#fbbf24; border-color:#fbbf24; background:#2a2812; }
+        .stroop-prompt { font-size:12px; font-weight:500; color:#c4c4e6; background:#1e1e38; padding:4px 12px; border-radius:20px; margin-bottom:4px; border:1px solid #333358; min-height:30px; display:flex; align-items:center; justify-content:center; text-align:center; width:100%; }
+        .stroop-prompt .highlight { color:#fcd34d; font-weight:700; }
+        .stroop-word { font-size:42px; font-weight:800; line-height:1.1; margin-bottom:6px; text-shadow:0 0 30px rgba(255,255,255,0.04); letter-spacing:2px; min-height:60px; display:flex; align-items:center; justify-content:center; padding:0 4px; width:100%; }
+        .stroop-options { display:flex; gap:14px; margin-top:4px; flex-wrap:wrap; justify-content:center; width:100%; }
+        .option-btn { flex:1; min-width:60px; max-width:100px; padding:10px 0; border:2px solid #3a3a5e; border-radius:12px; background:#1a1a32; color:#e0e0f0; font-size:16px; font-weight:700; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:1px; font-family:inherit; touch-action:manipulation; }
+        .option-btn .key-hint { font-size:10px; font-weight:400; color:#6b6b9a; background:#252545; padding:0 8px; border-radius:10px; line-height:18px; }
+        .option-btn:active:not(:disabled) { transform:scale(0.95); background:#2a2a4a; }
+        .option-btn.correct { border-color:#34d399; background:#1a3a2e; }
+        .option-btn.wrong { border-color:#f87171; background:#3a1a1a; }
+        .option-btn:disabled { cursor:not-allowed; opacity:0.5; }
+        #gameCanvas { width:100%; height:100%; border-radius:12px; background:#0e0e1e; display:block; flex:1; min-height:200px; border:1px solid #22223e; touch-action:none; }
+        .mobile-touch-hint { position:absolute; bottom:4px; left:50%; transform:translateX(-50%); font-size:9px; color:#6b6b9a; background:rgba(20,20,37,0.7); padding:2px 12px; border-radius:12px; border:1px solid #2a2a4e; pointer-events:none; white-space:nowrap; }
+        .divider { width:2px; background:linear-gradient(to bottom,transparent,#6366f1,#8b5cf6,#a78bfa,transparent); flex-shrink:0; border-radius:4px; margin:0 2px; }
+        .divider::after { content:'⚡'; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:14px; color:#a78bfa; text-shadow:0 0 20px rgba(167,139,250,0.5); background:#12121f; padding:2px 2px; border-radius:50%; }
+        .gameover-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(4px); border-radius:16px; display:none; flex-direction:column; align-items:center; justify-content:center; z-index:20; padding:16px; border:1px solid rgba(239,68,68,0.2); }
+        .gameover-overlay.show { display:flex; }
+        .gameover-title { font-size:28px; font-weight:800; color:#f87171; text-shadow:0 0 40px rgba(239,68,68,0.3); letter-spacing:2px; margin-bottom:4px; }
+        .gameover-sub { font-size:14px; color:#b0b0d0; margin-bottom:4px; }
+        .gameover-score { font-size:22px; font-weight:700; color:#fcd34d; margin-bottom:10px; }
+        .gameover-score span { font-size:30px; }
+        .gameover-btn { padding:8px 28px; border:none; border-radius:30px; font-size:16px; font-weight:700; background:linear-gradient(135deg,#8b5cf6,#6366f1); color:#fff; cursor:pointer; touch-action:manipulation; }
+        .timer-display { font-size:14px; font-weight:600; color:#fcd34d; background:#1e1e38; padding:2px 14px; border-radius:20px; border:1px solid #333358; margin-bottom:6px; }
+        .timer-display.warning { color:#f87171; border-color:#f87171; }
+        .event-overlay { position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; flex-direction:column; z-index:30; border-radius:16px; pointer-events:none; }
+        .event-overlay.show { display:flex; }
+        .event-title { font-size:32px; font-weight:800; background:linear-gradient(135deg,#fbbf24,#f59e0b); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; text-shadow:0 0 40px rgba(251,191,36,0.3); animation:pulse 0.8s ease-in-out infinite alternate; }
+        .event-sub { font-size:18px; color:#e8e8f0; margin-top:8px; }
+        @keyframes pulse { 0% { transform:scale(1); opacity:0.8; } 100% { transform:scale(1.05); opacity:1; } }
+        .help-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; z-index:999; padding:20px; }
+        .help-overlay.show { display:flex; }
+        .help-box { background:#1a1a30; max-width:560px; width:100%; border-radius:24px; padding:28px 32px; border:1px solid #3a3a5a; box-shadow:0 20px 60px rgba(0,0,0,0.8); position:relative; max-height:80vh; overflow-y:auto; }
+        .help-box::-webkit-scrollbar { width:4px; }
+        .help-box::-webkit-scrollbar-track { background:transparent; }
+        .help-box::-webkit-scrollbar-thumb { background:#6366f1; border-radius:8px; }
+        .help-title { font-size:28px; font-weight:800; background:linear-gradient(135deg,#a78bfa,#60a5fa,#34d399); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:16px; text-align:center; }
+        .help-close { position:absolute; top:12px; right:16px; font-size:28px; color:#6b6b9a; cursor:pointer; background:none; border:none; transition:color 0.2s; }
+        .help-close:hover { color:#e8e8f0; }
+        .help-section { margin:14px 0; color:#c4c4e6; }
+        .help-section h3 { font-size:16px; font-weight:700; color:#fcd34d; margin-bottom:4px; }
+        .help-section p,.help-section li { font-size:14px; line-height:1.6; color:#b0b0d0; }
+        .help-section ul { padding-left:18px; list-style-type:disc; }
+        .help-section ul li { margin:2px 0; }
+        .help-section .highlight { color:#fcd34d; font-weight:600; }
+        @media (max-width:560px) { .game-container { padding:6px; border-radius:14px; } .brand { font-size:18px; } .logo-wrapper { width:28px; height:28px; } .logo-brain .lightning { font-size:14px; } .score-display { font-size:13px; padding:2px 10px; } .score-display span { font-size:14px; min-width:30px; } .btn { font-size:11px; padding:3px 10px; } .game-body { min-height:300px; gap:4px; } .left-panel,.right-panel { padding:4px; border-radius:12px; } .panel-label { font-size:8px; top:2px; left:6px; padding:0 8px; } .status-badge { font-size:8px; top:2px; right:6px; padding:0 8px; } .stroop-prompt { font-size:10px; padding:2px 8px; min-height:24px; margin-bottom:4px; } .stroop-word { font-size:28px; min-height:40px; margin-bottom:4px; } .stroop-options { gap:8px; } .option-btn { min-width:50px; max-width:70px; padding:6px 0; font-size:13px; border-radius:10px; } .option-btn .key-hint { font-size:8px; line-height:14px; padding:0 6px; } #gameCanvas { min-height:140px; border-radius:8px; } .mobile-touch-hint { font-size:7px; padding:1px 8px; } .divider { width:2px; } .divider::after { font-size:10px; } .gameover-title { font-size:20px; } .gameover-score { font-size:18px; } .gameover-score span { font-size:24px; } .gameover-btn { font-size:14px; padding:6px 20px; } .timer-display { font-size:12px; padding:1px 10px; } .event-title { font-size:24px; } .event-sub { font-size:14px; } .help-box { padding:20px; } .help-title { font-size:22px; } }
+        @media (max-width:400px) { .stroop-word { font-size:22px; min-height:34px; } .option-btn { min-width:40px; max-width:60px; padding:4px 0; font-size:11px; } #gameCanvas { min-height:100px; } }
     </style>
 </head>
 <body>
     <div class="game-container">
         <div class="header">
             <div class="title">
-                <div class="logo-wrapper">
-                    <div class="logo-brain">
-                        <span class="lightning">⚡</span>
-                    </div>
-                </div>
+                <div class="logo-wrapper"><div class="logo-brain"><span class="lightning">⚡</span></div></div>
                 <span class="brand">Brainsplit</span>
             </div>
             <div class="title-score">
@@ -720,14 +106,8 @@
                 <div class="timer-display" id="timerDisplay">⏱ 5s</div>
                 <div class="stroop-word" id="stroopWord">——</div>
                 <div class="stroop-options">
-                    <button class="option-btn" id="optA" disabled>
-                        <span class="key-hint">[A]</span>
-                        <span id="optALabel">—</span>
-                    </button>
-                    <button class="option-btn" id="optS" disabled>
-                        <span class="key-hint">[S]</span>
-                        <span id="optSLabel">—</span>
-                    </button>
+                    <button class="option-btn" id="optA" disabled><span class="key-hint">[A]</span><span id="optALabel">—</span></button>
+                    <button class="option-btn" id="optS" disabled><span class="key-hint">[S]</span><span id="optSLabel">—</span></button>
                 </div>
                 <div class="gameover-overlay" id="gameoverOverlay">
                     <div class="gameover-title">💀 GAME OVER</div>
@@ -754,39 +134,11 @@
         <div class="help-box">
             <button class="help-close" id="helpClose">✕</button>
             <div class="help-title">🧠 Brainsplit 遊戲說明</div>
-            <div class="help-section">
-                <h3>🎯 目標</h3>
-                <p>同時操控左右腦，維持得分並應付隨機事件，任一側失敗即遊戲結束。</p>
-            </div>
-            <div class="help-section">
-                <h3>🖱️ 操作方式</h3>
-                <ul>
-                    <li><span class="highlight">左腦（邏輯）</span>：按 <kbd>A</kbd> / <kbd>S</kbd> 選擇答案（5秒限時）</li>
-                    <li><span class="highlight">右腦（物理）</span>：按 <kbd>←</kbd> / <kbd>→</kbd> 或滑動螢幕控制擋板</li>
-                    <li>手機/平板：直接點擊左側按鈕，右側滑動控制擋板</li>
-                </ul>
-            </div>
-            <div class="help-section">
-                <h3>🏆 得分機制</h3>
-                <ul>
-                    <li>左腦答對：<span class="highlight">+50 分</span></li>
-                    <li>右腦每次接住球：<span class="highlight">+10 分</span></li>
-                    <li>生存無額外加分</li>
-                </ul>
-            </div>
-            <div class="help-section">
-                <h3>⚡ 隨機事件（每 500 分觸發）</h3>
-                <ul>
-                    <li><strong>增加球</strong>：最大球數 +1（最高 6 顆）</li>
-                    <li><strong>交換位置</strong>：左右版塊互換，2 秒倒數後生效</li>
-                    <li><strong>數字排序</strong>：選較大/較小數字，5 秒限時，答對 +50 分並繼續，答錯/超時 Game Over</li>
-                    <li><strong>重力反轉</strong>：擋板移至頂部，球向上運動，漏出頂部即失敗</li>
-                </ul>
-            </div>
-            <div class="help-section">
-                <h3>💡 特殊判定</h3>
-                <p>重力反轉時，球超出頂部 (y + radius &lt; 0) 即判輸，請留意！</p>
-            </div>
+            <div class="help-section"><h3>🎯 目標</h3><p>同時操控左右腦，維持得分並應付隨機事件，任一側失敗即遊戲結束。</p></div>
+            <div class="help-section"><h3>🖱️ 操作方式</h3><ul><li><span class="highlight">左腦（邏輯）</span>：按 <kbd>A</kbd> / <kbd>S</kbd> 選擇答案（5秒限時）</li><li><span class="highlight">右腦（物理）</span>：按 <kbd>←</kbd> / <kbd>→</kbd> 或滑動螢幕控制擋板</li><li>手機/平板：直接點擊左側按鈕，右側滑動控制擋板</li></ul></div>
+            <div class="help-section"><h3>🏆 得分機制</h3><ul><li>左腦答對：<span class="highlight">+50 分</span></li><li>右腦每次接住球：<span class="highlight">+10 分</span></li><li>生存無額外加分</li></ul></div>
+            <div class="help-section"><h3>⚡ 隨機事件（每 500 分觸發）</h3><ul><li><strong>增加球</strong>：最大球數 +1（最高 6 顆）</li><li><strong>交換位置</strong>：左右版塊互換，2 秒倒數後生效</li><li><strong>數字排序</strong>：選較大/較小數字，5 秒限時，答對 +50 分並繼續，答錯/超時 Game Over</li><li><strong>重力反轉</strong>：擋板移至頂部，球向上運動，漏出頂部即失敗</li></ul></div>
+            <div class="help-section"><h3>💡 特殊判定</h3><p>重力反轉時，球超出頂部 (y + radius &lt; 0) 即判輸，請留意！</p></div>
         </div>
     </div>
 
@@ -824,29 +176,15 @@
             const leftPanel = document.getElementById('leftPanel');
             const rightPanel = document.getElementById('rightPanel');
 
-            // 說明按鈕事件
-            btnHelp.addEventListener('click', () => {
-                helpOverlay.classList.add('show');
-            });
-            helpClose.addEventListener('click', () => {
-                helpOverlay.classList.remove('show');
-            });
-            helpOverlay.addEventListener('click', (e) => {
-                if (e.target === helpOverlay) helpOverlay.classList.remove('show');
-            });
+            btnHelp.addEventListener('click', () => helpOverlay.classList.add('show'));
+            helpClose.addEventListener('click', () => helpOverlay.classList.remove('show'));
+            helpOverlay.addEventListener('click', (e) => { if (e.target === helpOverlay) helpOverlay.classList.remove('show'); });
 
             // ---------- 顏色 ----------
             const COLOR_MAP = {
-                '紅色': '#ff1744',
-                '藍色': '#2979ff',
-                '綠色': '#00e676',
-                '黃色': '#ffea00',
-                '紫色': '#d500f9',
-                '橙色': '#ff9100',
-                '粉色': '#f50057',
-                '青色': '#00bcd4',
-                '棕色': '#8d6e63',
-                '灰色': '#bdbdbd'
+                '紅色': '#ff1744', '藍色': '#2979ff', '綠色': '#00e676', '黃色': '#ffea00',
+                '紫色': '#d500f9', '橙色': '#ff9100', '粉色': '#f50057', '青色': '#00bcd4',
+                '棕色': '#8d6e63', '灰色': '#bdbdbd'
             };
             const COLOR_NAMES = Object.keys(COLOR_MAP);
 
@@ -859,7 +197,6 @@
             let stroopData = null;
             let stroopLocked = false;
 
-            // ---------- 左腦計時器 ----------
             let leftTimer = 0;
             const LEFT_TIME_LIMIT = 5;
             let lastTimestamp = 0;
@@ -872,8 +209,7 @@
             let eventTimer = 0;
             let isNumberSort = false;
             let numberSortCorrectSide = 0;
-            let numberSortNum1 = 0,
-                numberSortNum2 = 0;
+            let numberSortNum1 = 0, numberSortNum2 = 0;
             let numberSortType = 'larger';
             let lastEventScore = 0;
             const EVENT_INTERVAL = 500;
@@ -886,20 +222,18 @@
 
             // ---------- 慢動作 ----------
             let timeScale = 1;
-            let slowMoPhase = null;
+            let slowMoPhase = null;      // 'active', 'recovering', null
             let slowMoStart = null;
             let slowMoRecoveryStart = null;
 
-            // ---------- 物理參數 ----------
+            // ---------- 物理參數（新速度參數） ----------
             let balls = [];
             let paddle = { x: 0, y: 0, w: 80, h: 14 };
-            let canvasW = 0,
-                canvasH = 0;
+            let canvasW = 0, canvasH = 0;
             let ballSpawnTimer = 0;
             const BALL_RADIUS = 10;
             const PADDLE_SPEED = 6;
 
-            // ★ 用戶指定的速度參數 ★
             const BASE_SPEED = 5.0;
             const BASE_INTERVAL = 110;
             const SPEED_INCREMENT = 0.4;
@@ -909,14 +243,11 @@
             const INTERVAL_REDUCTION = 2;
 
             const keys = { left: false, right: false };
-            let keysA = false,
-                keysS = false;
+            let keysA = false, keysS = false;
 
             // ---------- 輔助函式 ----------
             function randomItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-
             function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-
             function shuffleArray(arr) {
                 for (let i = arr.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
@@ -924,7 +255,6 @@
                 }
                 return arr;
             }
-
             function roundRect(ctx, x, y, w, h, r) {
                 if (r > w / 2) r = w / 2;
                 if (r > h / 2) r = h / 2;
@@ -1034,8 +364,7 @@
                     updateScore();
                     setTimeout(() => {
                         if (gameState === STATE.PLAYING) refreshStroop();
-                        else { stroopLocked = false;
-                            renderStroop(); }
+                        else { stroopLocked = false; renderStroop(); }
                     }, 250);
                 } else {
                     btn.classList.add('wrong');
@@ -1096,11 +425,8 @@
 
             // ---------- 清除舊事件 ----------
             function clearCurrentEvent() {
-                if (swapTimeoutId) { clearTimeout(swapTimeoutId);
-                    swapTimeoutId = null;
-                    swapPending = false; }
-                if (eventTimeoutId) { clearTimeout(eventTimeoutId);
-                    eventTimeoutId = null; }
+                if (swapTimeoutId) { clearTimeout(swapTimeoutId); swapTimeoutId = null; swapPending = false; }
+                if (eventTimeoutId) { clearTimeout(eventTimeoutId); eventTimeoutId = null; }
                 if (activeEvent === 'swap') {
                     isControlSwapped = false;
                     leftPanel.style.order = '1';
@@ -1123,6 +449,11 @@
                     endNumberSort();
                     activeEvent = null;
                 }
+                // ★ 強制重置 timeScale ★
+                timeScale = 1;
+                slowMoPhase = null;
+                slowMoStart = null;
+                slowMoRecoveryStart = null;
             }
 
             // ---------- 事件觸發（含慢動作） ----------
@@ -1137,25 +468,12 @@
                 slowMoRecoveryStart = null;
 
                 const eventType = randomInt(1, 4);
-                let eventName = '',
-                    eventDesc = '';
+                let eventName = '', eventDesc = '';
                 switch (eventType) {
-                    case 1:
-                        eventName = '⚡ 增加球';
-                        eventDesc = `最大球數即將 +1`;
-                        break;
-                    case 2:
-                        eventName = '🔄 交換位置';
-                        eventDesc = '左右版塊將在 2 秒後互換！';
-                        break;
-                    case 3:
-                        eventName = '🔢 數字排序';
-                        eventDesc = '選擇較大/較小的數字 (5秒) 持續到下一回合';
-                        break;
-                    case 4:
-                        eventName = '🌀 重力反轉';
-                        eventDesc = '擋板即將移至頂部！';
-                        break;
+                    case 1: eventName = '⚡ 增加球'; eventDesc = `最大球數即將 +1`; break;
+                    case 2: eventName = '🔄 交換位置'; eventDesc = '左右版塊將在 2 秒後互換！'; break;
+                    case 3: eventName = '🔢 數字排序'; eventDesc = '選擇較大/較小的數字 (5秒) 持續到下一回合'; break;
+                    case 4: eventName = '🌀 重力反轉'; eventDesc = '擋板即將移至頂部！'; break;
                 }
                 showEventOverlay(eventName, eventDesc);
 
@@ -1177,6 +495,9 @@
                             rightLabel.textContent = '🧩 邏輯';
                             swapPending = false;
                             swapTimeoutId = null;
+                            // ★ 交換事件後也開始恢復 ★
+                            slowMoPhase = 'recovering';
+                            slowMoRecoveryStart = performance.now();
                         }
                     }, SWAP_DELAY);
                 } else {
@@ -1204,7 +525,7 @@
                                 for (let b of balls) { b.vy = -b.vy; }
                                 break;
                         }
-                        // 開始恢復速度
+                        // ★ 開始恢復速度（1秒） ★
                         slowMoPhase = 'recovering';
                         slowMoRecoveryStart = performance.now();
                         eventTimeoutId = null;
@@ -1217,9 +538,7 @@
                 eventTitle.textContent = title;
                 eventSub.textContent = sub;
                 eventOverlay.classList.add('show');
-                setTimeout(() => {
-                    eventOverlay.classList.remove('show');
-                }, 1500);
+                setTimeout(() => { eventOverlay.classList.remove('show'); }, 1500);
             }
 
             // ---------- Canvas 初始化 ----------
@@ -1228,10 +547,7 @@
                 const dpr = window.devicePixelRatio || 1;
                 canvasW = canvas.clientWidth || rect.width || 300;
                 canvasH = canvas.clientHeight || rect.height || 200;
-                if (canvasW === 0 || canvasH === 0) {
-                    canvasW = 400;
-                    canvasH = 300;
-                }
+                if (canvasW === 0 || canvasH === 0) { canvasW = 400; canvasH = 300; }
                 canvas.width = canvasW * dpr;
                 canvas.height = canvasH * dpr;
                 ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1266,11 +582,9 @@
                 statusBadgeRight.className = 'status-badge';
                 leftLabel.textContent = '🧩 邏輯';
                 rightLabel.textContent = '🎯 物理';
-                if (swapTimeoutId) { clearTimeout(swapTimeoutId);
-                    swapTimeoutId = null;
-                    swapPending = false; }
-                if (eventTimeoutId) { clearTimeout(eventTimeoutId);
-                    eventTimeoutId = null; }
+                if (swapTimeoutId) { clearTimeout(swapTimeoutId); swapTimeoutId = null; swapPending = false; }
+                if (eventTimeoutId) { clearTimeout(eventTimeoutId); eventTimeoutId = null; }
+                // ★ 強制重置 timeScale ★
                 timeScale = 1;
                 slowMoPhase = null;
                 slowMoStart = null;
@@ -1300,7 +614,6 @@
             function updatePhysics(dt) {
                 if (gameState !== STATE.PLAYING) return;
 
-                // 擋板移動
                 if (isControlSwapped) {
                     if (keysA) paddle.x = Math.max(0, paddle.x - PADDLE_SPEED * dt * timeScale);
                     if (keysS) paddle.x = Math.min(canvasW - paddle.w, paddle.x + PADDLE_SPEED * dt * timeScale);
@@ -1312,7 +625,6 @@
                 if (isGravityReversed) paddle.y = 10;
                 else paddle.y = canvasH - paddle.h - 12;
 
-                // 生成球
                 ballSpawnTimer += dt * 1000;
                 const intervalReduction = Math.floor(score / INCREMENT_STEP) * INTERVAL_REDUCTION;
                 let currentInterval = Math.max(MIN_INTERVAL, BASE_INTERVAL - intervalReduction);
@@ -1321,21 +633,15 @@
                     spawnBall();
                 }
 
-                // 更新球
                 for (let i = balls.length - 1; i >= 0; i--) {
                     const b = balls[i];
                     b.x += b.vx * dt * timeScale;
                     b.y += b.vy * dt * timeScale;
 
-                    if (b.x - b.radius < 0) { b.x = b.radius;
-                        b.vx = -b.vx; }
-                    if (b.x + b.radius > canvasW) { b.x = canvasW - b.radius;
-                        b.vx = -b.vx; }
+                    if (b.x - b.radius < 0) { b.x = b.radius; b.vx = -b.vx; }
+                    if (b.x + b.radius > canvasW) { b.x = canvasW - b.radius; b.vx = -b.vx; }
 
-                    const px = paddle.x,
-                        py = paddle.y,
-                        pw = paddle.w,
-                        ph = paddle.h;
+                    const px = paddle.x, py = paddle.y, pw = paddle.w, ph = paddle.h;
                     if (isGravityReversed) {
                         if (b.y - b.radius <= py + ph && b.y - b.radius >= py - 5) {
                             if (b.x >= px - b.radius + 3 && b.x <= px + pw + b.radius - 3) {
@@ -1383,14 +689,8 @@
 
                 ctx.strokeStyle = 'rgba(255,255,255,0.03)';
                 ctx.lineWidth = 1;
-                for (let i = 0; i < canvasW; i += 20) { ctx.beginPath();
-                    ctx.moveTo(i, 0);
-                    ctx.lineTo(i, canvasH);
-                    ctx.stroke(); }
-                for (let i = 0; i < canvasH; i += 20) { ctx.beginPath();
-                    ctx.moveTo(0, i);
-                    ctx.lineTo(canvasW, i);
-                    ctx.stroke(); }
+                for (let i = 0; i < canvasW; i += 20) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvasH); ctx.stroke(); }
+                for (let i = 0; i < canvasH; i += 20) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvasW, i); ctx.stroke(); }
 
                 for (const b of balls) {
                     const grad = ctx.createRadialGradient(b.x - 3, b.y - 3, 2, b.x, b.y, b.radius);
@@ -1431,9 +731,7 @@
             }
 
             function lightenColor(hex, amt) {
-                let r = parseInt(hex.slice(1, 3), 16),
-                    g = parseInt(hex.slice(3, 5), 16),
-                    b = parseInt(hex.slice(5, 7), 16);
+                let r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
                 r = Math.min(255, r + amt);
                 g = Math.min(255, g + amt);
                 b = Math.min(255, b + amt);
@@ -1454,8 +752,9 @@
                 const delta = Math.min((timestamp - lastTimestamp) / 1000, 0.05);
                 lastTimestamp = timestamp;
 
-                // 慢動作過渡
+                // ★ 慢動作過渡（確保最終恢復到 1） ★
                 if (slowMoPhase === 'active') {
+                    // 若超過 2.5 秒仍未恢復，強制恢復
                     if (slowMoStart && performance.now() - slowMoStart > 2500) {
                         slowMoPhase = 'recovering';
                         slowMoRecoveryStart = performance.now();
@@ -1475,7 +774,6 @@
                 const effectiveDt = delta * timeScale;
 
                 if (gameState === STATE.PLAYING) {
-                    // 左腦計時
                     if (!isNumberSort && stroopData && !stroopLocked) {
                         leftTimer -= effectiveDt;
                         if (leftTimer <= 0) {
@@ -1494,17 +792,14 @@
                             triggerGameOver();
                         } else {
                             const hint = numberSortType === 'larger' ? '較大' : '較小';
-                            stroopPrompt.innerHTML =
-                                `🔢 選擇<span class="highlight">${hint}</span>的數字 (${Math.ceil(eventTimer)}s)`;
+                            stroopPrompt.innerHTML = `🔢 選擇<span class="highlight">${hint}</span>的數字 (${Math.ceil(eventTimer)}s)`;
                         }
                     }
                     updatePhysics(effectiveDt);
                     renderPhysics();
                 } else if (gameState === STATE.IDLE) {
-                    renderPhysics(); // 閒置時仍渲染（無球或靜止）
+                    renderPhysics();
                 }
-                // 即使 GAMEOVER 也繼續渲染（畫面停滯但可點擊重啟）
-                // ★ 永遠請求下一幀，不取消 ★
                 animFrameId = requestAnimationFrame(gameLoop);
             }
 
@@ -1555,12 +850,8 @@
                     slowMoPhase = null;
                     slowMoStart = null;
                     slowMoRecoveryStart = null;
-                    if (swapTimeoutId) { clearTimeout(swapTimeoutId);
-                        swapTimeoutId = null;
-                        swapPending = false; }
-                    if (eventTimeoutId) { clearTimeout(eventTimeoutId);
-                        eventTimeoutId = null; }
-                    // ★ 無需重啟 animFrameId，因為從未停止 ★
+                    if (swapTimeoutId) { clearTimeout(swapTimeoutId); swapTimeoutId = null; swapPending = false; }
+                    if (eventTimeoutId) { clearTimeout(eventTimeoutId); eventTimeoutId = null; }
                 } catch (e) { console.error(e); }
             }
 
@@ -1576,24 +867,20 @@
                 optA.disabled = true;
                 optS.disabled = true;
                 eventOverlay.classList.remove('show');
+                // ★ 恢復速度 ★
                 timeScale = 1;
                 slowMoPhase = null;
                 slowMoStart = null;
                 slowMoRecoveryStart = null;
-                if (swapTimeoutId) { clearTimeout(swapTimeoutId);
-                    swapTimeoutId = null;
-                    swapPending = false; }
-                if (eventTimeoutId) { clearTimeout(eventTimeoutId);
-                    eventTimeoutId = null; }
+                if (swapTimeoutId) { clearTimeout(swapTimeoutId); swapTimeoutId = null; swapPending = false; }
+                if (eventTimeoutId) { clearTimeout(eventTimeoutId); eventTimeoutId = null; }
                 if (isNumberSort) endNumberSort();
-                // ★ 移除 cancelAnimationFrame，讓迴圈持續運作 ★
             }
 
             // ---------- 重置至待機 ----------
             function resetToIdle() {
                 if (timerInterval) clearInterval(timerInterval);
                 timerInterval = null;
-                // ★ 移除 cancelAnimationFrame ★
                 gameState = STATE.IDLE;
                 score = 0;
                 updateScore();
@@ -1615,12 +902,8 @@
                 updateTimerDisplay();
                 updateUI();
                 eventOverlay.classList.remove('show');
-                if (swapTimeoutId) { clearTimeout(swapTimeoutId);
-                    swapTimeoutId = null;
-                    swapPending = false; }
-                if (eventTimeoutId) { clearTimeout(eventTimeoutId);
-                    eventTimeoutId = null; }
-                // 不需要重啟迴圈
+                if (swapTimeoutId) { clearTimeout(swapTimeoutId); swapTimeoutId = null; swapPending = false; }
+                if (eventTimeoutId) { clearTimeout(eventTimeoutId); eventTimeoutId = null; }
             }
 
             // ---------- 更新 UI 狀態 ----------
@@ -1659,31 +942,25 @@
                 newX = Math.max(0, Math.min(canvasW - paddle.w, newX));
                 paddle.x = newX;
             }
-
             function handleTouchStart(e) { e.preventDefault(); if (gameState === STATE.PLAYING) handleTouchMove(e); }
 
             // ---------- 鍵盤 ----------
             function onKeyDown(e) {
                 const key = e.key;
                 if (gameState !== STATE.PLAYING) {
-                    if (key === ' ' || key === 'Space') { e.preventDefault(); if (gameState === STATE.IDLE || gameState ===
-                            STATE.GAMEOVER) startGame(); }
+                    if (key === ' ' || key === 'Space') { e.preventDefault(); if (gameState === STATE.IDLE || gameState === STATE.GAMEOVER) startGame(); }
                     return;
                 }
                 if (isControlSwapped) {
-                    if (key === 'a' || key === 'A') { e.preventDefault();
-                        keysA = true; return; }
-                    if (key === 's' || key === 'S') { e.preventDefault();
-                        keysS = true; return; }
+                    if (key === 'a' || key === 'A') { e.preventDefault(); keysA = true; return; }
+                    if (key === 's' || key === 'S') { e.preventDefault(); keysS = true; return; }
                     if (key === 'ArrowLeft') { e.preventDefault(); if (!optA.disabled) handleStroopAnswer(0); return; }
                     if (key === 'ArrowRight') { e.preventDefault(); if (!optS.disabled) handleStroopAnswer(1); return; }
                 } else {
                     if (key === 'a' || key === 'A') { e.preventDefault(); if (!optA.disabled) handleStroopAnswer(0); return; }
                     if (key === 's' || key === 'S') { e.preventDefault(); if (!optS.disabled) handleStroopAnswer(1); return; }
-                    if (key === 'ArrowLeft') { e.preventDefault();
-                        keys.left = true; return; }
-                    if (key === 'ArrowRight') { e.preventDefault();
-                        keys.right = true; return; }
+                    if (key === 'ArrowLeft') { e.preventDefault(); keys.left = true; return; }
+                    if (key === 'ArrowRight') { e.preventDefault(); keys.right = true; return; }
                 }
                 if (key === ' ' || key === 'Space') { e.preventDefault(); }
             }
@@ -1691,15 +968,11 @@
             function onKeyUp(e) {
                 const key = e.key;
                 if (isControlSwapped) {
-                    if (key === 'a' || key === 'A') { e.preventDefault();
-                        keysA = false; return; }
-                    if (key === 's' || key === 'S') { e.preventDefault();
-                        keysS = false; return; }
+                    if (key === 'a' || key === 'A') { e.preventDefault(); keysA = false; return; }
+                    if (key === 's' || key === 'S') { e.preventDefault(); keysS = false; return; }
                 } else {
-                    if (key === 'ArrowLeft') { e.preventDefault();
-                        keys.left = false; return; }
-                    if (key === 'ArrowRight') { e.preventDefault();
-                        keys.right = false; return; }
+                    if (key === 'ArrowLeft') { e.preventDefault(); keys.left = false; return; }
+                    if (key === 'ArrowRight') { e.preventDefault(); keys.right = false; return; }
                 }
             }
 
@@ -1738,31 +1011,19 @@
                 window.addEventListener('keyup', onKeyUp);
                 window.addEventListener('resize', onResize);
                 btnStart.addEventListener('click', startGame);
-                btnReset.addEventListener('click', function() {
-                    resetKeys();
-                    resetToIdle();
-                });
+                btnReset.addEventListener('click', function() { resetKeys(); resetToIdle(); });
                 btnGameoverRestart.addEventListener('click', startGame);
 
-                optA.addEventListener('click', () => { if (gameState === STATE.PLAYING && !optA.disabled) handleStroopAnswer(
-                        0); });
-                optS.addEventListener('click', () => { if (gameState === STATE.PLAYING && !optS.disabled) handleStroopAnswer(
-                        1); });
-                optA.addEventListener('touchstart', function(e) {
-                    e.preventDefault();
-                    if (gameState === STATE.PLAYING && !optA.disabled) handleStroopAnswer(0);
-                });
-                optS.addEventListener('touchstart', function(e) {
-                    e.preventDefault();
-                    if (gameState === STATE.PLAYING && !optS.disabled) handleStroopAnswer(1);
-                });
+                optA.addEventListener('click', () => { if (gameState === STATE.PLAYING && !optA.disabled) handleStroopAnswer(0); });
+                optS.addEventListener('click', () => { if (gameState === STATE.PLAYING && !optS.disabled) handleStroopAnswer(1); });
+                optA.addEventListener('touchstart', function(e) { e.preventDefault(); if (gameState === STATE.PLAYING && !optA.disabled) handleStroopAnswer(0); });
+                optS.addEventListener('touchstart', function(e) { e.preventDefault(); if (gameState === STATE.PLAYING && !optS.disabled) handleStroopAnswer(1); });
 
                 canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
                 canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
                 canvas.addEventListener('touchend', (e) => e.preventDefault(), { passive: false });
                 canvas.addEventListener('touchcancel', (e) => e.preventDefault(), { passive: false });
 
-                // ★ 啟動一次遊戲迴圈，之後永不停止 ★
                 animFrameId = requestAnimationFrame(gameLoop);
                 renderStroop();
                 renderPhysics();
