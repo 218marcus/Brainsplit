@@ -134,7 +134,7 @@
             <div class="help-section"><h3>🎯 目標</h3><p>同時操控左右腦，維持得分並應付隨機事件，任一側失敗即遊戲結束。</p></div>
             <div class="help-section"><h3>🖱️ 操作方式</h3><ul><li><span class="highlight">左腦（邏輯）</span>：按 <kbd>A</kbd> / <kbd>S</kbd> 選擇答案（初始9秒，每500分減1秒，最低5秒）</li><li><span class="highlight">右腦（物理）</span>：按 <kbd>←</kbd> / <kbd>→</kbd> 或滑動螢幕控制擋板</li><li>手機/平板：直接點擊左側按鈕，右側滑動控制擋板</li></ul></div>
             <div class="help-section"><h3>🏆 得分機制</h3><ul><li>左腦答對：<span class="highlight">+50 分</span></li><li>右腦每次接住球：<span class="highlight">+10 分</span></li><li>生存無額外加分</li></ul></div>
-            <div class="help-section"><h3>⚡ 隨機事件（每 500 分觸發）</h3><ul><li><strong>增加球</strong>：最大球數 +1（最高 6 顆）</li><li><strong>交換位置</strong>：左右版塊互換，2 秒倒數後生效</li><li><strong>數字排序</strong>：選較大/較小數字，5 秒限時，答對 +50 分並繼續，答錯/超時 Game Over</li><li><strong>重力反轉</strong>：擋板移至頂部，球向上運動，漏出頂部即失敗；再次觸發可恢復正常</li></ul></div>
+            <div class="help-section"><h3>⚡ 隨機事件（每 500 分觸發）</h3><ul><li><strong>增加球</strong>：最大球數 +1（最高 6 顆）</li><li><strong>交換位置</strong>：左右版塊互換，2 秒倒數後生效</li><li><strong>數字排序</strong>：選較大/較小數字，5 秒限時，答對 +50 分並繼續，答錯/超時 Game Over</li><li><strong>重力反轉</strong>：擋板移至頂部，球向上運動，漏出頂部即失敗；再次觸發可恢復正常，同時所有球垂直方向反轉</li></ul></div>
             <div class="help-section"><h3>💡 特殊判定</h3><p>正常模式底部判負；反轉模式頂部判負。上下邊界均會反彈（正常模式頂部反彈，反轉模式底部反彈）。</p></div>
         </div>
     </div>
@@ -477,6 +477,7 @@
                     statusBadgeRight.textContent = '▶';
                     statusBadgeRight.className = 'status-badge playing';
                     paddle.y = canvasH - paddle.h - 12;
+                    // ★ 反轉垂直速度（恢復正常） ★
                     for (let b of balls) { b.vy = -b.vy; }
                 }
                 if (activeEvent === 'number') {
@@ -532,9 +533,10 @@
                     }, SWAP_DELAY);
                 } else {
                     if (eventType === 4 && isGravityReversed) {
-                        // 已反轉 → 清除，不重新開啟
+                        // 已反轉 → 清除並恢復（但不重新開啟）
                         startSpeedAnimation(1.0, 1.0, speedScale);
                         timersPaused = false;
+                        // 但我們已經在 clearCurrentEvent 中反轉了 vy，所以只需清理狀態
                         activeEvent = null;
                         statusBadge.textContent = '▶';
                         statusBadge.className = 'status-badge playing';
@@ -568,6 +570,7 @@
                                 statusBadgeRight.textContent = '🌀';
                                 statusBadgeRight.className = 'status-badge event';
                                 paddle.y = 10;
+                                // ★ 反轉垂直速度 ★
                                 for (let b of balls) { b.vy = -b.vy; }
                                 break;
                         }
@@ -644,19 +647,18 @@
                 updateTimerDisplay();
             }
 
-            // ---------- 球生成（修改：強制向上） ----------
+            // ---------- 球生成（方向限制在 -75° 到 75° 之間） ----------
             function spawnBall() {
                 if (balls.length >= maxBalls) return;
                 const x = canvasW / 2;
                 const y = canvasH / 2;
-                const angle = Math.random() * 2 * Math.PI;
+                // 生成角度：-75° 到 75°（相對於垂直向上方向）
+                const deg = (Math.random() * 150 - 75); // -75 ~ 75
+                const rad = deg * Math.PI / 180;
                 const speedBonus = Math.floor(score / INCREMENT_STEP) * SPEED_INCREMENT;
                 const currentSpeed = Math.min(MAX_SPEED, BASE_SPEED + speedBonus);
-                let vx = Math.cos(angle) * currentSpeed;
-                let vy = Math.sin(angle) * currentSpeed;
-                // ★ 強制向上（vy 必須為負，若為正則取反） ★
-                if (vy >= 0) vy = -vy;
-                // 若水平速度過大，可稍微限制，但不必須
+                const vx = Math.sin(rad) * currentSpeed;
+                const vy = -Math.cos(rad) * currentSpeed; // 始終向上（負值）
                 const color = randomItem(COLOR_NAMES);
                 balls.push({ x, y, vx, vy, radius: BALL_RADIUS, color: COLOR_MAP[color] });
             }
