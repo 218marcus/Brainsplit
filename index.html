@@ -134,8 +134,8 @@
             <div class="help-section"><h3>🎯 目標</h3><p>同時操控左右腦，維持得分並應付隨機事件，任一側失敗即遊戲結束。</p></div>
             <div class="help-section"><h3>🖱️ 操作方式</h3><ul><li><span class="highlight">左腦（邏輯）</span>：按 <kbd>A</kbd> / <kbd>S</kbd> 選擇答案（初始9秒，每500分減1秒，最低5秒）</li><li><span class="highlight">右腦（物理）</span>：按 <kbd>←</kbd> / <kbd>→</kbd> 或滑動螢幕控制擋板</li><li>手機/平板：直接點擊左側按鈕，右側滑動控制擋板</li></ul></div>
             <div class="help-section"><h3>🏆 得分機制</h3><ul><li>左腦答對：<span class="highlight">+50 分</span></li><li>右腦每次接住球：<span class="highlight">+10 分</span></li><li>生存無額外加分</li></ul></div>
-            <div class="help-section"><h3>⚡ 隨機事件（每 500 分觸發）</h3><ul><li><strong>增加球</strong>：最大球數 +1（最高 6 顆）</li><li><strong>交換位置</strong>：左右版塊互換，2 秒倒數後生效</li><li><strong>數字排序</strong>：選較大/較小數字，5 秒限時，答對 +50 分並繼續，答錯/超時 Game Over</li><li><strong>重力反轉</strong>：擋板移至頂部，球向上運動，漏出頂部即失敗</li></ul></div>
-            <div class="help-section"><h3>💡 特殊判定</h3><p>重力反轉時，球超出頂部 (y + radius &lt; 0) 即判輸；正常模式球超出底部 (y + radius &gt; canvasH) 判輸。</p></div>
+            <div class="help-section"><h3>⚡ 隨機事件（每 500 分觸發）</h3><ul><li><strong>增加球</strong>：最大球數 +1（最高 6 顆）</li><li><strong>交換位置</strong>：左右版塊互換，2 秒倒數後生效</li><li><strong>數字排序</strong>：選較大/較小數字，5 秒限時，答對 +50 分並繼續，答錯/超時 Game Over</li><li><strong>重力反轉</strong>：擋板移至頂部，球向上運動，漏出頂部即失敗；再次觸發可恢復正常</li></ul></div>
+            <div class="help-section"><h3>💡 特殊判定</h3><p>正常模式底部判負；反轉模式頂部判負。上下邊界均會反彈（正常模式頂部反彈，反轉模式底部反彈）。</p></div>
         </div>
     </div>
 
@@ -195,10 +195,9 @@
             let stroopLocked = false;
 
             // ---------- 動態答題時間 ----------
-            let leftTimeLimit = 9;           // 當前限時（秒）
+            let leftTimeLimit = 9;
             const MIN_TIME_LIMIT = 5;
             const INIT_TIME_LIMIT = 9;
-
             let leftTimer = 0;
             let lastTimestamp = 0;
 
@@ -294,10 +293,8 @@
 
             // ---------- 動態限時更新 ----------
             function updateTimeLimit() {
-                // 每 500 分減 1 秒，最低 MIN_TIME_LIMIT
                 const reduction = Math.floor(score / EVENT_INTERVAL);
                 leftTimeLimit = Math.max(MIN_TIME_LIMIT, INIT_TIME_LIMIT - reduction);
-                // 若目前倒數大於新限時，則縮短（但通常不會）
                 if (leftTimer > leftTimeLimit) leftTimer = leftTimeLimit;
                 updateTimerDisplay();
             }
@@ -535,6 +532,27 @@
                         }
                     }, SWAP_DELAY);
                 } else {
+                    // 針對重力反轉的特殊處理：如果當前已反轉，則只清除（恢復正常）而不重新開啟
+                    if (eventType === 4 && isGravityReversed) {
+                        // 已經反轉，再次觸發反轉 → 清除並結束事件（不重新開啟）
+                        // 注意：clearCurrentEvent 已在上方執行，但此時 isGravityReversed 為 true，我們在 clearCurrentEvent 中已清除，
+                        // 但我們需要避免再次設置反轉，所以直接跳過設置，只恢復計時器。
+                        startSpeedAnimation(1.0, 1.0, speedScale);
+                        timersPaused = false;
+                        // 確保 activeEvent 為 null
+                        activeEvent = null;
+                        statusBadge.textContent = '▶';
+                        statusBadge.className = 'status-badge playing';
+                        statusBadgeRight.textContent = '▶';
+                        statusBadgeRight.className = 'status-badge playing';
+                        leftLabel.textContent = isControlSwapped ? '🎯 物理' : '🧩 邏輯';
+                        rightLabel.textContent = isControlSwapped ? '🧩 邏輯' : '🎯 物理';
+                        // 清除事件計時器
+                        if (eventTimeoutId) { clearTimeout(eventTimeoutId); eventTimeoutId = null; }
+                        lastEventScore += EVENT_INTERVAL;
+                        return;
+                    }
+
                     if (eventType === 1) activeEvent = null;
                     else if (eventType === 3) activeEvent = 'number';
                     else if (eventType === 4) activeEvent = 'gravity';
@@ -627,7 +645,6 @@
                 keys.right = false;
                 keysA = false;
                 keysS = false;
-                // 重置限時
                 leftTimeLimit = INIT_TIME_LIMIT;
                 leftTimer = leftTimeLimit;
                 updateTimerDisplay();
@@ -647,7 +664,7 @@
                 balls.push({ x, y, vx, vy, radius: BALL_RADIUS, color: COLOR_MAP[color] });
             }
 
-            // ---------- 物理更新（含正確邊界反彈） ----------
+            // ---------- 物理更新（含正確邊界反彈與水平隨機偏移） ----------
             function updatePhysics(dt) {
                 if (gameState !== STATE.PLAYING) return;
 
@@ -680,7 +697,7 @@
                     if (b.x - b.radius < 0) { b.x = b.radius; b.vx = -b.vx; }
                     if (b.x + b.radius > canvasW) { b.x = canvasW - b.radius; b.vx = -b.vx; }
 
-                    // 垂直邊界：正常模式底部判負，頂部反彈；反轉模式頂部判負，底部反彈
+                    // 垂直邊界
                     if (isGravityReversed) {
                         // 反轉模式：頂部判負，底部反彈
                         if (b.y - b.radius < 0) {
@@ -703,16 +720,17 @@
                         }
                     }
 
-                    // 擋板碰撞（不影響邊界反彈）
+                    // 擋板碰撞（只反轉方向，保持速度大小）
                     const px = paddle.x, py = paddle.y, pw = paddle.w, ph = paddle.h;
                     if (isGravityReversed) {
                         if (b.y - b.radius <= py + ph && b.y - b.radius >= py - 5) {
                             if (b.x >= px - b.radius + 3 && b.x <= px + pw + b.radius - 3) {
-                                b.vy = -b.vy;
+                                b.vy = -b.vy;  // 只反轉，不加減
                                 b.y = py + ph + b.radius + 0.5;
                                 score += 10;
                                 updateScore();
-                                b.vx += (Math.random() - 0.5) * 0.3;
+                                // 增加水平隨機偏移（幅度加大）
+                                b.vx += (Math.random() - 0.5) * 0.8;
                                 const maxV = 3;
                                 if (Math.abs(b.vx) > maxV) b.vx = Math.sign(b.vx) * maxV;
                                 continue;
@@ -721,11 +739,11 @@
                     } else {
                         if (b.y + b.radius >= py && b.y + b.radius <= py + ph + 6) {
                             if (b.x >= px - b.radius + 3 && b.x <= px + pw + b.radius - 3) {
-                                b.vy = -b.vy;
+                                b.vy = -b.vy;  // 只反轉
                                 b.y = py - b.radius - 0.5;
                                 score += 10;
                                 updateScore();
-                                b.vx += (Math.random() - 0.5) * 0.3;
+                                b.vx += (Math.random() - 0.5) * 0.8;
                                 const maxV = 3;
                                 if (Math.abs(b.vx) > maxV) b.vx = Math.sign(b.vx) * maxV;
                                 continue;
@@ -796,9 +814,7 @@
             // ---------- 分數更新 ----------
             function updateScore() {
                 scoreDisplay.textContent = Math.floor(score);
-                // 更新限時
                 updateTimeLimit();
-                // 事件觸發
                 if (score - lastEventScore >= EVENT_INTERVAL) {
                     triggerRandomEvent();
                 }
@@ -810,13 +826,11 @@
                 const delta = Math.min((timestamp - lastTimestamp) / 1000, 0.05);
                 lastTimestamp = timestamp;
 
-                // 更新球速動畫
                 updateSpeedAnimation();
 
                 const effectiveDt = delta;
 
                 if (gameState === STATE.PLAYING) {
-                    // 左腦計時（若未暫停）
                     if (!timersPaused && !isNumberSort && stroopData && !stroopLocked) {
                         leftTimer -= effectiveDt;
                         if (leftTimer <= 0) {
@@ -827,7 +841,6 @@
                             updateTimerDisplay();
                         }
                     }
-                    // 數字事件計時（若未暫停）
                     if (!timersPaused && isNumberSort) {
                         eventTimer -= effectiveDt;
                         if (eventTimer <= 0) {
