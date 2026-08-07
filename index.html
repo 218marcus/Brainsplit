@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Brainsplit</title>
     <style>
-        /* ===== 完整样式（与上一版相同，此处略以节省篇幅） ===== */
         * { margin:0; padding:0; box-sizing:border-box; user-select:none; }
         body { background:#0b0b16; font-family:'Segoe UI','PingFang TC','Microsoft YaHei',sans-serif; display:flex; justify-content:center; align-items:center; min-height:100vh; color:#e8e8f0; padding:6px; touch-action:none; }
         .game-container { width:100%; max-width:900px; background:#12121f; border-radius:20px; padding:12px; box-shadow:0 12px 40px rgba(0,0,0,0.8); border:1px solid #2a2a44; }
@@ -218,13 +217,18 @@
             let swapPending = false;
             let swapTimeoutId = null;
 
-            // ---------- 慢動作 ----------
-            let timeScale = 1;
-            let slowMoPhase = null;      // 'active', 'recovering', null
-            let slowMoStart = null;
-            let slowMoRecoveryStart = null;
+            // ---------- 球速控制（取代 timeScale） ----------
+            let speedScale = 1.0;               // 當前球速倍率
+            let speedScaleTarget = 1.0;         // 目標值（動畫用）
+            let speedScaleAnimStartTime = null; // 動畫開始時間
+            let speedScaleStartValue = 1.0;     // 動畫起始值
+            let speedScaleDuration = 0;         // 動畫持續時間（秒）
+            let speedScaleAnimating = false;    // 是否正在動畫
 
-            // ---------- 物理參數（新速度參數） ----------
+            // 計時器暫停標誌
+            let timersPaused = false;
+
+            // ---------- 物理參數 ----------
             let balls = [];
             let paddle = { x: 0, y: 0, w: 80, h: 14 };
             let canvasW = 0, canvasH = 0;
@@ -262,6 +266,29 @@
                 ctx.arcTo(x, y + h, x, y, r);
                 ctx.arcTo(x, y, x + w, y, r);
                 return ctx;
+            }
+
+            // ---------- 球速動畫函式 ----------
+            function startSpeedAnimation(target, duration, startValue) {
+                speedScaleTarget = target;
+                speedScaleDuration = duration;
+                speedScaleStartValue = startValue !== undefined ? startValue : speedScale;
+                speedScaleAnimStartTime = performance.now();
+                speedScaleAnimating = true;
+            }
+
+            function updateSpeedAnimation() {
+                if (!speedScaleAnimating) return;
+                const now = performance.now();
+                const elapsed = (now - speedScaleAnimStartTime) / 1000;
+                const progress = Math.min(elapsed / speedScaleDuration, 1);
+                // 線性插值
+                speedScale = speedScaleStartValue + (speedScaleTarget - speedScaleStartValue) * progress;
+                if (progress >= 1) {
+                    speedScale = speedScaleTarget;
+                    speedScaleAnimating = false;
+                    speedScaleAnimStartTime = null;
+                }
             }
 
             // ---------- Stroop ----------
@@ -447,23 +474,23 @@
                     endNumberSort();
                     activeEvent = null;
                 }
-                // ★ 強制重置 timeScale ★
-                timeScale = 1;
-                slowMoPhase = null;
-                slowMoStart = null;
-                slowMoRecoveryStart = null;
+                // 重置球速與暫停標誌
+                speedScale = 1.0;
+                speedScaleTarget = 1.0;
+                speedScaleAnimating = false;
+                speedScaleAnimStartTime = null;
+                timersPaused = false;
             }
 
-            // ---------- 事件觸發（含慢動作） ----------
+            // ---------- 事件觸發（含球速動畫與計時暫停） ----------
             function triggerRandomEvent() {
                 if (gameState !== STATE.PLAYING) return;
                 clearCurrentEvent();
 
-                // 啟動慢動作
-                timeScale = 0.3;
-                slowMoPhase = 'active';
-                slowMoStart = performance.now();
-                slowMoRecoveryStart = null;
+                // 啟動球速下降動畫（1.5 秒降到 0.2）
+                startSpeedAnimation(0.2, 1.5, 1.0);
+                // 暫停計時器
+                timersPaused = true;
 
                 const eventType = randomInt(1, 4);
                 let eventName = '', eventDesc = '';
@@ -493,9 +520,9 @@
                             rightLabel.textContent = '🧩 邏輯';
                             swapPending = false;
                             swapTimeoutId = null;
-                            // ★ 交換事件後開始恢復 ★
-                            slowMoPhase = 'recovering';
-                            slowMoRecoveryStart = performance.now();
+                            // 開始球速恢復（1 秒）
+                            startSpeedAnimation(1.0, 1.0, speedScale);
+                            timersPaused = false;
                         }
                     }, SWAP_DELAY);
                 } else {
@@ -523,9 +550,9 @@
                                 for (let b of balls) { b.vy = -b.vy; }
                                 break;
                         }
-                        // ★ 開始恢復速度（1秒） ★
-                        slowMoPhase = 'recovering';
-                        slowMoRecoveryStart = performance.now();
+                        // 開始球速恢復（1 秒）
+                        startSpeedAnimation(1.0, 1.0, speedScale);
+                        timersPaused = false;
                         eventTimeoutId = null;
                     }, EVENT_DELAY);
                 }
@@ -582,11 +609,12 @@
                 rightLabel.textContent = '🎯 物理';
                 if (swapTimeoutId) { clearTimeout(swapTimeoutId); swapTimeoutId = null; swapPending = false; }
                 if (eventTimeoutId) { clearTimeout(eventTimeoutId); eventTimeoutId = null; }
-                // ★ 強制重置 timeScale ★
-                timeScale = 1;
-                slowMoPhase = null;
-                slowMoStart = null;
-                slowMoRecoveryStart = null;
+                // 重置球速與暫停
+                speedScale = 1.0;
+                speedScaleTarget = 1.0;
+                speedScaleAnimating = false;
+                speedScaleAnimStartTime = null;
+                timersPaused = false;
                 if (isNumberSort) endNumberSort();
                 keys.left = false;
                 keys.right = false;
@@ -613,11 +641,11 @@
                 if (gameState !== STATE.PLAYING) return;
 
                 if (isControlSwapped) {
-                    if (keysA) paddle.x = Math.max(0, paddle.x - PADDLE_SPEED * dt * timeScale);
-                    if (keysS) paddle.x = Math.min(canvasW - paddle.w, paddle.x + PADDLE_SPEED * dt * timeScale);
+                    if (keysA) paddle.x = Math.max(0, paddle.x - PADDLE_SPEED * dt);
+                    if (keysS) paddle.x = Math.min(canvasW - paddle.w, paddle.x + PADDLE_SPEED * dt);
                 } else {
-                    if (keys.left) paddle.x = Math.max(0, paddle.x - PADDLE_SPEED * dt * timeScale);
-                    if (keys.right) paddle.x = Math.min(canvasW - paddle.w, paddle.x + PADDLE_SPEED * dt * timeScale);
+                    if (keys.left) paddle.x = Math.max(0, paddle.x - PADDLE_SPEED * dt);
+                    if (keys.right) paddle.x = Math.min(canvasW - paddle.w, paddle.x + PADDLE_SPEED * dt);
                 }
 
                 if (isGravityReversed) paddle.y = 10;
@@ -631,10 +659,12 @@
                     spawnBall();
                 }
 
+                // 應用球速縮放
+                const scale = speedScale;
                 for (let i = balls.length - 1; i >= 0; i--) {
                     const b = balls[i];
-                    b.x += b.vx * dt * timeScale;
-                    b.y += b.vy * dt * timeScale;
+                    b.x += b.vx * dt * scale;
+                    b.y += b.vy * dt * scale;
 
                     if (b.x - b.radius < 0) { b.x = b.radius; b.vx = -b.vx; }
                     if (b.x + b.radius > canvasW) { b.x = canvasW - b.radius; b.vx = -b.vx; }
@@ -744,35 +774,20 @@
                 }
             }
 
-            // ---------- 遊戲主迴圈（永不取消） ----------
+            // ---------- 遊戲主迴圈 ----------
             function gameLoop(timestamp) {
                 if (!lastTimestamp) lastTimestamp = timestamp;
                 const delta = Math.min((timestamp - lastTimestamp) / 1000, 0.05);
                 lastTimestamp = timestamp;
 
-                // ★ 慢動作過渡（強化恢復） ★
-                if (slowMoPhase === 'active') {
-                    // 若超過 1.5 秒仍未恢復，強制恢復（原為2.5，縮短為1.5）
-                    if (slowMoStart && performance.now() - slowMoStart > 1500) {
-                        slowMoPhase = 'recovering';
-                        slowMoRecoveryStart = performance.now();
-                    }
-                } else if (slowMoPhase === 'recovering') {
-                    const elapsed = performance.now() - slowMoRecoveryStart;
-                    if (elapsed >= 1000) {
-                        timeScale = 1;
-                        slowMoPhase = null;
-                        slowMoStart = null;
-                        slowMoRecoveryStart = null;
-                    } else {
-                        timeScale = 0.3 + 0.7 * (elapsed / 1000);
-                    }
-                }
+                // 更新球速動畫
+                updateSpeedAnimation();
 
-                const effectiveDt = delta * timeScale;
+                const effectiveDt = delta; // 不再縮放時間
 
                 if (gameState === STATE.PLAYING) {
-                    if (!isNumberSort && stroopData && !stroopLocked) {
+                    // 左腦計時（若未暫停）
+                    if (!timersPaused && !isNumberSort && stroopData && !stroopLocked) {
                         leftTimer -= effectiveDt;
                         if (leftTimer <= 0) {
                             leftTimer = 0;
@@ -782,7 +797,8 @@
                             updateTimerDisplay();
                         }
                     }
-                    if (isNumberSort) {
+                    // 數字事件計時（若未暫停）
+                    if (!timersPaused && isNumberSort) {
                         eventTimer -= effectiveDt;
                         if (eventTimer <= 0) {
                             eventTimer = 0;
@@ -844,11 +860,12 @@
                     statusBadgeRight.className = 'status-badge playing';
                     leftLabel.textContent = '🧩 邏輯';
                     rightLabel.textContent = '🎯 物理';
-                    // ★ 強制重置 timeScale ★
-                    timeScale = 1;
-                    slowMoPhase = null;
-                    slowMoStart = null;
-                    slowMoRecoveryStart = null;
+                    // 重置球速與暫停
+                    speedScale = 1.0;
+                    speedScaleTarget = 1.0;
+                    speedScaleAnimating = false;
+                    speedScaleAnimStartTime = null;
+                    timersPaused = false;
                     if (swapTimeoutId) { clearTimeout(swapTimeoutId); swapTimeoutId = null; swapPending = false; }
                     if (eventTimeoutId) { clearTimeout(eventTimeoutId); eventTimeoutId = null; }
                 } catch (e) { console.error(e); }
@@ -866,11 +883,12 @@
                 optA.disabled = true;
                 optS.disabled = true;
                 eventOverlay.classList.remove('show');
-                // ★ 恢復速度 ★
-                timeScale = 1;
-                slowMoPhase = null;
-                slowMoStart = null;
-                slowMoRecoveryStart = null;
+                // 重置球速與暫停
+                speedScale = 1.0;
+                speedScaleTarget = 1.0;
+                speedScaleAnimating = false;
+                speedScaleAnimStartTime = null;
+                timersPaused = false;
                 if (swapTimeoutId) { clearTimeout(swapTimeoutId); swapTimeoutId = null; swapPending = false; }
                 if (eventTimeoutId) { clearTimeout(eventTimeoutId); eventTimeoutId = null; }
                 if (isNumberSort) endNumberSort();
