@@ -100,7 +100,7 @@
                 <div class="panel-label" id="leftLabel">🧩 邏輯</div>
                 <div class="status-badge" id="statusBadge">⏸</div>
                 <div class="stroop-prompt" id="stroopPrompt">按 <span class="highlight">開始</span></div>
-                <div class="timer-display" id="timerDisplay">⏱ 5s</div>
+                <div class="timer-display" id="timerDisplay">⏱ 9s</div>
                 <div class="stroop-word" id="stroopWord">——</div>
                 <div class="stroop-options">
                     <button class="option-btn" id="optA" disabled><span class="key-hint">[A]</span><span id="optALabel">—</span></button>
@@ -132,10 +132,10 @@
             <button class="help-close" id="helpClose">✕</button>
             <div class="help-title">🧠 Brainsplit 遊戲說明</div>
             <div class="help-section"><h3>🎯 目標</h3><p>同時操控左右腦，維持得分並應付隨機事件，任一側失敗即遊戲結束。</p></div>
-            <div class="help-section"><h3>🖱️ 操作方式</h3><ul><li><span class="highlight">左腦（邏輯）</span>：按 <kbd>A</kbd> / <kbd>S</kbd> 選擇答案（5秒限時）</li><li><span class="highlight">右腦（物理）</span>：按 <kbd>←</kbd> / <kbd>→</kbd> 或滑動螢幕控制擋板</li><li>手機/平板：直接點擊左側按鈕，右側滑動控制擋板</li></ul></div>
+            <div class="help-section"><h3>🖱️ 操作方式</h3><ul><li><span class="highlight">左腦（邏輯）</span>：按 <kbd>A</kbd> / <kbd>S</kbd> 選擇答案（初始9秒，每500分減1秒，最低5秒）</li><li><span class="highlight">右腦（物理）</span>：按 <kbd>←</kbd> / <kbd>→</kbd> 或滑動螢幕控制擋板</li><li>手機/平板：直接點擊左側按鈕，右側滑動控制擋板</li></ul></div>
             <div class="help-section"><h3>🏆 得分機制</h3><ul><li>左腦答對：<span class="highlight">+50 分</span></li><li>右腦每次接住球：<span class="highlight">+10 分</span></li><li>生存無額外加分</li></ul></div>
             <div class="help-section"><h3>⚡ 隨機事件（每 500 分觸發）</h3><ul><li><strong>增加球</strong>：最大球數 +1（最高 6 顆）</li><li><strong>交換位置</strong>：左右版塊互換，2 秒倒數後生效</li><li><strong>數字排序</strong>：選較大/較小數字，5 秒限時，答對 +50 分並繼續，答錯/超時 Game Over</li><li><strong>重力反轉</strong>：擋板移至頂部，球向上運動，漏出頂部即失敗</li></ul></div>
-            <div class="help-section"><h3>💡 特殊判定</h3><p>重力反轉時，球超出頂部 (y + radius &lt; 0) 即判輸，請留意！</p></div>
+            <div class="help-section"><h3>💡 特殊判定</h3><p>重力反轉時，球超出頂部 (y + radius &lt; 0) 即判輸；正常模式球超出底部 (y + radius &gt; canvasH) 判輸。</p></div>
         </div>
     </div>
 
@@ -194,10 +194,13 @@
             let stroopData = null;
             let stroopLocked = false;
 
+            // ---------- 動態答題時間 ----------
+            let leftTimeLimit = 9;           // 當前限時（秒）
+            const MIN_TIME_LIMIT = 5;
+            const INIT_TIME_LIMIT = 9;
+
             let leftTimer = 0;
-            const LEFT_TIME_LIMIT = 5;
             let lastTimestamp = 0;
-            let leftTimeLimit = 9;  // 初始 9 秒
 
             // ---------- 事件系統 ----------
             let maxBalls = 3;
@@ -218,15 +221,13 @@
             let swapPending = false;
             let swapTimeoutId = null;
 
-            // ---------- 球速控制（取代 timeScale） ----------
-            let speedScale = 1.0;               // 當前球速倍率
-            let speedScaleTarget = 1.0;         // 目標值（動畫用）
-            let speedScaleAnimStartTime = null; // 動畫開始時間
-            let speedScaleStartValue = 1.0;     // 動畫起始值
-            let speedScaleDuration = 0;         // 動畫持續時間（秒）
-            let speedScaleAnimating = false;    // 是否正在動畫
-
-            // 計時器暫停標誌
+            // ---------- 球速控制 ----------
+            let speedScale = 1.0;
+            let speedScaleTarget = 1.0;
+            let speedScaleAnimStartTime = null;
+            let speedScaleStartValue = 1.0;
+            let speedScaleDuration = 0;
+            let speedScaleAnimating = false;
             let timersPaused = false;
 
             // ---------- 物理參數 ----------
@@ -235,13 +236,14 @@
             let canvasW = 0, canvasH = 0;
             let ballSpawnTimer = 0;
             const BALL_RADIUS = 10;
-            const PADDLE_SPEED = 360;
 
-            const BASE_SPEED = 540.0;
+            // ★ 速度參數（像素/秒）★
+            const PADDLE_SPEED = 360;
+            const BASE_SPEED = 240.0;
             const BASE_INTERVAL = 110;
-            const SPEED_INCREMENT = 24;
+            const SPEED_INCREMENT = 10;
             const INCREMENT_STEP = 300;
-            const MAX_SPEED =900.0;
+            const MAX_SPEED = 360.0;
             const MIN_INTERVAL = 60;
             const INTERVAL_REDUCTION = 2;
 
@@ -269,7 +271,7 @@
                 return ctx;
             }
 
-            // ---------- 球速動畫函式 ----------
+            // ---------- 球速動畫 ----------
             function startSpeedAnimation(target, duration, startValue) {
                 speedScaleTarget = target;
                 speedScaleDuration = duration;
@@ -277,19 +279,27 @@
                 speedScaleAnimStartTime = performance.now();
                 speedScaleAnimating = true;
             }
-
             function updateSpeedAnimation() {
                 if (!speedScaleAnimating) return;
                 const now = performance.now();
                 const elapsed = (now - speedScaleAnimStartTime) / 1000;
                 const progress = Math.min(elapsed / speedScaleDuration, 1);
-                // 線性插值
                 speedScale = speedScaleStartValue + (speedScaleTarget - speedScaleStartValue) * progress;
                 if (progress >= 1) {
                     speedScale = speedScaleTarget;
                     speedScaleAnimating = false;
                     speedScaleAnimStartTime = null;
                 }
+            }
+
+            // ---------- 動態限時更新 ----------
+            function updateTimeLimit() {
+                // 每 500 分減 1 秒，最低 MIN_TIME_LIMIT
+                const reduction = Math.floor(score / EVENT_INTERVAL);
+                leftTimeLimit = Math.max(MIN_TIME_LIMIT, INIT_TIME_LIMIT - reduction);
+                // 若目前倒數大於新限時，則縮短（但通常不會）
+                if (leftTimer > leftTimeLimit) leftTimer = leftTimeLimit;
+                updateTimerDisplay();
             }
 
             // ---------- Stroop ----------
@@ -347,7 +357,7 @@
                 optS.disabled = false;
                 optA.className = 'option-btn';
                 optS.className = 'option-btn';
-                leftTimer = leftTimeLimit;   // 取代原 LEFT_TIME_LIMIT;
+                leftTimer = leftTimeLimit;
                 updateTimerDisplay();
             }
 
@@ -475,7 +485,7 @@
                     endNumberSort();
                     activeEvent = null;
                 }
-                // 重置球速與暫停標誌
+                // 重置球速與暫停
                 speedScale = 1.0;
                 speedScaleTarget = 1.0;
                 speedScaleAnimating = false;
@@ -490,7 +500,6 @@
 
                 // 啟動球速下降動畫（1.5 秒降到 0.2）
                 startSpeedAnimation(0.2, 1.5, 1.0);
-                // 暫停計時器
                 timersPaused = true;
 
                 const eventType = randomInt(1, 4);
@@ -521,7 +530,6 @@
                             rightLabel.textContent = '🧩 邏輯';
                             swapPending = false;
                             swapTimeoutId = null;
-                            // 開始球速恢復（1 秒）
                             startSpeedAnimation(1.0, 1.0, speedScale);
                             timersPaused = false;
                         }
@@ -551,7 +559,6 @@
                                 for (let b of balls) { b.vy = -b.vy; }
                                 break;
                         }
-                        // 開始球速恢復（1 秒）
                         startSpeedAnimation(1.0, 1.0, speedScale);
                         timersPaused = false;
                         eventTimeoutId = null;
@@ -610,7 +617,6 @@
                 rightLabel.textContent = '🎯 物理';
                 if (swapTimeoutId) { clearTimeout(swapTimeoutId); swapTimeoutId = null; swapPending = false; }
                 if (eventTimeoutId) { clearTimeout(eventTimeoutId); eventTimeoutId = null; }
-                // 重置球速與暫停
                 speedScale = 1.0;
                 speedScaleTarget = 1.0;
                 speedScaleAnimating = false;
@@ -621,6 +627,10 @@
                 keys.right = false;
                 keysA = false;
                 keysS = false;
+                // 重置限時
+                leftTimeLimit = INIT_TIME_LIMIT;
+                leftTimer = leftTimeLimit;
+                updateTimerDisplay();
             }
 
             // ---------- 球生成 ----------
@@ -637,7 +647,7 @@
                 balls.push({ x, y, vx, vy, radius: BALL_RADIUS, color: COLOR_MAP[color] });
             }
 
-            // ---------- 物理更新 ----------
+            // ---------- 物理更新（含正確邊界反彈） ----------
             function updatePhysics(dt) {
                 if (gameState !== STATE.PLAYING) return;
 
@@ -660,16 +670,40 @@
                     spawnBall();
                 }
 
-                // 應用球速縮放
                 const scale = speedScale;
                 for (let i = balls.length - 1; i >= 0; i--) {
                     const b = balls[i];
                     b.x += b.vx * dt * scale;
                     b.y += b.vy * dt * scale;
 
+                    // 左右邊界反彈
                     if (b.x - b.radius < 0) { b.x = b.radius; b.vx = -b.vx; }
                     if (b.x + b.radius > canvasW) { b.x = canvasW - b.radius; b.vx = -b.vx; }
 
+                    // 垂直邊界：正常模式底部判負，頂部反彈；反轉模式頂部判負，底部反彈
+                    if (isGravityReversed) {
+                        // 反轉模式：頂部判負，底部反彈
+                        if (b.y - b.radius < 0) {
+                            triggerGameOver();
+                            return;
+                        }
+                        if (b.y + b.radius > canvasH) {
+                            b.y = canvasH - b.radius;
+                            b.vy = -b.vy;
+                        }
+                    } else {
+                        // 正常模式：底部判負，頂部反彈
+                        if (b.y + b.radius > canvasH) {
+                            triggerGameOver();
+                            return;
+                        }
+                        if (b.y - b.radius < 0) {
+                            b.y = b.radius;
+                            b.vy = -b.vy;
+                        }
+                    }
+
+                    // 擋板碰撞（不影響邊界反彈）
                     const px = paddle.x, py = paddle.y, pw = paddle.w, ph = paddle.h;
                     if (isGravityReversed) {
                         if (b.y - b.radius <= py + ph && b.y - b.radius >= py - 5) {
@@ -684,10 +718,6 @@
                                 continue;
                             }
                         }
-                        if (b.y + b.radius < 0) {
-                            triggerGameOver();
-                            return;
-                        }
                     } else {
                         if (b.y + b.radius >= py && b.y + b.radius <= py + ph + 6) {
                             if (b.x >= px - b.radius + 3 && b.x <= px + pw + b.radius - 3) {
@@ -700,10 +730,6 @@
                                 if (Math.abs(b.vx) > maxV) b.vx = Math.sign(b.vx) * maxV;
                                 continue;
                             }
-                        }
-                        if (b.y - b.radius > canvasH) {
-                            triggerGameOver();
-                            return;
                         }
                     }
                 }
@@ -770,9 +796,9 @@
             // ---------- 分數更新 ----------
             function updateScore() {
                 scoreDisplay.textContent = Math.floor(score);
-                // 動態調整左腦限時
-                leftTimeLimit = Math.max(5, 9 - Math.floor(score / 500));
-                // 事件觸發檢查
+                // 更新限時
+                updateTimeLimit();
+                // 事件觸發
                 if (score - lastEventScore >= EVENT_INTERVAL) {
                     triggerRandomEvent();
                 }
@@ -787,7 +813,7 @@
                 // 更新球速動畫
                 updateSpeedAnimation();
 
-                const effectiveDt = delta; // 不再縮放時間
+                const effectiveDt = delta;
 
                 if (gameState === STATE.PLAYING) {
                     // 左腦計時（若未暫停）
@@ -841,7 +867,8 @@
                     optS.disabled = true;
                     optA.className = 'option-btn';
                     optS.className = 'option-btn';
-                    leftTimer = LEFT_TIME_LIMIT;
+                    leftTimeLimit = INIT_TIME_LIMIT;
+                    leftTimer = leftTimeLimit;
                     updateTimerDisplay();
                     gameState = STATE.PLAYING;
                     updateUI();
@@ -864,7 +891,6 @@
                     statusBadgeRight.className = 'status-badge playing';
                     leftLabel.textContent = '🧩 邏輯';
                     rightLabel.textContent = '🎯 物理';
-                    // 重置球速與暫停
                     speedScale = 1.0;
                     speedScaleTarget = 1.0;
                     speedScaleAnimating = false;
@@ -887,7 +913,6 @@
                 optA.disabled = true;
                 optS.disabled = true;
                 eventOverlay.classList.remove('show');
-                // 重置球速與暫停
                 speedScale = 1.0;
                 speedScaleTarget = 1.0;
                 speedScaleAnimating = false;
@@ -919,7 +944,8 @@
                 optS.disabled = true;
                 optA.className = 'option-btn';
                 optS.className = 'option-btn';
-                leftTimer = LEFT_TIME_LIMIT;
+                leftTimeLimit = INIT_TIME_LIMIT;
+                leftTimer = leftTimeLimit;
                 updateTimerDisplay();
                 updateUI();
                 eventOverlay.classList.remove('show');
@@ -1025,7 +1051,8 @@
                 updateScore();
                 updateUI();
                 gameoverOverlay.classList.remove('show');
-                leftTimer = LEFT_TIME_LIMIT;
+                leftTimeLimit = INIT_TIME_LIMIT;
+                leftTimer = leftTimeLimit;
                 updateTimerDisplay();
 
                 window.addEventListener('keydown', onKeyDown);
