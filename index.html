@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Brainsplit</title>
     <style>
-        /* ===== 完整样式（与之前相同，略） ===== */
         * { margin:0; padding:0; box-sizing:border-box; user-select:none; }
         body { background:#0b0b16; font-family:'Segoe UI','PingFang TC','Microsoft YaHei',sans-serif; display:flex; justify-content:center; align-items:center; min-height:100vh; color:#e8e8f0; padding:6px; touch-action:none; }
         .game-container { width:100%; max-width:900px; background:#12121f; border-radius:20px; padding:12px; box-shadow:0 12px 40px rgba(0,0,0,0.8); border:1px solid #2a2a44; }
@@ -237,10 +236,9 @@
             let ballSpawnTimer = 0;
             const BALL_RADIUS = 10;
 
-            // ★ 速度參數（像素/秒）★
             const PADDLE_SPEED = 360;
             const BASE_SPEED = 240.0;
-            const BASE_INTERVAL = 500;      // 原 110，增加至 300
+            const BASE_INTERVAL = 700;
             const SPEED_INCREMENT = 20;
             const INCREMENT_STEP = 300;
             const MAX_SPEED = 400.0;
@@ -330,6 +328,8 @@
                     optS.disabled = false;
                     optA.className = 'option-btn';
                     optS.className = 'option-btn';
+                    timerDisplay.textContent = `⏱ ${Math.ceil(eventTimer)}s`;
+                    timerDisplay.className = 'timer-display';
                     return;
                 }
                 if (!stroopData) {
@@ -644,7 +644,7 @@
                 updateTimerDisplay();
             }
 
-            // ---------- 球生成 ----------
+            // ---------- 球生成（修改：強制向上） ----------
             function spawnBall() {
                 if (balls.length >= maxBalls) return;
                 const x = canvasW / 2;
@@ -652,13 +652,16 @@
                 const angle = Math.random() * 2 * Math.PI;
                 const speedBonus = Math.floor(score / INCREMENT_STEP) * SPEED_INCREMENT;
                 const currentSpeed = Math.min(MAX_SPEED, BASE_SPEED + speedBonus);
-                const vx = Math.cos(angle) * currentSpeed;
-                const vy = Math.sin(angle) * currentSpeed;
+                let vx = Math.cos(angle) * currentSpeed;
+                let vy = Math.sin(angle) * currentSpeed;
+                // ★ 強制向上（vy 必須為負，若為正則取反） ★
+                if (vy >= 0) vy = -vy;
+                // 若水平速度過大，可稍微限制，但不必須
                 const color = randomItem(COLOR_NAMES);
                 balls.push({ x, y, vx, vy, radius: BALL_RADIUS, color: COLOR_MAP[color] });
             }
 
-            // ---------- 物理更新（含速度保持與大幅隨機偏移） ----------
+            // ---------- 物理更新 ----------
             function updatePhysics(dt) {
                 if (gameState !== STATE.PLAYING) return;
 
@@ -687,11 +690,9 @@
                     b.x += b.vx * dt * scale;
                     b.y += b.vy * dt * scale;
 
-                    // 邊界反彈（左右）
                     if (b.x - b.radius < 0) { b.x = b.radius; b.vx = -b.vx; }
                     if (b.x + b.radius > canvasW) { b.x = canvasW - b.radius; b.vx = -b.vx; }
 
-                    // 垂直邊界：正常模式頂部反彈、底部判負；反轉模式底部反彈、頂部判負
                     if (isGravityReversed) {
                         if (b.y - b.radius < 0) {
                             triggerGameOver();
@@ -712,29 +713,19 @@
                         }
                     }
 
-                    // 擋板碰撞（保持速度大小，增加水平隨機偏移）
                     const px = paddle.x, py = paddle.y, pw = paddle.w, ph = paddle.h;
-                    let hit = false;
                     if (isGravityReversed) {
                         if (b.y - b.radius <= py + ph && b.y - b.radius >= py - 5) {
                             if (b.x >= px - b.radius + 3 && b.x <= px + pw + b.radius - 3) {
-                                hit = true;
-                                // 計算當前總速度
                                 const speed = Math.sqrt(b.vx * b.vx + b.vy * b.vy);
-                                // 垂直反向
                                 b.vy = -b.vy;
-                                // 加入大幅水平隨機偏移（±12）
                                 b.vx += (Math.random() - 0.5) * 12;
-                                // 限制水平速度最大為總速度的 40%
                                 const maxVx = speed * 0.4;
                                 if (Math.abs(b.vx) > maxVx) b.vx = Math.sign(b.vx) * maxVx;
-                                // 重新調整垂直速度，使總速度保持不變
                                 const newVx = b.vx;
                                 const remaining = Math.sqrt(Math.max(0, speed * speed - newVx * newVx));
                                 b.vy = Math.sign(b.vy) * remaining;
-                                // 防止因浮點數導致速度為 NaN
-                                if (isNaN(b.vy)) b.vy = -Math.sign(b.vy) * speed * 0.6;
-                                // 位置修正
+                                if (isNaN(b.vy)) b.vy = Math.sign(b.vy) * speed * 0.6;
                                 b.y = py + ph + b.radius + 0.5;
                                 score += 10;
                                 updateScore();
@@ -743,7 +734,6 @@
                     } else {
                         if (b.y + b.radius >= py && b.y + b.radius <= py + ph + 6) {
                             if (b.x >= px - b.radius + 3 && b.x <= px + pw + b.radius - 3) {
-                                hit = true;
                                 const speed = Math.sqrt(b.vx * b.vx + b.vy * b.vy);
                                 b.vy = -b.vy;
                                 b.vx += (Math.random() - 0.5) * 12;
@@ -858,6 +848,8 @@
                         } else {
                             const hint = numberSortType === 'larger' ? '較大' : '較小';
                             stroopPrompt.innerHTML = `🔢 選擇<span class="highlight">${hint}</span>的數字 (${Math.ceil(eventTimer)}s)`;
+                            timerDisplay.textContent = `⏱ ${Math.ceil(eventTimer)}s`;
+                            timerDisplay.className = Math.ceil(eventTimer) <= 1 ? 'timer-display warning' : 'timer-display';
                         }
                     }
                     updatePhysics(effectiveDt);
