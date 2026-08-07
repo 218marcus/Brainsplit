@@ -1177,6 +1177,10 @@
                             rightLabel.textContent = '🧩 邏輯';
                             swapPending = false;
                             swapTimeoutId = null;
+                            // ★ 新增：开始恢复慢动作 ★
+                            slowMoPhase = 'recovering';
+                            slowMoRecoveryStart = performance.now();
+                            slowMoStart = null; // 防止强制恢复冲突
                         }
                     }, SWAP_DELAY);
                 } else {
