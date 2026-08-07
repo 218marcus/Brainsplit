@@ -197,6 +197,7 @@
             let leftTimer = 0;
             const LEFT_TIME_LIMIT = 5;
             let lastTimestamp = 0;
+            let leftTimeLimit = 9;  // 初始 9 秒
 
             // ---------- 事件系統 ----------
             let maxBalls = 3;
@@ -346,7 +347,7 @@
                 optS.disabled = false;
                 optA.className = 'option-btn';
                 optS.className = 'option-btn';
-                leftTimer = LEFT_TIME_LIMIT;
+                leftTimer = leftTimeLimit;   // 取代原 LEFT_TIME_LIMIT;
                 updateTimerDisplay();
             }
 
@@ -683,7 +684,7 @@
                                 continue;
                             }
                         }
-                        if (b.y - b.radius < 0) {
+                        if (b.y + b.radius < 0) {
                             triggerGameOver();
                             return;
                         }
@@ -700,7 +701,7 @@
                                 continue;
                             }
                         }
-                        if (b.y + b.radius > canvasH) {
+                        if (b.y - b.radius > canvasH) {
                             triggerGameOver();
                             return;
                         }
@@ -769,6 +770,9 @@
             // ---------- 分數更新 ----------
             function updateScore() {
                 scoreDisplay.textContent = Math.floor(score);
+                // 動態調整左腦限時
+                leftTimeLimit = Math.max(5, 9 - Math.floor(score / 500));
+                // 事件觸發檢查
                 if (score - lastEventScore >= EVENT_INTERVAL) {
                     triggerRandomEvent();
                 }
