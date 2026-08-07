@@ -900,11 +900,11 @@
             const PADDLE_SPEED = 6;
 
             // ★ 用戶指定的速度參數 ★
-            const BASE_SPEED = 5.0;
+            const BASE_SPEED = 9.0;
             const BASE_INTERVAL = 110;
             const SPEED_INCREMENT = 0.5;
             const INCREMENT_STEP = 300;
-            const MAX_SPEED = 12.0;
+            const MAX_SPEED = 21.0;
             const MIN_INTERVAL = 60;
             const INTERVAL_REDUCTION = 2;
 
@@ -1177,10 +1177,6 @@
                             rightLabel.textContent = '🧩 邏輯';
                             swapPending = false;
                             swapTimeoutId = null;
-                            // ★ 新增：开始恢复慢动作 ★
-                            slowMoPhase = 'recovering';
-                            slowMoRecoveryStart = performance.now();
-                            slowMoStart = null; // 防止强制恢复冲突
                         }
                     }, SWAP_DELAY);
                 } else {
@@ -1452,7 +1448,7 @@
                 }
             }
 
-            // ---------- 遊戲主迴圈 ----------
+            // ---------- 遊戲主迴圈（永不取消） ----------
             function gameLoop(timestamp) {
                 if (!lastTimestamp) lastTimestamp = timestamp;
                 const delta = Math.min((timestamp - lastTimestamp) / 1000, 0.05);
@@ -1505,8 +1501,10 @@
                     updatePhysics(effectiveDt);
                     renderPhysics();
                 } else if (gameState === STATE.IDLE) {
-                    renderPhysics();
+                    renderPhysics(); // 閒置時仍渲染（無球或靜止）
                 }
+                // 即使 GAMEOVER 也繼續渲染（畫面停滯但可點擊重啟）
+                // ★ 永遠請求下一幀，不取消 ★
                 animFrameId = requestAnimationFrame(gameLoop);
             }
 
@@ -1562,6 +1560,7 @@
                         swapPending = false; }
                     if (eventTimeoutId) { clearTimeout(eventTimeoutId);
                         eventTimeoutId = null; }
+                    // ★ 無需重啟 animFrameId，因為從未停止 ★
                 } catch (e) { console.error(e); }
             }
 
@@ -1587,16 +1586,14 @@
                 if (eventTimeoutId) { clearTimeout(eventTimeoutId);
                     eventTimeoutId = null; }
                 if (isNumberSort) endNumberSort();
-                if (animFrameId) { cancelAnimationFrame(animFrameId);
-                    animFrameId = null; }
+                // ★ 移除 cancelAnimationFrame，讓迴圈持續運作 ★
             }
 
             // ---------- 重置至待機 ----------
             function resetToIdle() {
                 if (timerInterval) clearInterval(timerInterval);
                 timerInterval = null;
-                if (animFrameId) { cancelAnimationFrame(animFrameId);
-                    animFrameId = null; }
+                // ★ 移除 cancelAnimationFrame ★
                 gameState = STATE.IDLE;
                 score = 0;
                 updateScore();
@@ -1623,7 +1620,7 @@
                     swapPending = false; }
                 if (eventTimeoutId) { clearTimeout(eventTimeoutId);
                     eventTimeoutId = null; }
-                if (!animFrameId) animFrameId = requestAnimationFrame(gameLoop);
+                // 不需要重啟迴圈
             }
 
             // ---------- 更新 UI 狀態 ----------
@@ -1765,6 +1762,7 @@
                 canvas.addEventListener('touchend', (e) => e.preventDefault(), { passive: false });
                 canvas.addEventListener('touchcancel', (e) => e.preventDefault(), { passive: false });
 
+                // ★ 啟動一次遊戲迴圈，之後永不停止 ★
                 animFrameId = requestAnimationFrame(gameLoop);
                 renderStroop();
                 renderPhysics();
