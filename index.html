@@ -171,7 +171,12 @@ const i18n = {
         status_idle: '⏸',
         timer_label: '⏱',
         touch_hint: '👆 Swipe',
-        // number sort hint dynamic
+        // 左脑任务英文
+        task_color: 'Click Color',
+        task_meaning: 'Click Meaning',
+        // 数字排序英文
+        sort_larger: 'Choose the larger number',
+        sort_smaller: 'Choose the smaller number',
     },
     zh: {
         brand: '🧠 左右腦互搏',
@@ -221,6 +226,11 @@ const i18n = {
         status_idle: '⏸',
         timer_label: '⏱',
         touch_hint: '👆 滑動',
+        // 中文任务
+        task_color: '點顏色',
+        task_meaning: '點意思',
+        sort_larger: '較大',
+        sort_smaller: '較小',
     }
 };
 
@@ -353,8 +363,10 @@ return {word,displayColor:displayColorHex,displayColorName,task,correctAnswer,op
 function renderStroop(){
 const t = i18n[lang];
 if(isNumberSort){
-const hint=numberSortType==='larger'? (lang==='zh'?'較大':'larger') : (lang==='zh'?'較小':'smaller');
-stroopPrompt.innerHTML = `🔢 ${lang==='zh'?'選擇':'Choose'} <span class=highlight>${hint}</span> ${lang==='zh'?'的數字':'number'} (${Math.ceil(eventTimer)}s)`;
+const hint = (numberSortType==='larger') ? (lang==='zh' ? t.sort_larger : t.sort_larger) : (lang==='zh' ? t.sort_smaller : t.sort_smaller);
+const label = lang==='zh' ? '選擇' : 'Choose';
+const extra = lang==='zh' ? '的數字' : 'number';
+stroopPrompt.innerHTML = `🔢 ${label} <span class=highlight>${hint}</span> ${extra} (${Math.ceil(eventTimer)}s)`;
 stroopWord.textContent=`${numberSortNum1}  vs  ${numberSortNum2}`;
 optALabel.textContent=numberSortNum1; optSLabel.textContent=numberSortNum2;
 optA.disabled=optS.disabled=false; optA.className=optS.className='option-btn';
@@ -368,7 +380,7 @@ optA.disabled=optS.disabled=true;
 timerDisplay.textContent='⏱ --'; timerDisplay.className='timer-display'; return;
 }
 const d=stroopData;
-const taskLabel = d.task==='color' ? (lang==='zh'?'點顏色':'color') : (lang==='zh'?'點意思':'meaning');
+const taskLabel = d.task==='color' ? t.task_color : t.task_meaning;
 stroopPrompt.innerHTML = `🎯 <span class=highlight>${taskLabel}</span>`;
 stroopWord.textContent=d.word; stroopWord.style.color=d.displayColor;
 optALabel.textContent=d.options[0]; optSLabel.textContent=d.options[1];
