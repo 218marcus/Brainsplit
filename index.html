@@ -19,6 +19,7 @@ body{background:#0b0b16;font-family:'Segoe UI','PingFang TC','Microsoft YaHei',s
 .btn-primary{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none}
 .btn-danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border:none}
 .btn-info{background:linear-gradient(135deg,#34d399,#10b981);color:#fff;border:none}
+.btn-lang{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;font-size:12px;padding:4px 12px}
 .btn:disabled{opacity:.35;cursor:not-allowed}
 .game-body{display:flex;gap:6px;min-height:380px;position:relative;flex-direction:row!important}
 .left-panel{flex:1 1 0;min-width:0;padding:8px 6px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#141425;border-radius:16px;border:1px solid #22223e;position:relative;order:1}
@@ -71,42 +72,157 @@ body{background:#0b0b16;font-family:'Segoe UI','PingFang TC','Microsoft YaHei',s
 .help-section ul{padding-left:18px;list-style-type:disc}
 .help-section ul li{margin:2px 0}
 .help-section .highlight{color:#fcd34d;font-weight:600}
-@media(max-width:560px){.game-container{padding:6px;border-radius:14px}.brand{font-size:18px}.logo-wrapper{width:28px;height:28px}.logo-brain .lightning{font-size:14px}.score-display{font-size:13px;padding:2px 10px}.score-display span{font-size:14px;min-width:30px}.btn{font-size:11px;padding:3px 10px}.game-body{min-height:300px;gap:4px}.left-panel,.right-panel{padding:4px;border-radius:12px}.panel-label{font-size:8px;top:2px;left:6px;padding:0 8px}.status-badge{font-size:8px;top:2px;right:6px;padding:0 8px}.stroop-prompt{font-size:10px;padding:2px 8px;min-height:24px;margin-bottom:4px}.stroop-word{font-size:28px;min-height:40px;margin-bottom:4px}.stroop-options{gap:8px}.option-btn{min-width:50px;max-width:70px;padding:6px 0;font-size:13px;border-radius:10px}.option-btn .key-hint{font-size:8px;line-height:14px;padding:0 6px}#gameCanvas{min-height:140px;border-radius:8px}.mobile-touch-hint{font-size:7px;padding:1px 8px}.divider{width:2px}.divider::after{font-size:10px}.gameover-title{font-size:20px}.gameover-score{font-size:18px}.gameover-score span{font-size:24px}.gameover-btn{font-size:14px;padding:6px 20px}.timer-display{font-size:12px;padding:1px 10px}.event-title{font-size:24px}.event-sub{font-size:14px}.help-box{padding:20px}.help-title{font-size:22px}}
+@media(max-width:560px){.game-container{padding:6px;border-radius:14px}.brand{font-size:18px}.logo-wrapper{width:28px;height:28px}.logo-brain .lightning{font-size:14px}.score-display{font-size:13px;padding:2px 10px}.score-display span{font-size:14px;min-width:30px}.btn{font-size:11px;padding:3px 10px}.btn-lang{font-size:10px;padding:2px 8px}.game-body{min-height:300px;gap:4px}.left-panel,.right-panel{padding:4px;border-radius:12px}.panel-label{font-size:8px;top:2px;left:6px;padding:0 8px}.status-badge{font-size:8px;top:2px;right:6px;padding:0 8px}.stroop-prompt{font-size:10px;padding:2px 8px;min-height:24px;margin-bottom:4px}.stroop-word{font-size:28px;min-height:40px;margin-bottom:4px}.stroop-options{gap:8px}.option-btn{min-width:50px;max-width:70px;padding:6px 0;font-size:13px;border-radius:10px}.option-btn .key-hint{font-size:8px;line-height:14px;padding:0 6px}#gameCanvas{min-height:140px;border-radius:8px}.mobile-touch-hint{font-size:7px;padding:1px 8px}.divider{width:2px}.divider::after{font-size:10px}.gameover-title{font-size:20px}.gameover-score{font-size:18px}.gameover-score span{font-size:24px}.gameover-btn{font-size:14px;padding:6px 20px}.timer-display{font-size:12px;padding:1px 10px}.event-title{font-size:24px}.event-sub{font-size:14px}.help-box{padding:20px}.help-title{font-size:22px}}
 @media(max-width:400px){.stroop-word{font-size:22px;min-height:34px}.option-btn{min-width:40px;max-width:60px;padding:4px 0;font-size:11px}#gameCanvas{min-height:100px}}
 </style>
 </head>
 <body>
 <div class="game-container">
-<div class="header"><div class="title"><div class="logo-wrapper"><div class="logo-brain"><span class="lightning">⚡</span></div></div><span class="brand">Brainsplit</span></div>
-<div class="title-score"><div class="score-display">🏆 <span id=scoreDisplay>0</span></div>
-<div class="btn-group"><button class="btn btn-primary" id=btnStart>▶ 開始</button><button class="btn btn-info" id=btnHelp>📖 說明</button><button class="btn btn-danger" id=btnReset>⟳</button></div></div></div>
+<div class="header">
+<div class="title">
+<div class="logo-wrapper"><div class="logo-brain"><span class="lightning">⚡</span></div></div>
+<span class="brand" data-lang="brand">Brainsplit</span>
+</div>
+<div class="title-score">
+<div class="score-display">🏆 <span id=scoreDisplay>0</span></div>
+<div class="btn-group">
+<button class="btn btn-primary" id=btnStart data-lang="start">▶ Start</button>
+<button class="btn btn-lang" id=btnLang>🌐 中/EN</button>
+<button class="btn btn-info" id=btnHelp data-lang="help">📖 Help</button>
+<button class="btn btn-danger" id=btnReset data-lang="reset">⟳</button>
+</div></div></div>
 <div class="game-body">
-<div class="left-panel" id=leftPanel><div class="panel-label" id=leftLabel>🧠 左腦</div><div class="status-badge" id=statusBadge>⏸</div>
-<div class="stroop-prompt" id=stroopPrompt>按 <span class=highlight>開始</span></div><div class="timer-display" id=timerDisplay>⏱ 9s</div>
+<div class="left-panel" id=leftPanel><div class="panel-label" id=leftLabel data-lang="left_label">🧠 Left Brain</div><div class="status-badge" id=statusBadge>⏸</div>
+<div class="stroop-prompt" id=stroopPrompt>Press <span class=highlight>Start</span></div><div class="timer-display" id=timerDisplay>⏱ 9s</div>
 <div class="stroop-word" id=stroopWord>——</div>
 <div class="stroop-options"><button class="option-btn" id=optA disabled><span class=key-hint>[A]</span><span id=optALabel>—</span></button><button class="option-btn" id=optS disabled><span class=key-hint>[S]</span><span id=optSLabel>—</span></button></div>
-<div class="gameover-overlay" id=gameoverOverlay><div class=gameover-title>💀 GAME OVER</div><div class=gameover-sub>左右腦失守</div><div class=gameover-score>得分 <span id=finalScore>0</span></div><button class=gameover-btn id=btnGameoverRestart>🔄 再挑戰</button></div>
-<div class="event-overlay" id=eventOverlay><div class=event-title id=eventTitle>⚡ 事件觸發</div><div class=event-sub id=eventSub>增加一顆球</div></div></div>
+<div class="gameover-overlay" id=gameoverOverlay><div class=gameover-title data-lang="gameover_title">💀 GAME OVER</div><div class=gameover-sub data-lang="gameover_sub">Both brains lost</div><div class=gameover-score>Score <span id=finalScore>0</span></div><button class=gameover-btn id=btnGameoverRestart data-lang="retry">🔄 Retry</button></div>
+<div class="event-overlay" id=eventOverlay><div class=event-title id=eventTitle>⚡ Event Triggered</div><div class=event-sub id=eventSub>+1 ball</div></div></div>
 <div class=divider></div>
-<div class="right-panel" id=rightPanel><div class="panel-label" id=rightLabel>🧠 右腦</div><div class="status-badge" id=statusBadgeRight>⏸</div><canvas id=gameCanvas></canvas><div class=mobile-touch-hint id=touchHint>👆 滑動</div></div></div></div>
-<div class="help-overlay" id=helpOverlay><div class=help-box><button class=help-close id=helpClose>✕</button><div class=help-title>🧠 Brainsplit 遊戲說明</div>
-<div class=help-section><h3>🎯 目標</h3><p>同時操控左右腦，維持得分並應付隨機事件，任一側失敗即遊戲結束。</p></div>
-<div class=help-section><h3>🖱️ 操作方式</h3><ul><li><span class=highlight>左腦</span>：按 <kbd>A</kbd> / <kbd>S</kbd> 選擇答案（初始9秒，每400分減1秒，最低5秒）</li><li><span class=highlight>右腦</span>：按 <kbd>←</kbd> / <kbd>→</kbd> 或滑動螢幕控制擋板</li><li>手機/平板：直接點擊左側按鈕，右側滑動控制擋板</li></ul></div>
-<div class=help-section><h3>🏆 得分機制</h3><ul><li>左腦答對：<span class=highlight>+50 分</span></li><li>右腦每次接住球：<span class=highlight>+10 分</span></li><li>生存無額外加分</li></ul></div>
-<div class=help-section><h3>⚡ 隨機事件（每 400 分觸發）</h3><ul><li><strong>增加球</strong>：最大球數 +1（最高 6 顆）</li><li><strong>交換位置</strong>：左右版塊互換，2 秒倒數後生效</li><li><strong>數字排序</strong>：選較大/較小數字，5 秒限時，答對 +50 分並繼續，答錯/超時 Game Over</li><li><strong>重力反轉</strong>：擋板移至頂部，球向上運動，漏出頂部即失敗；再次觸發可恢復正常，同時所有球垂直方向反轉</li></ul></div>
-<div class=help-section><h3>💡 特殊判定</h3><p>正常模式底部判負；反轉模式頂部判負。上下邊界均會反彈（正常模式頂部反彈，反轉模式底部反彈）。</p></div></div></div>
+<div class="right-panel" id=rightPanel><div class="panel-label" id=rightLabel data-lang="right_label">🧠 Right Brain</div><div class="status-badge" id=statusBadgeRight>⏸</div><canvas id=gameCanvas></canvas><div class=mobile-touch-hint id=touchHint>👆 Swipe</div></div></div></div>
+<div class="help-overlay" id=helpOverlay><div class=help-box><button class=help-close id=helpClose>✕</button><div class=help-title id=helpTitle>🧠 Brainsplit Guide</div>
+<div class=help-section><h3 data-lang="help_goal_title">🎯 Goal</h3><p data-lang="help_goal_text">Control both brains, maintain score and handle random events; any side fails = Game Over.</p></div>
+<div class=help-section><h3 data-lang="help_controls_title">🖱️ Controls</h3><ul><li><span class=highlight data-lang="help_left">Left Brain</span> <span data-lang="help_left_desc">Press <kbd>A</kbd> / <kbd>S</kbd> to answer (initial 9s, -1s per 400pts, min 5s)</span></li><li><span class=highlight data-lang="help_right">Right Brain</span> <span data-lang="help_right_desc">Press <kbd>←</kbd> / <kbd>→</kbd> or swipe to control paddle</span></li><li data-lang="help_touch">Mobile/tablet: tap left buttons, swipe right to control paddle</li></ul></div>
+<div class=help-section><h3 data-lang="help_score_title">🏆 Scoring</h3><ul><li data-lang="help_score_left">Left correct: <span class=highlight>+50 pts</span></li><li data-lang="help_score_right">Right catch: <span class=highlight>+10 pts</span></li><li data-lang="help_score_survive">No extra survival bonus</li></ul></div>
+<div class=help-section><h3 data-lang="help_events_title">⚡ Random Events (every 400 pts)</h3><ul><li data-lang="help_event_add">+1 ball (max 6)</li><li data-lang="help_event_swap">Swap sides (2s delay)</li><li data-lang="help_event_number">Number sort (5s, +50 if correct, wrong/timeout = Game Over)</li><li data-lang="help_event_gravity">Gravity flip (paddle to top, miss top = lose)</li></ul></div>
+<div class=help-section><h3 data-lang="help_special_title">💡 Special</h3><p data-lang="help_special_text">Normal mode: bottom lose; Flip mode: top lose. Both top/bottom walls bounce (top in normal, bottom in flip).</p></div></div></div>
 <script>
 (function(){
 'use strict';
-// ----- DOM references -----
+// ----- DOM refs -----
 const $=id=>document.getElementById(id);
 const D=document;
 const scoreDisplay=$('scoreDisplay'), finalScore=$('finalScore');
-const btnStart=$('btnStart'), btnReset=$('btnReset'), btnHelp=$('btnHelp'), helpOverlay=$('helpOverlay'), helpClose=$('helpClose'), btnGameoverRestart=$('btnGameoverRestart');
+const btnStart=$('btnStart'), btnReset=$('btnReset'), btnHelp=$('btnHelp'), helpOverlay=$('helpOverlay'), helpClose=$('helpClose'), btnGameoverRestart=$('btnGameoverRestart'), btnLang=$('btnLang');
 const stroopPrompt=$('stroopPrompt'), stroopWord=$('stroopWord'), optA=$('optA'), optS=$('optS'), optALabel=$('optALabel'), optSLabel=$('optSLabel');
 const statusBadge=$('statusBadge'), statusBadgeRight=$('statusBadgeRight'), gameoverOverlay=$('gameoverOverlay'), touchHint=$('touchHint');
 const canvas=$('gameCanvas'), ctx=canvas.getContext('2d'), timerDisplay=$('timerDisplay'), eventOverlay=$('eventOverlay'), eventTitle=$('eventTitle'), eventSub=$('eventSub');
 const leftLabel=$('leftLabel'), rightLabel=$('rightLabel'), leftPanel=$('leftPanel'), rightPanel=$('rightPanel');
+const helpTitle=$('helpTitle');
+
+// ----- i18n -----
+let lang = 'en'; // 'en' or 'zh'
+const i18n = {
+    en: {
+        brand: 'Brainsplit',
+        start: '▶ Start',
+        help: '📖 Help',
+        reset: '⟳',
+        left_label: '🧠 Left Brain',
+        right_label: '🧠 Right Brain',
+        gameover_title: '💀 GAME OVER',
+        gameover_sub: 'Both brains lost',
+        retry: '🔄 Retry',
+        help_title: '🧠 Brainsplit Guide',
+        help_goal_title: '🎯 Goal',
+        help_goal_text: 'Control both brains, maintain score and handle random events; any side fails = Game Over.',
+        help_controls_title: '🖱️ Controls',
+        help_left: 'Left Brain',
+        help_left_desc: 'Press <kbd>A</kbd> / <kbd>S</kbd> to answer (initial 9s, -1s per 400pts, min 5s)',
+        help_right: 'Right Brain',
+        help_right_desc: 'Press <kbd>←</kbd> / <kbd>→</kbd> or swipe to control paddle',
+        help_touch: 'Mobile/tablet: tap left buttons, swipe right to control paddle',
+        help_score_title: '🏆 Scoring',
+        help_score_left: 'Left correct: <span class=highlight>+50 pts</span>',
+        help_score_right: 'Right catch: <span class=highlight>+10 pts</span>',
+        help_score_survive: 'No extra survival bonus',
+        help_events_title: '⚡ Random Events (every 400 pts)',
+        help_event_add: '+1 ball (max 6)',
+        help_event_swap: 'Swap sides (2s delay)',
+        help_event_number: 'Number sort (5s, +50 if correct, wrong/timeout = Game Over)',
+        help_event_gravity: 'Gravity flip (paddle to top, miss top = lose)',
+        help_special_title: '💡 Special',
+        help_special_text: 'Normal mode: bottom lose; Flip mode: top lose. Both top/bottom walls bounce (top in normal, bottom in flip).',
+        stroop_prompt_default: 'Press <span class=highlight>Start</span>',
+        stroop_prompt_ready: '🧠 Preparing...',
+        event_add: '⚡ +1 ball',
+        event_swap: '🔄 Swap sides',
+        event_swap_desc: 'Sides will swap in 2s!',
+        event_number: '🔢 Number sort',
+        event_number_desc: 'Choose larger/smaller (5s) until next event',
+        event_gravity: '🌀 Gravity flip',
+        event_gravity_desc: 'Paddle moving to top!',
+        event_overlay_add: '+1 ball',
+        event_overlay_swap: 'Sides swap in 2s!',
+        event_overlay_number: 'Choose larger/smaller (5s)',
+        event_overlay_gravity: 'Paddle to top!',
+        status_playing: '▶',
+        status_gameover: '💀',
+        status_idle: '⏸',
+        timer_label: '⏱',
+        touch_hint: '👆 Swipe',
+        // number sort hint dynamic
+    },
+    zh: {
+        brand: '🧠 左右腦互搏',
+        start: '▶ 開始',
+        help: '📖 說明',
+        reset: '⟳',
+        left_label: '🧠 左腦',
+        right_label: '🧠 右腦',
+        gameover_title: '💀 遊戲結束',
+        gameover_sub: '左右腦失守',
+        retry: '🔄 再挑戰',
+        help_title: '🧠 左右腦互搏 遊戲說明',
+        help_goal_title: '🎯 目標',
+        help_goal_text: '同時操控左右腦，維持得分並應付隨機事件，任一側失敗即遊戲結束。',
+        help_controls_title: '🖱️ 操作方式',
+        help_left: '左腦',
+        help_left_desc: '按 <kbd>A</kbd> / <kbd>S</kbd> 選擇答案（初始9秒，每400分減1秒，最低5秒）',
+        help_right: '右腦',
+        help_right_desc: '按 <kbd>←</kbd> / <kbd>→</kbd> 或滑動螢幕控制擋板',
+        help_touch: '手機/平板：直接點擊左側按鈕，右側滑動控制擋板',
+        help_score_title: '🏆 得分機制',
+        help_score_left: '左腦答對：<span class=highlight>+50 分</span>',
+        help_score_right: '右腦每次接住球：<span class=highlight>+10 分</span>',
+        help_score_survive: '生存無額外加分',
+        help_events_title: '⚡ 隨機事件（每 400 分觸發）',
+        help_event_add: '增加球數 +1（最高 6 顆）',
+        help_event_swap: '左右版塊互換（2 秒延遲）',
+        help_event_number: '數字排序（5秒限時，答對 +50 分，答錯/超時 Game Over）',
+        help_event_gravity: '重力反轉（擋板移至頂部，漏出頂部即失敗）',
+        help_special_title: '💡 特殊判定',
+        help_special_text: '正常模式底部判負；反轉模式頂部判負。上下邊界均會反彈（正常模式頂部反彈，反轉模式底部反彈）。',
+        stroop_prompt_default: '按 <span class=highlight>開始</span>',
+        stroop_prompt_ready: '🧠 準備中...',
+        event_add: '⚡ 增加球',
+        event_swap: '🔄 交換位置',
+        event_swap_desc: '左右版塊將在 2 秒後互換！',
+        event_number: '🔢 數字排序',
+        event_number_desc: '選擇較大/較小的數字 (5秒) 持續到下一回合',
+        event_gravity: '🌀 重力反轉',
+        event_gravity_desc: '擋板即將移至頂部！',
+        event_overlay_add: '增加一顆球',
+        event_overlay_swap: '左右版塊將在 2 秒後互換！',
+        event_overlay_number: '選擇較大/較小的數字 (5秒)',
+        event_overlay_gravity: '擋板即將移至頂部！',
+        status_playing: '▶',
+        status_gameover: '💀',
+        status_idle: '⏸',
+        timer_label: '⏱',
+        touch_hint: '👆 滑動',
+    }
+};
 
 // ----- Helpers -----
 const COLOR_MAP={'紅色':'#ff1744','藍色':'#2979ff','綠色':'#00e676','黃色':'#ffea00','紫色':'#d500f9','橙色':'#ff9100','粉色':'#f50057','青色':'#00bcd4','棕色':'#8d6e63','灰色':'#bdbdbd'};
@@ -131,30 +247,100 @@ const EVENT_DELAY=1500, SWAP_DELAY=2000;
 // ----- Speed animation -----
 let speedScale=1, speedScaleTarget=1, speedScaleAnimStart=null, speedScaleStart=1, speedScaleDur=0, speedScaleAnim=false;
 function startSpeedAnim(t,d,s){speedScaleTarget=t;speedScaleDur=d;speedScaleStart=s!==undefined?s:speedScale;speedScaleAnimStart=performance.now();speedScaleAnim=true}
-function updateSpeedAnim(){
-if(!speedScaleAnim)return;
-const e=(performance.now()-speedScaleAnimStart)/1000;
-const p=Math.min(e/speedScaleDur,1);
-speedScale=speedScaleStart+(speedScaleTarget-speedScaleStart)*p;
-if(p>=1){speedScale=speedScaleTarget;speedScaleAnim=false;speedScaleAnimStart=null}
-}
+function updateSpeedAnim(){if(!speedScaleAnim)return;const e=(performance.now()-speedScaleAnimStart)/1000;const p=Math.min(e/speedScaleDur,1);speedScale=speedScaleStart+(speedScaleTarget-speedScaleStart)*p;if(p>=1){speedScale=speedScaleTarget;speedScaleAnim=false;speedScaleAnimStart=null}}
 
-// ----- Physics parameters (球速降低) -----
+// ----- Physics -----
 let balls=[], paddle={x:0,y:0,w:80,h:14}, canvasW=0, canvasH=0, ballSpawnTimer=0;
-let ballRadius = 10;  // 动态半径
+let ballRadius=10;
 const PADDLE_SPEED=360;
-const BASE_SPEED=180;   // 从240降至180
-const BASE_INTERVAL=600, SPEED_INCREMENT=20, INCREMENT_STEP=300, MAX_SPEED=300, MIN_INTERVAL=60, INTERVAL_REDUCTION=2;
+const BASE_SPEED=180, BASE_INTERVAL=600, SPEED_INCREMENT=20, INCREMENT_STEP=300, MAX_SPEED=300, MIN_INTERVAL=60, INTERVAL_REDUCTION=2;
 const keys={left:false,right:false}; let keysA=false, keysS=false;
 
-// 更新球半径（根据屏幕宽度）
 function updateBallRadius(){
     if(canvasW < 500) ballRadius = 10;
-    else if(canvasW < 800) ballRadius = 13;
-    else ballRadius = 16;
+    else if(canvasW < 800) ballRadius = 20;
+    else ballRadius = 24;
 }
 
-// ----- Stroop (unchanged) -----
+// ----- i18n update -----
+function updateLanguage(){
+    const t = i18n[lang];
+    // update all data-lang elements
+    document.querySelectorAll('[data-lang]').forEach(el => {
+        const key = el.getAttribute('data-lang');
+        if(t[key] !== undefined){
+            if(key === 'help_left_desc' || key === 'help_right_desc' || key === 'help_goal_text' || key === 'help_special_text' || key === 'help_score_left' || key === 'help_score_right'){
+                el.innerHTML = t[key];
+            } else {
+                el.textContent = t[key];
+            }
+        }
+    });
+    // update help title separately
+    helpTitle.textContent = t.help_title;
+    // update dynamic texts that are not data-lang
+    // Stroop prompt if idle
+    if(!stroopData && gameState!==STATE.PLAYING){
+        stroopPrompt.innerHTML = t.stroop_prompt_default;
+    }
+    if(gameState===STATE.IDLE){
+        statusBadge.textContent = t.status_idle;
+        statusBadgeRight.textContent = t.status_idle;
+        touchHint.textContent = t.touch_hint;
+    } else if(gameState===STATE.PLAYING){
+        statusBadge.textContent = t.status_playing;
+        statusBadgeRight.textContent = t.status_playing;
+        touchHint.textContent = t.touch_hint;
+    } else {
+        statusBadge.textContent = t.status_gameover;
+        statusBadgeRight.textContent = t.status_gameover;
+        touchHint.textContent = '';
+    }
+    // update timer label
+    timerDisplay.textContent = t.timer_label + ' ' + Math.ceil(leftTimer) + 's';
+    // update gameover overlay texts (already data-lang)
+    // update event overlay if active
+    if(activeEvent){
+        const ev = i18n[lang];
+        if(activeEvent==='swap'){
+            eventTitle.textContent = ev.event_swap;
+            eventSub.textContent = ev.event_swap_desc;
+        } else if(activeEvent==='number'){
+            eventTitle.textContent = ev.event_number;
+            eventSub.textContent = ev.event_number_desc;
+        } else if(activeEvent==='gravity'){
+            eventTitle.textContent = ev.event_gravity;
+            eventSub.textContent = ev.event_gravity_desc;
+        } else {
+            eventTitle.textContent = ev.event_add;
+            eventSub.textContent = ev.event_overlay_add;
+        }
+    }
+    // update left/right labels (already data-lang)
+    // update button texts (done by data-lang)
+    // update stroop prompt if playing and stroopData exists (handled in renderStroop)
+    if(stroopData && gameState===STATE.PLAYING){
+        renderStroop(); // re-render with new language
+    }
+    // update number sort prompt if active
+    if(isNumberSort){
+        renderStroop(); // will use current lang
+    }
+}
+
+// ----- Language toggle -----
+btnLang.addEventListener('click', ()=>{
+    lang = (lang === 'en') ? 'zh' : 'en';
+    updateLanguage();
+    // also update brand in title
+    document.querySelector('.brand').textContent = i18n[lang].brand;
+    // update help title again
+    helpTitle.textContent = i18n[lang].help_title;
+    // force re-render of current stroop if any
+    if(stroopData || isNumberSort) renderStroop();
+});
+
+// ----- Stroop -----
 function genStroop(){
 const word=randomItem(COLOR_NAMES);
 let displayColorName=Math.random()<.3?word:randomItem(COLOR_NAMES.filter(c=>c!==word));
@@ -165,17 +351,25 @@ const options=shuffle([correctAnswer,distractor]);
 return {word,displayColor:displayColorHex,displayColorName,task,correctAnswer,options};
 }
 function renderStroop(){
+const t = i18n[lang];
 if(isNumberSort){
-const hint=numberSortType==='larger'?'較大':'較小';
-stroopPrompt.innerHTML=`🔢 選擇<span class=highlight>${hint}</span>的數字 (${Math.ceil(eventTimer)}s)`;
+const hint=numberSortType==='larger'? (lang==='zh'?'較大':'larger') : (lang==='zh'?'較小':'smaller');
+stroopPrompt.innerHTML = `🔢 ${lang==='zh'?'選擇':'Choose'} <span class=highlight>${hint}</span> ${lang==='zh'?'的數字':'number'} (${Math.ceil(eventTimer)}s)`;
 stroopWord.textContent=`${numberSortNum1}  vs  ${numberSortNum2}`;
 optALabel.textContent=numberSortNum1; optSLabel.textContent=numberSortNum2;
 optA.disabled=optS.disabled=false; optA.className=optS.className='option-btn';
 timerDisplay.textContent=`⏱ ${Math.ceil(eventTimer)}s`; timerDisplay.className='timer-display'; return;
 }
-if(!stroopData){stroopPrompt.innerHTML='按 <span class=highlight>開始</span>';stroopWord.textContent='——';stroopWord.style.color='#555';optALabel.textContent=optSLabel.textContent='—';optA.disabled=optS.disabled=true;timerDisplay.textContent='⏱ --';timerDisplay.className='timer-display';return;}
-const d=stroopData, taskLabel=d.task==='color'?'點顏色':'點意思';
-stroopPrompt.innerHTML=`🎯 <span class=highlight>${taskLabel}</span>`;
+if(!stroopData){
+stroopPrompt.innerHTML = t.stroop_prompt_default;
+stroopWord.textContent='——'; stroopWord.style.color='#555';
+optALabel.textContent=optSLabel.textContent='—';
+optA.disabled=optS.disabled=true;
+timerDisplay.textContent='⏱ --'; timerDisplay.className='timer-display'; return;
+}
+const d=stroopData;
+const taskLabel = d.task==='color' ? (lang==='zh'?'點顏色':'color') : (lang==='zh'?'點意思':'meaning');
+stroopPrompt.innerHTML = `🎯 <span class=highlight>${taskLabel}</span>`;
 stroopWord.textContent=d.word; stroopWord.style.color=d.displayColor;
 optALabel.textContent=d.options[0]; optSLabel.textContent=d.options[1];
 optA.disabled=optS.disabled=false; optA.className=optS.className='option-btn';
@@ -200,16 +394,16 @@ else{btn.classList.add('wrong');setTimeout(triggerGameOver,300);}
 function updateTimerDisplay(){const s=Math.ceil(leftTimer);timerDisplay.textContent=`⏱ ${s}s`;timerDisplay.className=s<=1?'timer-display warning':'timer-display';}
 
 // ----- Number sort -----
-function startNumberSort(){isNumberSort=true;activeEvent='number';stroopLocked=false;eventTimer=5;statusBadge.textContent='🔢';statusBadge.className='status-badge event';leftLabel.textContent='🔢 數字排序';refreshNumberSort();}
+function startNumberSort(){isNumberSort=true;activeEvent='number';stroopLocked=false;eventTimer=5;statusBadge.textContent='🔢';statusBadge.className='status-badge event';leftLabel.textContent=i18n[lang].left_label;refreshNumberSort();}
 function refreshNumberSort(){let n1,n2;do{n1=randomInt(1,50);n2=randomInt(1,50);}while(n1===n2);const chooseLarger=Math.random()<.5;numberSortCorrectSide=chooseLarger?(n1>n2?0:1):(n1<n2?0:1);numberSortNum1=n1;numberSortNum2=n2;numberSortType=chooseLarger?'larger':'smaller';eventTimer=5;stroopLocked=false;renderStroop();}
-function endNumberSort(){isNumberSort=false;activeEvent=null;eventTimer=0;statusBadge.textContent='▶';statusBadge.className='status-badge playing';leftLabel.textContent=isControlSwapped?'🧠 右腦':'🧠 左腦';stroopData=null;refreshStroop();}
+function endNumberSort(){isNumberSort=false;activeEvent=null;eventTimer=0;statusBadge.textContent=i18n[lang].status_playing;statusBadge.className='status-badge playing';leftLabel.textContent=isControlSwapped?i18n[lang].right_label:i18n[lang].left_label;stroopData=null;refreshStroop();}
 
 // ----- Clear event -----
 function clearCurrentEvent(){
 if(swapTimeoutId){clearTimeout(swapTimeoutId);swapTimeoutId=null;swapPending=false;}
 if(eventTimeoutId){clearTimeout(eventTimeoutId);eventTimeoutId=null;}
-if(activeEvent==='swap'){isControlSwapped=false;leftPanel.style.order='1';rightPanel.style.order='2';activeEvent=null;statusBadge.textContent='▶';statusBadge.className='status-badge playing';leftLabel.textContent='🧠 左腦';rightLabel.textContent='🧠 右腦';}
-if(activeEvent==='gravity'){isGravityReversed=false;activeEvent=null;statusBadgeRight.textContent='▶';statusBadgeRight.className='status-badge playing';paddle.y=canvasH-paddle.h-12;for(let b of balls)b.vy=-b.vy;}
+if(activeEvent==='swap'){isControlSwapped=false;leftPanel.style.order='1';rightPanel.style.order='2';activeEvent=null;statusBadge.textContent=i18n[lang].status_playing;statusBadge.className='status-badge playing';leftLabel.textContent=i18n[lang].left_label;rightLabel.textContent=i18n[lang].right_label;}
+if(activeEvent==='gravity'){isGravityReversed=false;activeEvent=null;statusBadgeRight.textContent=i18n[lang].status_playing;statusBadgeRight.className='status-badge playing';paddle.y=canvasH-paddle.h-12;for(let b of balls)b.vy=-b.vy;}
 if(activeEvent==='number'){endNumberSort();activeEvent=null;}
 speedScale=1;speedScaleTarget=1;speedScaleAnim=false;speedScaleAnimStart=null;timersPaused=false;
 }
@@ -218,26 +412,27 @@ if(gameState!==STATE.PLAYING)return;
 clearCurrentEvent();
 startSpeedAnim(0.2,1.5,1); timersPaused=true;
 const type=randomInt(1,4);
-const names=['','⚡ 增加球','🔄 交換位置','🔢 數字排序','🌀 重力反轉'];
-const descs=['','最大球數即將 +1','左右版塊將在 2 秒後互換！','選擇較大/較小的數字 (5秒) 持續到下一回合','擋板即將移至頂部！'];
-showEventOverlay(names[type],descs[type]);
+const t = i18n[lang];
+const names=['', t.event_add, t.event_swap, t.event_number, t.event_gravity];
+const descs=['', t.event_overlay_add, t.event_overlay_swap, t.event_overlay_number, t.event_overlay_gravity];
+showEventOverlay(names[type], descs[type]);
 if(type===2){
 activeEvent='swap'; statusBadge.textContent='⏳'; statusBadge.className='status-badge event';
 if(swapTimeoutId)clearTimeout(swapTimeoutId); swapPending=true;
 swapTimeoutId=setTimeout(()=>{
 if(gameState!==STATE.PLAYING)return;
-if(activeEvent==='swap'){isControlSwapped=true;leftPanel.style.order='2';rightPanel.style.order='1';statusBadge.textContent='🔄';statusBadge.className='status-badge event';leftLabel.textContent='🧠 右腦';rightLabel.textContent='🧠 左腦';swapPending=false;swapTimeoutId=null;startSpeedAnim(1,1,speedScale);timersPaused=false;}
+if(activeEvent==='swap'){isControlSwapped=true;leftPanel.style.order='2';rightPanel.style.order='1';statusBadge.textContent='🔄';statusBadge.className='status-badge event';leftLabel.textContent=t.right_label;rightLabel.textContent=t.left_label;swapPending=false;swapTimeoutId=null;startSpeedAnim(1,1,speedScale);timersPaused=false;}
 },SWAP_DELAY);
 }else{
 if(type===4 && isGravityReversed){
-startSpeedAnim(1,1,speedScale);timersPaused=false;activeEvent=null;statusBadge.textContent='▶';statusBadge.className='status-badge playing';statusBadgeRight.textContent='▶';statusBadgeRight.className='status-badge playing';leftLabel.textContent=isControlSwapped?'🧠 右腦':'🧠 左腦';rightLabel.textContent=isControlSwapped?'🧠 左腦':'🧠 右腦';if(eventTimeoutId){clearTimeout(eventTimeoutId);eventTimeoutId=null;}lastEventScore+=EVENT_INTERVAL;return;
+startSpeedAnim(1,1,speedScale);timersPaused=false;activeEvent=null;statusBadge.textContent=t.status_playing;statusBadge.className='status-badge playing';statusBadgeRight.textContent=t.status_playing;statusBadgeRight.className='status-badge playing';leftLabel.textContent=isControlSwapped?t.right_label:t.left_label;rightLabel.textContent=isControlSwapped?t.left_label:t.right_label;if(eventTimeoutId){clearTimeout(eventTimeoutId);eventTimeoutId=null;}lastEventScore+=EVENT_INTERVAL;return;
 }
 if(type===1)activeEvent=null;else if(type===3)activeEvent='number';else if(type===4)activeEvent='gravity';
 if(eventTimeoutId)clearTimeout(eventTimeoutId);
 eventTimeoutId=setTimeout(()=>{
 if(gameState!==STATE.PLAYING)return;
 switch(type){
-case 1:maxBalls=Math.min(6,maxBalls+1);statusBadge.textContent='▶';statusBadge.className='status-badge playing';break;
+case 1:maxBalls=Math.min(6,maxBalls+1);statusBadge.textContent=t.status_playing;statusBadge.className='status-badge playing';break;
 case 3:startNumberSort();break;
 case 4:isGravityReversed=true;statusBadgeRight.textContent='🌀';statusBadgeRight.className='status-badge event';paddle.y=10;for(let b of balls)b.vy=-b.vy;break;
 }
@@ -248,32 +443,30 @@ lastEventScore+=EVENT_INTERVAL;
 }
 function showEventOverlay(title,sub){eventTitle.textContent=title;eventSub.textContent=sub;eventOverlay.classList.add('show');setTimeout(()=>eventOverlay.classList.remove('show'),1500);}
 
-// ----- Canvas init (含球半径更新) -----
+// ----- Canvas init -----
 function initCanvas(){
 const rect=canvas.getBoundingClientRect(), dpr=devicePixelRatio||1;
 canvasW=canvas.clientWidth||rect.width||300;
 canvasH=canvas.clientHeight||rect.height||200;
 if(canvasW===0||canvasH===0){canvasW=400;canvasH=300;}
 canvas.width=canvasW*dpr; canvas.height=canvasH*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
-// 挡板比例
 const ratio=canvasW<500?0.28:canvasW<800?0.34:0.40;
 paddle.w=clamp(canvasW*ratio,60,220);
 paddle.x=(canvasW-paddle.w)/2;
 paddle.y=isGravityReversed?10:canvasH-paddle.h-12;
-// 更新球半径
 updateBallRadius();
 }
 function resetPhysics(){
 balls=[];ballSpawnTimer=0;paddle.x=(canvasW-paddle.w)/2;paddle.y=isGravityReversed?10:canvasH-paddle.h-12;
 isControlSwapped=false;isGravityReversed=false;activeEvent=null;isNumberSort=false;maxBalls=3;lastEventScore=0;
-leftPanel.style.order='1';rightPanel.style.order='2';statusBadge.textContent='⏸';statusBadge.className='status-badge';statusBadgeRight.textContent='⏸';statusBadgeRight.className='status-badge';leftLabel.textContent='🧠 左腦';rightLabel.textContent='🧠 右腦';
+leftPanel.style.order='1';rightPanel.style.order='2';statusBadge.textContent=i18n[lang].status_idle;statusBadge.className='status-badge';statusBadgeRight.textContent=i18n[lang].status_idle;statusBadgeRight.className='status-badge';leftLabel.textContent=i18n[lang].left_label;rightLabel.textContent=i18n[lang].right_label;
 if(swapTimeoutId){clearTimeout(swapTimeoutId);swapTimeoutId=null;swapPending=false;}
 if(eventTimeoutId){clearTimeout(eventTimeoutId);eventTimeoutId=null;}
 speedScale=1;speedScaleTarget=1;speedScaleAnim=false;speedScaleAnimStart=null;timersPaused=false;
 if(isNumberSort)endNumberSort();keys.left=keys.right=keysA=keysS=false;leftTimeLimit=INIT_TIME_LIMIT;leftTimer=leftTimeLimit;updateTimerDisplay();
 }
 
-// ----- Ball spawn (使用动态半径) -----
+// ----- Ball spawn -----
 function spawnBall(){
 if(balls.length>=maxBalls)return;
 const x=canvasW/2, y=canvasH/2;
@@ -285,7 +478,7 @@ const vx=Math.sin(rad)*speed, vy=-Math.cos(rad)*speed;
 balls.push({x,y,vx,vy,radius:ballRadius,color:COLOR_MAP[randomItem(COLOR_NAMES)]});
 }
 
-// ----- Physics update (使用动态半径) -----
+// ----- Physics update -----
 function updatePhysics(dt){
 if(gameState!==STATE.PLAYING)return;
 if(isControlSwapped){
@@ -296,16 +489,13 @@ if(keys.left)paddle.x=Math.max(0,paddle.x-PADDLE_SPEED*dt);
 if(keys.right)paddle.x=Math.min(canvasW-paddle.w,paddle.x+PADDLE_SPEED*dt);
 }
 paddle.y=isGravityReversed?10:canvasH-paddle.h-12;
-
 ballSpawnTimer+=dt*1000;
 const interval=Math.max(MIN_INTERVAL,BASE_INTERVAL-Math.floor(score/INCREMENT_STEP)*INTERVAL_REDUCTION);
 if(ballSpawnTimer>=interval){ballSpawnTimer=0;spawnBall();}
-
 const scale=speedScale;
 for(let i=balls.length-1;i>=0;i--){
 const b=balls[i];
 b.x+=b.vx*dt*scale; b.y+=b.vy*dt*scale;
-// 使用 b.radius（动态）
 if(b.x-b.radius<0){b.x=b.radius;b.vx=-b.vx;}
 if(b.x+b.radius>canvasW){b.x=canvasW-b.radius;b.vx=-b.vx;}
 if(isGravityReversed){
@@ -339,7 +529,7 @@ b.y=py-b.radius-.5; score+=10; updateScore();
 balls=balls.filter(b=>b.y<canvasH+100 && b.y>-100);
 }
 
-// ----- Render physics (使用动态半径) -----
+// ----- Render physics -----
 function renderPhysics(){
 const dpr=devicePixelRatio||1; ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,canvasW,canvasH);
 ctx.strokeStyle='rgba(255,255,255,.03)'; ctx.lineWidth=1;
@@ -362,11 +552,7 @@ ctx.beginPath(); roundRect(ctx,paddle.x,paddle.y,paddle.w,paddle.h,6); ctx.strok
 ctx.fillStyle='rgba(255,255,255,.06)'; ctx.beginPath(); roundRect(ctx,paddle.x+8,paddle.y+2,paddle.w-16,3,3); ctx.fill();
 }
 function roundRect(ctx,x,y,w,h,r){if(r>w/2)r=w/2;if(r>h/2)r=h/2;ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);return ctx;}
-function lightenColor(h,a){
-let r=parseInt(h.slice(1,3),16), g=parseInt(h.slice(3,5),16), b=parseInt(h.slice(5,7),16);
-r=Math.min(255,r+a); g=Math.min(255,g+a); b=Math.min(255,b+a);
-return '#'+[r,g,b].map(c=>c.toString(16).padStart(2,'0')).join('');
-}
+function lightenColor(h,a){let r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);r=Math.min(255,r+a);g=Math.min(255,g+a);b=Math.min(255,b+a);return '#'+[r,g,b].map(c=>c.toString(16).padStart(2,'0')).join('');}
 
 // ----- Score -----
 function updateScore(){
@@ -393,7 +579,7 @@ if(leftTimer<=0){leftTimer=0;updateTimerDisplay();triggerGameOver();}else update
 if(!timersPaused && isNumberSort){
 eventTimer-=dt;
 if(eventTimer<=0){eventTimer=0;endNumberSort();triggerGameOver();}
-else{const hint=numberSortType==='larger'?'較大':'較小';stroopPrompt.innerHTML=`🔢 選擇<span class=highlight>${hint}</span>的數字 (${Math.ceil(eventTimer)}s)`;timerDisplay.textContent=`⏱ ${Math.ceil(eventTimer)}s`;timerDisplay.className=Math.ceil(eventTimer)<=1?'timer-display warning':'timer-display';}
+else{renderStroop();} // refresh display
 }
 updatePhysics(dt);
 renderPhysics();
@@ -406,14 +592,14 @@ function startGame(){
 try{
 if(timerInterval)clearInterval(timerInterval); timerInterval=null;
 score=0; updateScore(); resetPhysics(); gameoverOverlay.classList.remove('show');
-stroopData=null; stroopLocked=false; stroopPrompt.innerHTML='🧠 準備中...'; stroopWord.textContent='——'; stroopWord.style.color='#555'; optALabel.textContent=optSLabel.textContent='—'; optA.disabled=optS.disabled=true; optA.className=optS.className='option-btn';
+stroopData=null; stroopLocked=false; stroopPrompt.innerHTML=i18n[lang].stroop_prompt_ready; stroopWord.textContent='——'; stroopWord.style.color='#555'; optALabel.textContent=optSLabel.textContent='—'; optA.disabled=optS.disabled=true; optA.className=optS.className='option-btn';
 leftTimeLimit=INIT_TIME_LIMIT; leftTimer=leftTimeLimit; updateTimerDisplay();
 gameState=STATE.PLAYING; updateUI();
 setTimeout(()=>{if(gameState===STATE.PLAYING)refreshStroop();},200);
 setTimeout(()=>{if(gameState===STATE.PLAYING)spawnBall();},300);
 ballSpawnTimer=0; lastTimestamp=0; lastEventScore=0;
 isControlSwapped=false; isGravityReversed=false; activeEvent=null; isNumberSort=false; maxBalls=3;
-leftPanel.style.order='1'; rightPanel.style.order='2'; statusBadge.textContent='▶'; statusBadge.className='status-badge playing'; statusBadgeRight.textContent='▶'; statusBadgeRight.className='status-badge playing'; leftLabel.textContent='🧠 左腦'; rightLabel.textContent='🧠 右腦';
+leftPanel.style.order='1'; rightPanel.style.order='2'; statusBadge.textContent=i18n[lang].status_playing; statusBadge.className='status-badge playing'; statusBadgeRight.textContent=i18n[lang].status_playing; statusBadgeRight.className='status-badge playing'; leftLabel.textContent=i18n[lang].left_label; rightLabel.textContent=i18n[lang].right_label;
 speedScale=1; speedScaleTarget=1; speedScaleAnim=false; speedScaleAnimStart=null; timersPaused=false;
 if(swapTimeoutId){clearTimeout(swapTimeoutId);swapTimeoutId=null;swapPending=false;}
 if(eventTimeoutId){clearTimeout(eventTimeoutId);eventTimeoutId=null;}
@@ -433,7 +619,7 @@ function resetToIdle(){
 if(timerInterval)clearInterval(timerInterval); timerInterval=null;
 gameState=STATE.IDLE; score=0; updateScore(); resetPhysics(); balls=[];
 stroopData=null; stroopLocked=false; gameoverOverlay.classList.remove('show');
-stroopPrompt.innerHTML='按 <span class=highlight>開始</span>'; stroopWord.textContent='——'; stroopWord.style.color='#555'; optALabel.textContent=optSLabel.textContent='—'; optA.disabled=optS.disabled=true; optA.className=optS.className='option-btn';
+stroopPrompt.innerHTML=i18n[lang].stroop_prompt_default; stroopWord.textContent='——'; stroopWord.style.color='#555'; optALabel.textContent=optSLabel.textContent='—'; optA.disabled=optS.disabled=true; optA.className=optS.className='option-btn';
 leftTimeLimit=INIT_TIME_LIMIT; leftTimer=leftTimeLimit; updateTimerDisplay();
 updateUI(); eventOverlay.classList.remove('show');
 if(swapTimeoutId){clearTimeout(swapTimeoutId);swapTimeoutId=null;swapPending=false;}
@@ -441,10 +627,10 @@ if(eventTimeoutId){clearTimeout(eventTimeoutId);eventTimeoutId=null;}
 }
 function updateUI(){
 const idle=gameState===STATE.IDLE, play=gameState===STATE.PLAYING, over=gameState===STATE.GAMEOVER;
-btnStart.disabled=play; btnStart.textContent=over?'▶ 再玩':'▶ 開始';
-if(idle){statusBadge.textContent='⏸';statusBadge.className='status-badge';statusBadgeRight.textContent='⏸';statusBadgeRight.className='status-badge';touchHint.style.display='block';}
-else if(play){touchHint.style.display='block';}
-else{statusBadge.textContent='💀';statusBadge.className='status-badge gameover';statusBadgeRight.textContent='💀';statusBadgeRight.className='status-badge gameover';touchHint.style.display='none';}
+btnStart.disabled=play; btnStart.textContent=i18n[lang].start;
+if(idle){statusBadge.textContent=i18n[lang].status_idle;statusBadge.className='status-badge';statusBadgeRight.textContent=i18n[lang].status_idle;statusBadgeRight.className='status-badge';touchHint.textContent=i18n[lang].touch_hint;touchHint.style.display='block';}
+else if(play){touchHint.textContent=i18n[lang].touch_hint;touchHint.style.display='block';}
+else{statusBadge.textContent=i18n[lang].status_gameover;statusBadge.className='status-badge gameover';statusBadgeRight.textContent=i18n[lang].status_gameover;statusBadgeRight.className='status-badge gameover';touchHint.style.display='none';}
 }
 
 // ----- Touch & Keyboard -----
@@ -500,6 +686,11 @@ canvas.addEventListener('touchcancel',e=>e.preventDefault(),{passive:false});
 
 function init(){
 initCanvas(); resetPhysics(); gameState=STATE.IDLE; score=0; updateScore(); updateUI(); gameoverOverlay.classList.remove('show'); leftTimeLimit=INIT_TIME_LIMIT; leftTimer=leftTimeLimit; updateTimerDisplay();
+// set initial language
+lang = 'en';
+updateLanguage();
+document.querySelector('.brand').textContent = i18n[lang].brand;
+helpTitle.textContent = i18n[lang].help_title;
 animFrameId=requestAnimationFrame(gameLoop);
 renderStroop(); renderPhysics();
 }
