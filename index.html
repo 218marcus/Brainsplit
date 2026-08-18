@@ -171,12 +171,23 @@ const i18n = {
         status_idle: '⏸',
         timer_label: '⏱',
         touch_hint: '👆 Swipe',
-        // 左脑任务英文
         task_color: 'Click Color',
         task_meaning: 'Click Meaning',
-        // 数字排序英文
         sort_larger: 'Choose the larger number',
         sort_smaller: 'Choose the smaller number',
+        // 颜色名称英译
+        colorNames: {
+            '紅色': 'Red',
+            '藍色': 'Blue',
+            '綠色': 'Green',
+            '黃色': 'Yellow',
+            '紫色': 'Purple',
+            '橙色': 'Orange',
+            '粉色': 'Pink',
+            '青色': 'Cyan',
+            '棕色': 'Brown',
+            '灰色': 'Gray'
+        }
     },
     zh: {
         brand: '🧠 左右腦互搏',
@@ -226,11 +237,10 @@ const i18n = {
         status_idle: '⏸',
         timer_label: '⏱',
         touch_hint: '👆 滑動',
-        // 中文任务
         task_color: '點顏色',
         task_meaning: '點意思',
         sort_larger: '較大',
-        sort_smaller: '較小',
+        sort_smaller: '較小'
     }
 };
 
@@ -241,6 +251,14 @@ const randomItem=a=>a[Math.floor(Math.random()*a.length)];
 const randomInt=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 const clamp=(v,min,max)=>Math.min(max,Math.max(min,v));
+
+// 颜色名称翻译辅助
+function getColorName(zhName, langCode) {
+    if (langCode === 'en' && i18n.en.colorNames && i18n.en.colorNames[zhName]) {
+        return i18n.en.colorNames[zhName];
+    }
+    return zhName;
+}
 
 // ----- State -----
 const STATE={IDLE:'idle',PLAYING:'playing',GAMEOVER:'gameover'};
@@ -275,7 +293,6 @@ function updateBallRadius(){
 // ----- i18n update -----
 function updateLanguage(){
     const t = i18n[lang];
-    // update all data-lang elements
     document.querySelectorAll('[data-lang]').forEach(el => {
         const key = el.getAttribute('data-lang');
         if(t[key] !== undefined){
@@ -286,10 +303,7 @@ function updateLanguage(){
             }
         }
     });
-    // update help title separately
     helpTitle.textContent = t.help_title;
-    // update dynamic texts that are not data-lang
-    // Stroop prompt if idle
     if(!stroopData && gameState!==STATE.PLAYING){
         stroopPrompt.innerHTML = t.stroop_prompt_default;
     }
@@ -306,10 +320,7 @@ function updateLanguage(){
         statusBadgeRight.textContent = t.status_gameover;
         touchHint.textContent = '';
     }
-    // update timer label
     timerDisplay.textContent = t.timer_label + ' ' + Math.ceil(leftTimer) + 's';
-    // update gameover overlay texts (already data-lang)
-    // update event overlay if active
     if(activeEvent){
         const ev = i18n[lang];
         if(activeEvent==='swap'){
@@ -326,15 +337,11 @@ function updateLanguage(){
             eventSub.textContent = ev.event_overlay_add;
         }
     }
-    // update left/right labels (already data-lang)
-    // update button texts (done by data-lang)
-    // update stroop prompt if playing and stroopData exists (handled in renderStroop)
     if(stroopData && gameState===STATE.PLAYING){
-        renderStroop(); // re-render with new language
+        renderStroop();
     }
-    // update number sort prompt if active
     if(isNumberSort){
-        renderStroop(); // will use current lang
+        renderStroop();
     }
 }
 
@@ -342,11 +349,8 @@ function updateLanguage(){
 btnLang.addEventListener('click', ()=>{
     lang = (lang === 'en') ? 'zh' : 'en';
     updateLanguage();
-    // also update brand in title
     document.querySelector('.brand').textContent = i18n[lang].brand;
-    // update help title again
     helpTitle.textContent = i18n[lang].help_title;
-    // force re-render of current stroop if any
     if(stroopData || isNumberSort) renderStroop();
 });
 
@@ -382,8 +386,15 @@ timerDisplay.textContent='⏱ --'; timerDisplay.className='timer-display'; retur
 const d=stroopData;
 const taskLabel = d.task==='color' ? t.task_color : t.task_meaning;
 stroopPrompt.innerHTML = `🎯 <span class=highlight>${taskLabel}</span>`;
-stroopWord.textContent=d.word; stroopWord.style.color=d.displayColor;
-optALabel.textContent=d.options[0]; optSLabel.textContent=d.options[1];
+// 显示颜色文字（翻译）
+const displayWord = getColorName(d.word, lang);
+stroopWord.textContent = displayWord;
+stroopWord.style.color = d.displayColor;
+// 选项文字翻译
+const optAtrans = getColorName(d.options[0], lang);
+const optStrans = getColorName(d.options[1], lang);
+optALabel.textContent = optAtrans;
+optSLabel.textContent = optStrans;
 optA.disabled=optS.disabled=false; optA.className=optS.className='option-btn';
 leftTimer=leftTimeLimit; updateTimerDisplay();
 }
@@ -591,7 +602,7 @@ if(leftTimer<=0){leftTimer=0;updateTimerDisplay();triggerGameOver();}else update
 if(!timersPaused && isNumberSort){
 eventTimer-=dt;
 if(eventTimer<=0){eventTimer=0;endNumberSort();triggerGameOver();}
-else{renderStroop();} // refresh display
+else{renderStroop();}
 }
 updatePhysics(dt);
 renderPhysics();
@@ -698,7 +709,6 @@ canvas.addEventListener('touchcancel',e=>e.preventDefault(),{passive:false});
 
 function init(){
 initCanvas(); resetPhysics(); gameState=STATE.IDLE; score=0; updateScore(); updateUI(); gameoverOverlay.classList.remove('show'); leftTimeLimit=INIT_TIME_LIMIT; leftTimer=leftTimeLimit; updateTimerDisplay();
-// set initial language
 lang = 'en';
 updateLanguage();
 document.querySelector('.brand').textContent = i18n[lang].brand;
