@@ -120,7 +120,7 @@ const clamp=(v,min,max)=>Math.min(max,Math.max(min,v));
 const STATE={IDLE:'idle',PLAYING:'playing',GAMEOVER:'gameover'};
 let gameState=STATE.IDLE, score=0, timerInterval=null, animFrameId=null, stroopData=null, stroopLocked=false;
 let leftTimer=0, leftTimeLimit=9, lastTimestamp=0;
-const MIN_TIME_LIMIT=5, INIT_TIME_LIMIT=9, EVENT_INTERVAL=400;  // 改為 400
+const MIN_TIME_LIMIT=5, INIT_TIME_LIMIT=9, EVENT_INTERVAL=400;
 
 // ----- Event system -----
 let maxBalls=3, isControlSwapped=false, isGravityReversed=false, activeEvent=null, eventTimer=0, isNumberSort=false;
@@ -139,13 +139,22 @@ speedScale=speedScaleStart+(speedScaleTarget-speedScaleStart)*p;
 if(p>=1){speedScale=speedScaleTarget;speedScaleAnim=false;speedScaleAnimStart=null}
 }
 
-// ----- Physics -----
+// ----- Physics parameters (球速降低) -----
 let balls=[], paddle={x:0,y:0,w:80,h:14}, canvasW=0, canvasH=0, ballSpawnTimer=0;
-const BALL_RADIUS=10, PADDLE_SPEED=360;
-const BASE_SPEED=240, BASE_INTERVAL=600, SPEED_INCREMENT=20, INCREMENT_STEP=300, MAX_SPEED=400, MIN_INTERVAL=60, INTERVAL_REDUCTION=2;
+let ballRadius = 10;  // 动态半径
+const PADDLE_SPEED=360;
+const BASE_SPEED=180;   // 从240降至180
+const BASE_INTERVAL=600, SPEED_INCREMENT=20, INCREMENT_STEP=300, MAX_SPEED=300, MIN_INTERVAL=60, INTERVAL_REDUCTION=2;
 const keys={left:false,right:false}; let keysA=false, keysS=false;
 
-// ----- Stroop -----
+// 更新球半径（根据屏幕宽度）
+function updateBallRadius(){
+    if(canvasW < 500) ballRadius = 10;
+    else if(canvasW < 800) ballRadius = 13;
+    else ballRadius = 16;
+}
+
+// ----- Stroop (unchanged) -----
 function genStroop(){
 const word=randomItem(COLOR_NAMES);
 let displayColorName=Math.random()<.3?word:randomItem(COLOR_NAMES.filter(c=>c!==word));
@@ -239,18 +248,20 @@ lastEventScore+=EVENT_INTERVAL;
 }
 function showEventOverlay(title,sub){eventTitle.textContent=title;eventSub.textContent=sub;eventOverlay.classList.add('show');setTimeout(()=>eventOverlay.classList.remove('show'),1500);}
 
-// ----- Canvas init (挡板加长) -----
+// ----- Canvas init (含球半径更新) -----
 function initCanvas(){
 const rect=canvas.getBoundingClientRect(), dpr=devicePixelRatio||1;
 canvasW=canvas.clientWidth||rect.width||300;
 canvasH=canvas.clientHeight||rect.height||200;
 if(canvasW===0||canvasH===0){canvasW=400;canvasH=300;}
 canvas.width=canvasW*dpr; canvas.height=canvasH*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
-// 挡板比例加长：手机0.28，平板0.34，电脑0.40，上限220
+// 挡板比例
 const ratio=canvasW<500?0.28:canvasW<800?0.34:0.40;
 paddle.w=clamp(canvasW*ratio,60,220);
 paddle.x=(canvasW-paddle.w)/2;
 paddle.y=isGravityReversed?10:canvasH-paddle.h-12;
+// 更新球半径
+updateBallRadius();
 }
 function resetPhysics(){
 balls=[];ballSpawnTimer=0;paddle.x=(canvasW-paddle.w)/2;paddle.y=isGravityReversed?10:canvasH-paddle.h-12;
@@ -262,7 +273,7 @@ speedScale=1;speedScaleTarget=1;speedScaleAnim=false;speedScaleAnimStart=null;ti
 if(isNumberSort)endNumberSort();keys.left=keys.right=keysA=keysS=false;leftTimeLimit=INIT_TIME_LIMIT;leftTimer=leftTimeLimit;updateTimerDisplay();
 }
 
-// ----- Ball spawn (angle -75~-25 or 25~75) -----
+// ----- Ball spawn (使用动态半径) -----
 function spawnBall(){
 if(balls.length>=maxBalls)return;
 const x=canvasW/2, y=canvasH/2;
@@ -271,10 +282,10 @@ const rad=deg*Math.PI/180;
 const bonus=Math.floor(score/INCREMENT_STEP)*SPEED_INCREMENT;
 const speed=Math.min(MAX_SPEED,BASE_SPEED+bonus);
 const vx=Math.sin(rad)*speed, vy=-Math.cos(rad)*speed;
-balls.push({x,y,vx,vy,radius:BALL_RADIUS,color:COLOR_MAP[randomItem(COLOR_NAMES)]});
+balls.push({x,y,vx,vy,radius:ballRadius,color:COLOR_MAP[randomItem(COLOR_NAMES)]});
 }
 
-// ----- Physics update -----
+// ----- Physics update (使用动态半径) -----
 function updatePhysics(dt){
 if(gameState!==STATE.PLAYING)return;
 if(isControlSwapped){
@@ -294,6 +305,7 @@ const scale=speedScale;
 for(let i=balls.length-1;i>=0;i--){
 const b=balls[i];
 b.x+=b.vx*dt*scale; b.y+=b.vy*dt*scale;
+// 使用 b.radius（动态）
 if(b.x-b.radius<0){b.x=b.radius;b.vx=-b.vx;}
 if(b.x+b.radius>canvasW){b.x=canvasW-b.radius;b.vx=-b.vx;}
 if(isGravityReversed){
@@ -327,7 +339,7 @@ b.y=py-b.radius-.5; score+=10; updateScore();
 balls=balls.filter(b=>b.y<canvasH+100 && b.y>-100);
 }
 
-// ----- Render physics -----
+// ----- Render physics (使用动态半径) -----
 function renderPhysics(){
 const dpr=devicePixelRatio||1; ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,canvasW,canvasH);
 ctx.strokeStyle='rgba(255,255,255,.03)'; ctx.lineWidth=1;
