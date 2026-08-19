@@ -149,7 +149,7 @@ body{background:#0b0b16;font-family:'Segoe UI','PingFang TC','Microsoft YaHei',s
 <div class="help-overlay" id=helpOverlay><div class=help-box><button class=help-close id=helpClose>✕</button><div class=help-title id=helpTitle>🧠 Brainsplit Guide</div>
 <div class=help-section><h3 data-lang="help_goal_title">🎯 Goal</h3><p data-lang="help_goal_text">Control both brains, maintain score and handle random events; any side fails = Game Over.</p></div>
 <div class=help-section><h3 data-lang="help_controls_title">🖱️ Controls</h3><ul><li><span class=highlight data-lang="help_left">Left Brain</span> <span data-lang="help_left_desc">Press <kbd>A</kbd> / <kbd>S</kbd> to answer (initial 9s, -1s per 400pts, min 5s)</span></li><li><span class=highlight data-lang="help_right">Right Brain</span> <span data-lang="help_right_desc">Press <kbd>←</kbd> / <kbd>→</kbd> or swipe to control paddle</span></li><li data-lang="help_touch">Mobile/tablet: tap left buttons, swipe right to control paddle</li></ul></div>
-<div class=help-section><h3 data-lang="help_score_title">🏆 Scoring</h3><ul><li data-lang="help_score_left">Left correct: <span class=highlight>+50 pts</span></li><li data-lang="help_score_right">Right catch: <span class=highlight>+10 pts</span></li><li data-lang="help_score_survive">No extra survival bonus</li></ul></div>
+<div class=help-section><h3 data-lang="help_score_title">🏆 Scoring</h3><ul><li data-lang="help_score_left">Left correct: <span class=highlight>+50 pts</span></li><li data-lang="help_score_right">Right catch: <span class=highlight>+20 pts</span></li><li data-lang="help_score_survive">No extra survival bonus</li></ul></div>
 <div class=help-section><h3 data-lang="help_events_title">⚡ Random Events (every 400 pts)</h3><ul><li data-lang="help_event_add">+1 ball (max 6)</li><li data-lang="help_event_swap">Swap sides (2s delay)</li><li data-lang="help_event_number">Number sort (5s, +50 if correct, wrong/timeout = Game Over)</li><li data-lang="help_event_gravity">Gravity flip (paddle to top, miss top = lose)</li></ul></div>
 <div class=help-section><h3 data-lang="help_special_title">💡 Special</h3><p data-lang="help_special_text">Normal mode: bottom lose; Flip mode: top lose. Both top/bottom walls bounce (top in normal, bottom in flip).</p></div></div></div>
 <!-- 段位表模態框 -->
@@ -171,7 +171,7 @@ const leftLabel=$('leftLabel'), rightLabel=$('rightLabel'), leftPanel=$('leftPan
 const helpTitle=$('helpTitle');
 const rankIcon=$('rankIcon'), rankName=$('rankName'), rankResultIcon=$('rankResultIcon'), rankResultName=$('rankResultName'), rankProgress=$('rankProgress');
 
-// ----- 段位定義（0分無段位，100~499青銅，500~999白銀，1000~1999黃金，2000~3499鉑金，3500~4999鑽石，5000+傳說） -----
+// ----- 段位定義 -----
 const RANKS = [
     { name: 'Unranked', name_zh: '無段位', icon: '🧠', color: 'rank-color-unranked', minScore: 0 },
     { name: 'Bronze', name_zh: '青銅', icon: '🥉', color: 'rank-color-bronze', minScore: 100 },
@@ -183,7 +183,7 @@ const RANKS = [
 ];
 
 function getRank(score){
-    let r = RANKS[0]; // 默認無段位
+    let r = RANKS[0];
     for(let i=RANKS.length-1; i>=0; i--){
         if(score >= RANKS[i].minScore){
             r = RANKS[i];
@@ -221,7 +221,7 @@ const i18n = {
         help_touch: 'Mobile/tablet: tap left buttons, swipe right to control paddle',
         help_score_title: '🏆 Scoring',
         help_score_left: 'Left correct: <span class=highlight>+50 pts</span>',
-        help_score_right: 'Right catch: <span class=highlight>+10 pts</span>',
+        help_score_right: 'Right catch: <span class=highlight>+20 pts</span>',
         help_score_survive: 'No extra survival bonus',
         help_events_title: '⚡ Random Events (every 400 pts)',
         help_event_add: '+1 ball (max 6)',
@@ -291,7 +291,7 @@ const i18n = {
         help_touch: '手機/平板：直接點擊左側按鈕，右側滑動控制擋板',
         help_score_title: '🏆 得分機制',
         help_score_left: '左腦答對：<span class=highlight>+50 分</span>',
-        help_score_right: '右腦每次接住球：<span class=highlight>+10 分</span>',
+        help_score_right: '右腦每次接住球：<span class=highlight>+20 分</span>',
         help_score_survive: '生存無額外加分',
         help_events_title: '⚡ 隨機事件（每 400 分觸發）',
         help_event_add: '增加球數 +1（最高 6 顆）',
@@ -392,7 +392,6 @@ function updateRankResult(score){
     rankResultIcon.textContent = rank.icon;
     rankResultName.textContent = name;
     rankResultName.className = 'rank-name ' + rank.color;
-    // 顯示下一段位進度
     const nextRankIndex = RANKS.indexOf(rank) + 1;
     if(nextRankIndex < RANKS.length){
         const nextRank = RANKS[nextRankIndex];
@@ -429,16 +428,13 @@ function updateLanguage(){
         }
     });
     helpTitle.textContent = t.help_title;
-    // 更新段位表标题
     document.querySelector('.rank-title').textContent = t.rank_title;
-    // 更新段位表表头
     const ths = document.querySelectorAll('#rankTableBody').previousElementSibling?.querySelectorAll('th') || [];
     if(ths.length === 3){
         ths[0].textContent = t.rank_icon;
         ths[1].textContent = t.rank_name;
         ths[2].textContent = t.rank_score;
     }
-    // 重繪段位表
     renderRankTable();
     if(!stroopData && gameState!==STATE.PLAYING){
         stroopPrompt.innerHTML = t.stroop_prompt_default;
@@ -479,7 +475,6 @@ function updateLanguage(){
     if(isNumberSort){
         renderStroop();
     }
-    // 更新段位显示
     updateRankDisplay();
 }
 
@@ -652,19 +647,26 @@ function resetPhysics(){
     if(isNumberSort)endNumberSort();keys.left=keys.right=keysA=keysS=false;leftTimeLimit=INIT_TIME_LIMIT;leftTimer=leftTimeLimit;updateTimerDisplay();
 }
 
-// ----- Ball spawn -----
+// ----- Ball spawn（角度 -70~-35 和 35~70） -----
 function spawnBall(){
     if(balls.length>=maxBalls)return;
     const x=canvasW/2, y=canvasH/2;
-    const deg=Math.random()<.5?(-75+Math.random()*50):(25+Math.random()*50);
-    const rad=deg*Math.PI/180;
-    const bonus=Math.floor(score/INCREMENT_STEP)*SPEED_INCREMENT;
-    const speed=Math.min(MAX_SPEED,BASE_SPEED+bonus);
-    const vx=Math.sin(rad)*speed, vy=-Math.cos(rad)*speed;
-    balls.push({x,y,vx,vy,radius:ballRadius,color:COLOR_MAP[randomItem(COLOR_NAMES)]});
+    // 生成角度：从 [-70,-35] 或 [35,70] 均匀选取
+    let deg;
+    if(Math.random() < 0.5) {
+        deg = -70 + Math.random() * 35;  // -70 ~ -35
+    } else {
+        deg = 35 + Math.random() * 35;   // 35 ~ 70
+    }
+    const rad = deg * Math.PI / 180;
+    const bonus = Math.floor(score / INCREMENT_STEP) * SPEED_INCREMENT;
+    const speed = Math.min(MAX_SPEED, BASE_SPEED + bonus);
+    const vx = Math.sin(rad) * speed;
+    const vy = -Math.cos(rad) * speed; // 始终向上（负值）
+    balls.push({x, y, vx, vy, radius: ballRadius, color: COLOR_MAP[randomItem(COLOR_NAMES)]});
 }
 
-// ----- Physics update -----
+// ----- Physics update（每接球加20分） -----
 function updatePhysics(dt){
     if(gameState!==STATE.PLAYING)return;
     if(isControlSwapped){
@@ -699,7 +701,9 @@ function updatePhysics(dt){
                 const maxVx=spd*.4; if(Math.abs(b.vx)>maxVx)b.vx=Math.sign(b.vx)*maxVx;
                 const rem=Math.sqrt(Math.max(0,spd*spd-b.vx*b.vx));
                 b.vy=Math.sign(b.vy)*rem||Math.sign(b.vy)*spd*.6;
-                b.y=py+ph+b.radius+.5; score+=10; updateScore();
+                b.y=py+ph+b.radius+.5;
+                score += 20;  // 接球加20分
+                updateScore();
             }
         }else{
             if(b.y+b.radius>=py && b.y+b.radius<=py+ph+6 && b.x>=px-b.radius+3 && b.x<=px+pw+b.radius-3){
@@ -708,7 +712,9 @@ function updatePhysics(dt){
                 const maxVx=spd*.4; if(Math.abs(b.vx)>maxVx)b.vx=Math.sign(b.vx)*maxVx;
                 const rem=Math.sqrt(Math.max(0,spd*spd-b.vx*b.vx));
                 b.vy=Math.sign(b.vy)*rem||Math.sign(b.vy)*spd*.6;
-                b.y=py-b.radius-.5; score+=10; updateScore();
+                b.y=py-b.radius-.5;
+                score += 20;  // 接球加20分
+                updateScore();
             }
         }
     }
@@ -748,7 +754,6 @@ function updateScore(){
     if(leftTimer>leftTimeLimit)leftTimer=leftTimeLimit;
     updateTimerDisplay();
     if(score-lastEventScore>=EVENT_INTERVAL)triggerRandomEvent();
-    // 实时更新段位显示（最高分）
     if(score > highScore){
         highScore = score;
         localStorage.setItem('brainsplit_highScore', highScore.toString());
@@ -801,14 +806,11 @@ function triggerGameOver(){
     if(gameState===STATE.GAMEOVER)return;
     gameState=STATE.GAMEOVER; if(timerInterval)clearInterval(timerInterval); timerInterval=null;
     updateUI(); finalScore.textContent=Math.floor(score); gameoverOverlay.classList.add('show');
-    // 更新段位结果
     updateRankResult(score);
-    // 如果本次得分超过历史最高，更新最高分
     if(score > highScore){
         highScore = score;
         localStorage.setItem('brainsplit_highScore', highScore.toString());
         updateRankDisplay();
-        // 显示晋升动画
         rankResultIcon.style.transition = 'transform 0.3s';
         rankResultIcon.style.transform = 'scale(1.5)';
         setTimeout(()=>{ rankResultIcon.style.transform = 'scale(1)'; }, 500);
@@ -828,7 +830,6 @@ function resetToIdle(){
     updateUI(); eventOverlay.classList.remove('show');
     if(swapTimeoutId){clearTimeout(swapTimeoutId);swapTimeoutId=null;swapPending=false;}
     if(eventTimeoutId){clearTimeout(eventTimeoutId);eventTimeoutId=null;}
-    // 重置段位显示（最高分不变）
     updateRankDisplay();
 }
 function updateUI(){
@@ -896,9 +897,7 @@ function init(){
     updateLanguage();
     document.querySelector('.brand').textContent = i18n[lang].brand;
     helpTitle.textContent = i18n[lang].help_title;
-    // 初始化段位显示
     updateRankDisplay();
-    // 渲染段位表
     renderRankTable();
     animFrameId=requestAnimationFrame(gameLoop);
     renderStroop(); renderPhysics();
