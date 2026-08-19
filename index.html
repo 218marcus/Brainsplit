@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW"><head><meta charset="UTF-8"><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Brainsplit</title>
 <style>
+/* 原有样式保持不变，新增段位相关样式 */
 *{margin:0;padding:0;box-sizing:border-box;user-select:none}
 body{background:#0b0b16;font-family:'Segoe UI','PingFang TC','Microsoft YaHei',sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;color:#e8e8f0;padding:6px;touch-action:none}
 .game-container{width:100%;max-width:900px;background:#12121f;border-radius:20px;padding:12px;box-shadow:0 12px 40px rgba(0,0,0,.8);border:1px solid #2a2a44}
@@ -74,6 +75,18 @@ body{background:#0b0b16;font-family:'Segoe UI','PingFang TC','Microsoft YaHei',s
 .help-section .highlight{color:#fcd34d;font-weight:600}
 @media(max-width:560px){.game-container{padding:6px;border-radius:14px}.brand{font-size:18px}.logo-wrapper{width:28px;height:28px}.logo-brain .lightning{font-size:14px}.score-display{font-size:13px;padding:2px 10px}.score-display span{font-size:14px;min-width:30px}.btn{font-size:11px;padding:3px 10px}.btn-lang{font-size:10px;padding:2px 8px}.game-body{min-height:300px;gap:4px}.left-panel,.right-panel{padding:4px;border-radius:12px}.panel-label{font-size:8px;top:2px;left:6px;padding:0 8px}.status-badge{font-size:8px;top:2px;right:6px;padding:0 8px}.stroop-prompt{font-size:10px;padding:2px 8px;min-height:24px;margin-bottom:4px}.stroop-word{font-size:28px;min-height:40px;margin-bottom:4px}.stroop-options{gap:8px}.option-btn{min-width:50px;max-width:70px;padding:6px 0;font-size:13px;border-radius:10px}.option-btn .key-hint{font-size:8px;line-height:14px;padding:0 6px}#gameCanvas{min-height:140px;border-radius:8px}.mobile-touch-hint{font-size:7px;padding:1px 8px}.divider{width:2px}.divider::after{font-size:10px}.gameover-title{font-size:20px}.gameover-score{font-size:18px}.gameover-score span{font-size:24px}.gameover-btn{font-size:14px;padding:6px 20px}.timer-display{font-size:12px;padding:1px 10px}.event-title{font-size:24px}.event-sub{font-size:14px}.help-box{padding:20px}.help-title{font-size:22px}}
 @media(max-width:400px){.stroop-word{font-size:22px;min-height:34px}.option-btn{min-width:40px;max-width:60px;padding:4px 0;font-size:11px}#gameCanvas{min-height:100px}}
+/* 段位显示样式 */
+.rank-display{display:flex;align-items:center;gap:8px;background:#1c1c32;padding:2px 12px 2px 8px;border-radius:30px;border:1px solid #3a3a5a;font-size:14px;font-weight:600;margin-left:4px;white-space:nowrap}
+.rank-icon{font-size:20px;line-height:1}
+.rank-name{color:#c4c4e6}
+.rank-color-bronze{color:#cd7f32}
+.rank-color-silver{color:#c0c0c0}
+.rank-color-gold{color:#ffd700}
+.rank-color-platinum{color:#e5e4e2}
+.rank-color-diamond{color:#4fc3f7}
+.rank-color-master{color:#9c27b0}
+.rank-color-legend{color:#ff6f00}
+.rank-color-god{background:linear-gradient(135deg,#ff6b6b,#feca57,#48dbfb,#ff9ff3);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 </style>
 </head>
 <body>
@@ -82,6 +95,10 @@ body{background:#0b0b16;font-family:'Segoe UI','PingFang TC','Microsoft YaHei',s
 <div class="title">
 <div class="logo-wrapper"><div class="logo-brain"><span class="lightning">⚡</span></div></div>
 <span class="brand" data-lang="brand">Brainsplit</span>
+<div class="rank-display" id="rankDisplay">
+<span class="rank-icon" id="rankIcon">🧠</span>
+<span class="rank-name" id="rankName">Bronze</span>
+</div>
 </div>
 <div class="title-score">
 <div class="score-display">🏆 <span id=scoreDisplay>0</span></div>
@@ -96,7 +113,18 @@ body{background:#0b0b16;font-family:'Segoe UI','PingFang TC','Microsoft YaHei',s
 <div class="stroop-prompt" id=stroopPrompt>Press <span class=highlight>Start</span></div><div class="timer-display" id=timerDisplay>⏱ 9s</div>
 <div class="stroop-word" id=stroopWord>——</div>
 <div class="stroop-options"><button class="option-btn" id=optA disabled><span class=key-hint>[A]</span><span id=optALabel>—</span></button><button class="option-btn" id=optS disabled><span class=key-hint>[S]</span><span id=optSLabel>—</span></button></div>
-<div class="gameover-overlay" id=gameoverOverlay><div class=gameover-title data-lang="gameover_title">💀 GAME OVER</div><div class=gameover-sub data-lang="gameover_sub">Both brains lost</div><div class=gameover-score>Score <span id=finalScore>0</span></div><button class=gameover-btn id=btnGameoverRestart data-lang="retry">🔄 Retry</button></div>
+<div class="gameover-overlay" id=gameoverOverlay>
+<div class=gameover-title data-lang="gameover_title">💀 GAME OVER</div>
+<div class=gameover-sub data-lang="gameover_sub">Both brains lost</div>
+<div class=gameover-score>Score <span id=finalScore>0</span></div>
+<div class="rank-result" style="margin:8px 0;display:flex;align-items:center;gap:12px;font-size:18px;">
+<span style="font-weight:600;">Rank:</span>
+<span id="rankResultIcon" style="font-size:32px;">🧠</span>
+<span id="rankResultName" style="font-weight:700;color:#fcd34d;">Bronze</span>
+</div>
+<div style="font-size:14px;color:#b0b0d0;margin-bottom:8px;" id="rankProgress">Next rank in 500 pts</div>
+<button class=gameover-btn id=btnGameoverRestart data-lang="retry">🔄 Retry</button>
+</div>
 <div class="event-overlay" id=eventOverlay><div class=event-title id=eventTitle>⚡ Event Triggered</div><div class=event-sub id=eventSub>+1 ball</div></div></div>
 <div class=divider></div>
 <div class="right-panel" id=rightPanel><div class="panel-label" id=rightLabel data-lang="right_label">🧠 Right Brain</div><div class="status-badge" id=statusBadgeRight>⏸</div><canvas id=gameCanvas></canvas><div class=mobile-touch-hint id=touchHint>👆 Swipe</div></div></div></div>
@@ -105,7 +133,8 @@ body{background:#0b0b16;font-family:'Segoe UI','PingFang TC','Microsoft YaHei',s
 <div class=help-section><h3 data-lang="help_controls_title">🖱️ Controls</h3><ul><li><span class=highlight data-lang="help_left">Left Brain</span> <span data-lang="help_left_desc">Press <kbd>A</kbd> / <kbd>S</kbd> to answer (initial 9s, -1s per 400pts, min 5s)</span></li><li><span class=highlight data-lang="help_right">Right Brain</span> <span data-lang="help_right_desc">Press <kbd>←</kbd> / <kbd>→</kbd> or swipe to control paddle</span></li><li data-lang="help_touch">Mobile/tablet: tap left buttons, swipe right to control paddle</li></ul></div>
 <div class=help-section><h3 data-lang="help_score_title">🏆 Scoring</h3><ul><li data-lang="help_score_left">Left correct: <span class=highlight>+50 pts</span></li><li data-lang="help_score_right">Right catch: <span class=highlight>+10 pts</span></li><li data-lang="help_score_survive">No extra survival bonus</li></ul></div>
 <div class=help-section><h3 data-lang="help_events_title">⚡ Random Events (every 400 pts)</h3><ul><li data-lang="help_event_add">+1 ball (max 6)</li><li data-lang="help_event_swap">Swap sides (2s delay)</li><li data-lang="help_event_number">Number sort (5s, +50 if correct, wrong/timeout = Game Over)</li><li data-lang="help_event_gravity">Gravity flip (paddle to top, miss top = lose)</li></ul></div>
-<div class=help-section><h3 data-lang="help_special_title">💡 Special</h3><p data-lang="help_special_text">Normal mode: bottom lose; Flip mode: top lose. Both top/bottom walls bounce (top in normal, bottom in flip).</p></div></div></div>
+<div class=help-section><h3 data-lang="help_special_title">💡 Special</h3><p data-lang="help_special_text">Normal mode: bottom lose; Flip mode: top lose. Both top/bottom walls bounce (top in normal, bottom in flip).</p></div>
+</div></div>
 <script>
 (function(){
 'use strict';
@@ -119,6 +148,36 @@ const statusBadge=$('statusBadge'), statusBadgeRight=$('statusBadgeRight'), game
 const canvas=$('gameCanvas'), ctx=canvas.getContext('2d'), timerDisplay=$('timerDisplay'), eventOverlay=$('eventOverlay'), eventTitle=$('eventTitle'), eventSub=$('eventSub');
 const leftLabel=$('leftLabel'), rightLabel=$('rightLabel'), leftPanel=$('leftPanel'), rightPanel=$('rightPanel');
 const helpTitle=$('helpTitle');
+const rankIcon=$('rankIcon'), rankName=$('rankName'), rankResultIcon=$('rankResultIcon'), rankResultName=$('rankResultName'), rankProgress=$('rankProgress');
+
+// ----- 段位定义 -----
+const RANKS = [
+    { name: 'Bronze', name_zh: '青銅', icon: '🥉', color: 'rank-color-bronze', minScore: 0 },
+    { name: 'Silver', name_zh: '白銀', icon: '🥈', color: 'rank-color-silver', minScore: 500 },
+    { name: 'Gold', name_zh: '黃金', icon: '🥇', color: 'rank-color-gold', minScore: 1000 },
+    { name: 'Platinum', name_zh: '鉑金', icon: '💎', color: 'rank-color-platinum', minScore: 2000 },
+    { name: 'Diamond', name_zh: '鑽石', icon: '💠', color: 'rank-color-diamond', minScore: 3500 },
+    { name: 'Master', name_zh: '大師', icon: '👑', color: 'rank-color-master', minScore: 5000 },
+    { name: 'Legend', name_zh: '傳說', icon: '🔥', color: 'rank-color-legend', minScore: 7500 },
+    { name: 'God', name_zh: '神腦', icon: '🌌', color: 'rank-color-god', minScore: 10000 }
+];
+
+function getRank(score){
+    let r = RANKS[0];
+    for(let i=RANKS.length-1; i>=0; i--){
+        if(score >= RANKS[i].minScore){
+            r = RANKS[i];
+            break;
+        }
+    }
+    return r;
+}
+
+function getRankName(rank, lang){
+    return lang === 'zh' ? rank.name_zh : rank.name;
+}
+
+function getRankColorClass(rank){ return rank.color; }
 
 // ----- i18n -----
 let lang = 'en';
@@ -263,6 +322,8 @@ const STATE={IDLE:'idle',PLAYING:'playing',GAMEOVER:'gameover'};
 let gameState=STATE.IDLE, score=0, timerInterval=null, animFrameId=null, stroopData=null, stroopLocked=false;
 let leftTimer=0, leftTimeLimit=9, lastTimestamp=0;
 const MIN_TIME_LIMIT=5, INIT_TIME_LIMIT=9, EVENT_INTERVAL=400;
+let highScore = parseInt(localStorage.getItem('brainsplit_highScore')) || 0;
+let currentRank = getRank(highScore);
 
 // ----- Event system -----
 let maxBalls=3, isControlSwapped=false, isGravityReversed=false, activeEvent=null, eventTimer=0, isNumberSort=false;
@@ -286,6 +347,33 @@ function updateBallRadius(){
     if(canvasW < 500) ballRadius = 10;
     else if(canvasW < 800) ballRadius = 20;
     else ballRadius = 24;
+}
+
+// ----- 段位显示更新 -----
+function updateRankDisplay(){
+    const rank = getRank(highScore);
+    const name = getRankName(rank, lang);
+    rankIcon.textContent = rank.icon;
+    rankName.textContent = name;
+    rankName.className = 'rank-name ' + rank.color;
+}
+
+function updateRankResult(score){
+    const rank = getRank(score);
+    const name = getRankName(rank, lang);
+    rankResultIcon.textContent = rank.icon;
+    rankResultName.textContent = name;
+    rankResultName.className = 'rank-name ' + rank.color;
+    // 显示下一段位进度
+    const nextRankIndex = RANKS.indexOf(rank) + 1;
+    if(nextRankIndex < RANKS.length){
+        const nextRank = RANKS[nextRankIndex];
+        const remaining = nextRank.minScore - score;
+        const label = lang === 'zh' ? '距離下一段位還差' : 'Next rank in';
+        rankProgress.textContent = `${label} ${remaining} ${lang==='zh'?'分':'pts'}`;
+    } else {
+        rankProgress.textContent = lang === 'zh' ? '已達最高段位！' : 'Max rank reached!';
+    }
 }
 
 // ----- i18n update -----
@@ -341,6 +429,8 @@ function updateLanguage(){
     if(isNumberSort){
         renderStroop();
     }
+    // 更新段位显示
+    updateRankDisplay();
 }
 
 // ----- Language toggle -----
@@ -352,7 +442,7 @@ btnLang.addEventListener('click', ()=>{
     if(stroopData || isNumberSort) renderStroop();
 });
 
-// ----- Stroop (genStroop 修改干扰项逻辑) -----
+// ----- Stroop -----
 function genStroop(){
     const word = randomItem(COLOR_NAMES);
     let displayColorName;
@@ -364,27 +454,20 @@ function genStroop(){
     const displayColorHex = COLOR_MAP[displayColorName];
     const task = Math.random() < 0.5 ? 'color' : 'meaning';
     const correctAnswer = (task === 'color') ? displayColorName : word;
-
-    // 生成干扰项：利用 Stroop 冲突
     let distractor;
     if (task === 'color') {
-        // 任务：點顏色 → 干扰项使用字义（word）
         distractor = word;
-        // 但确保 distractor 不等于 correctAnswer（当 displayColorName 与 word 相同时可能相等）
         if (distractor === correctAnswer) {
-            // 回退到随机选择其他颜色
             const candidates = COLOR_NAMES.filter(c => c !== correctAnswer);
             distractor = randomItem(candidates);
         }
-    } else { // task === 'meaning'
-        // 任务：點意思 → 干扰项使用显示颜色（displayColorName）
+    } else {
         distractor = displayColorName;
         if (distractor === correctAnswer) {
             const candidates = COLOR_NAMES.filter(c => c !== correctAnswer);
             distractor = randomItem(candidates);
         }
     }
-
     const options = shuffle([correctAnswer, distractor]);
     return { word, displayColor: displayColorHex, displayColorName, task, correctAnswer, options };
 }
@@ -607,6 +690,12 @@ function updateScore(){
     if(leftTimer>leftTimeLimit)leftTimer=leftTimeLimit;
     updateTimerDisplay();
     if(score-lastEventScore>=EVENT_INTERVAL)triggerRandomEvent();
+    // 实时更新段位显示（最高分）
+    if(score > highScore){
+        highScore = score;
+        localStorage.setItem('brainsplit_highScore', highScore.toString());
+        updateRankDisplay();
+    }
 }
 
 // ----- Main loop -----
@@ -654,6 +743,18 @@ function triggerGameOver(){
     if(gameState===STATE.GAMEOVER)return;
     gameState=STATE.GAMEOVER; if(timerInterval)clearInterval(timerInterval); timerInterval=null;
     updateUI(); finalScore.textContent=Math.floor(score); gameoverOverlay.classList.add('show');
+    // 更新段位结果
+    updateRankResult(score);
+    // 如果本次得分超过历史最高，更新最高分
+    if(score > highScore){
+        highScore = score;
+        localStorage.setItem('brainsplit_highScore', highScore.toString());
+        updateRankDisplay();
+        // 显示晋升动画（简单效果）
+        rankResultIcon.style.transition = 'transform 0.3s';
+        rankResultIcon.style.transform = 'scale(1.5)';
+        setTimeout(()=>{ rankResultIcon.style.transform = 'scale(1)'; }, 500);
+    }
     optA.disabled=optS.disabled=true; eventOverlay.classList.remove('show');
     speedScale=1; speedScaleTarget=1; speedScaleAnim=false; speedScaleAnimStart=null; timersPaused=false;
     if(swapTimeoutId){clearTimeout(swapTimeoutId);swapTimeoutId=null;swapPending=false;}
@@ -669,6 +770,8 @@ function resetToIdle(){
     updateUI(); eventOverlay.classList.remove('show');
     if(swapTimeoutId){clearTimeout(swapTimeoutId);swapTimeoutId=null;swapPending=false;}
     if(eventTimeoutId){clearTimeout(eventTimeoutId);eventTimeoutId=null;}
+    // 重置段位显示（最高分不变）
+    updateRankDisplay();
 }
 function updateUI(){
     const idle=gameState===STATE.IDLE, play=gameState===STATE.PLAYING, over=gameState===STATE.GAMEOVER;
@@ -735,6 +838,8 @@ function init(){
     updateLanguage();
     document.querySelector('.brand').textContent = i18n[lang].brand;
     helpTitle.textContent = i18n[lang].help_title;
+    // 初始化段位显示
+    updateRankDisplay();
     animFrameId=requestAnimationFrame(gameLoop);
     renderStroop(); renderPhysics();
 }
