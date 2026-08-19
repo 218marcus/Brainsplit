@@ -6,12 +6,9 @@ body{background:#0b0b16;font-family:'Segoe UI','PingFang TC','Microsoft YaHei',s
 .game-container{width:100%;max-width:900px;background:#12121f;border-radius:20px;padding:12px;box-shadow:0 12px 40px rgba(0,0,0,.8);border:1px solid #2a2a44}
 .header{display:flex;justify-content:space-between;align-items:center;padding-bottom:8px;border-bottom:1px solid #2a2a44;margin-bottom:10px;flex-wrap:wrap;gap:4px 8px}
 .title{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.logo-wrapper{width:36px;height:36px;position:relative;flex-shrink:0}
-.logo-brain{width:100%;height:100%;border-radius:50%;background:linear-gradient(to right,#6366f1 50%,#8b5cf6 50%);position:relative;overflow:hidden;box-shadow:0 0 20px rgba(99,102,241,.3)}
-.logo-brain::after{content:'';position:absolute;left:50%;top:0;width:2px;height:100%;background:#fff;transform:translateX(-50%);box-shadow:0 0 8px rgba(255,255,255,.4)}
-.logo-brain .lightning{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:18px;color:#fff;text-shadow:0 0 12px rgba(255,255,255,.6);line-height:1}
+.logo-wrapper{width:40px;height:40px;position:relative;flex-shrink:0}
+.logo-brain{width:100%;height:100%}
 .brand{font-size:22px;font-weight:700;letter-spacing:1px;background:linear-gradient(135deg,#a78bfa,#60a5fa,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.title-right{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .rank-display{display:flex;align-items:center;gap:6px;background:#1c1c32;padding:2px 12px 2px 8px;border-radius:30px;border:1px solid #3a3a5a;font-size:14px;font-weight:600;white-space:nowrap}
 .rank-icon{font-size:20px;line-height:1}
 .rank-name{color:#c4c4e6}
@@ -102,7 +99,7 @@ body{background:#0b0b16;font-family:'Segoe UI','PingFang TC','Microsoft YaHei',s
 .rank-table .rank-name-td{font-weight:600}
 .rank-table .rank-score-td{color:#b0b0d0}
 @media(max-width:560px){.rank-box{padding:16px}.rank-title{font-size:20px}.rank-table th,.rank-table td{padding:4px 4px;font-size:12px}.rank-table .rank-icon-td{font-size:18px}}
-@media(max-width:560px){.game-container{padding:6px;border-radius:14px}.brand{font-size:18px}.logo-wrapper{width:28px;height:28px}.logo-brain .lightning{font-size:14px}.score-display{font-size:13px;padding:2px 10px}.score-display span{font-size:14px;min-width:30px}.btn{font-size:11px;padding:3px 10px}.btn-lang,.btn-rank{font-size:10px;padding:2px 8px}.game-body{min-height:300px;gap:4px}.left-panel,.right-panel{padding:4px;border-radius:12px}.panel-label{font-size:8px;top:2px;left:6px;padding:0 8px}.status-badge{font-size:8px;top:2px;right:6px;padding:0 8px}.stroop-prompt{font-size:10px;padding:2px 8px;min-height:24px;margin-bottom:4px}.stroop-word{font-size:28px;min-height:40px;margin-bottom:4px}.stroop-options{gap:8px}.option-btn{min-width:50px;max-width:70px;padding:6px 0;font-size:13px;border-radius:10px}.option-btn .key-hint{font-size:8px;line-height:14px;padding:0 6px}#gameCanvas{min-height:140px;border-radius:8px}.mobile-touch-hint{font-size:7px;padding:1px 8px}.divider{width:2px}.divider::after{font-size:10px}.gameover-title{font-size:20px}.gameover-score{font-size:18px}.gameover-score span{font-size:24px}.gameover-btn{font-size:14px;padding:6px 20px}.timer-display{font-size:12px;padding:1px 10px}.event-title{font-size:24px}.event-sub{font-size:14px}.help-box{padding:20px}.help-title{font-size:22px}}
+@media(max-width:560px){.game-container{padding:6px;border-radius:14px}.brand{font-size:18px}.logo-wrapper{width:28px;height:28px}.score-display{font-size:13px;padding:2px 10px}.score-display span{font-size:14px;min-width:30px}.btn{font-size:11px;padding:3px 10px}.btn-lang,.btn-rank{font-size:10px;padding:2px 8px}.game-body{min-height:300px;gap:4px}.left-panel,.right-panel{padding:4px;border-radius:12px}.panel-label{font-size:8px;top:2px;left:6px;padding:0 8px}.status-badge{font-size:8px;top:2px;right:6px;padding:0 8px}.stroop-prompt{font-size:10px;padding:2px 8px;min-height:24px;margin-bottom:4px}.stroop-word{font-size:28px;min-height:40px;margin-bottom:4px}.stroop-options{gap:8px}.option-btn{min-width:50px;max-width:70px;padding:6px 0;font-size:13px;border-radius:10px}.option-btn .key-hint{font-size:8px;line-height:14px;padding:0 6px}#gameCanvas{min-height:140px;border-radius:8px}.mobile-touch-hint{font-size:7px;padding:1px 8px}.divider{width:2px}.divider::after{font-size:10px}.gameover-title{font-size:20px}.gameover-score{font-size:18px}.gameover-score span{font-size:24px}.gameover-btn{font-size:14px;padding:6px 20px}.timer-display{font-size:12px;padding:1px 10px}.event-title{font-size:24px}.event-sub{font-size:14px}.help-box{padding:20px}.help-title{font-size:22px}}
 @media(max-width:400px){.stroop-word{font-size:22px;min-height:34px}.option-btn{min-width:40px;max-width:60px;padding:4px 0;font-size:11px}#gameCanvas{min-height:100px}}
 </style>
 </head>
@@ -110,7 +107,42 @@ body{background:#0b0b16;font-family:'Segoe UI','PingFang TC','Microsoft YaHei',s
 <div class="game-container">
 <div class="header">
 <div class="title">
-<div class="logo-wrapper"><div class="logo-brain"><span class="lightning">⚡</span></div></div>
+<!-- 新 Logo：SVG 大腦分割 + 閃電 -->
+<div class="logo-wrapper">
+<svg class="logo-brain" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="leftBrain" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#4f46e5" />
+    </linearGradient>
+    <linearGradient id="rightBrain" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8b5cf6" />
+      <stop offset="100%" stop-color="#7c3aed" />
+    </linearGradient>
+    <clipPath id="brainClipLeft">
+      <path d="M 20 20 C 40 10, 70 10, 80 30 C 85 40, 85 60, 75 75 C 60 90, 35 90, 25 80 C 15 70, 10 50, 20 20 Z" />
+    </clipPath>
+    <clipPath id="brainClipRight">
+      <path d="M 80 20 C 60 10, 30 10, 20 30 C 15 40, 15 60, 25 75 C 40 90, 65 90, 75 80 C 85 70, 90 50, 80 20 Z" />
+    </clipPath>
+  </defs>
+  <!-- 背景（透明） -->
+  <!-- 左半腦 -->
+  <g clip-path="url(#brainClipLeft)">
+    <rect width="50" height="100" fill="url(#leftBrain)" />
+  </g>
+  <!-- 右半腦 -->
+  <g clip-path="url(#brainClipRight)">
+    <rect x="50" width="50" height="100" fill="url(#rightBrain)" />
+  </g>
+  <!-- 分割斜線（閃電線條） -->
+  <line x1="20" y1="10" x2="80" y2="90" stroke="#fcd34d" stroke-width="3" stroke-linecap="round" />
+  <!-- 閃電符號（中央） -->
+  <polygon points="48,30 40,55 52,55 44,80 56,55 44,55" fill="#fcd34d" />
+  <!-- 微光暈 -->
+  <circle cx="50" cy="50" r="48" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
+</svg>
+</div>
 <span class="brand" data-lang="brand">Brainsplit</span>
 <div class="rank-display" id="rankDisplay">
 <span class="rank-icon" id="rankIcon">🧠</span>
@@ -651,18 +683,17 @@ function resetPhysics(){
 function spawnBall(){
     if(balls.length>=maxBalls)return;
     const x=canvasW/2, y=canvasH/2;
-    // 生成角度：从 [-70,-35] 或 [35,70] 均匀选取
     let deg;
     if(Math.random() < 0.5) {
-        deg = -70 + Math.random() * 35;  // -70 ~ -35
+        deg = -70 + Math.random() * 35;
     } else {
-        deg = 35 + Math.random() * 35;   // 35 ~ 70
+        deg = 35 + Math.random() * 35;
     }
     const rad = deg * Math.PI / 180;
     const bonus = Math.floor(score / INCREMENT_STEP) * SPEED_INCREMENT;
     const speed = Math.min(MAX_SPEED, BASE_SPEED + bonus);
     const vx = Math.sin(rad) * speed;
-    const vy = -Math.cos(rad) * speed; // 始终向上（负值）
+    const vy = -Math.cos(rad) * speed;
     balls.push({x, y, vx, vy, radius: ballRadius, color: COLOR_MAP[randomItem(COLOR_NAMES)]});
 }
 
@@ -702,7 +733,7 @@ function updatePhysics(dt){
                 const rem=Math.sqrt(Math.max(0,spd*spd-b.vx*b.vx));
                 b.vy=Math.sign(b.vy)*rem||Math.sign(b.vy)*spd*.6;
                 b.y=py+ph+b.radius+.5;
-                score += 20;  // 接球加20分
+                score += 20;
                 updateScore();
             }
         }else{
@@ -713,7 +744,7 @@ function updatePhysics(dt){
                 const rem=Math.sqrt(Math.max(0,spd*spd-b.vx*b.vx));
                 b.vy=Math.sign(b.vy)*rem||Math.sign(b.vy)*spd*.6;
                 b.y=py-b.radius-.5;
-                score += 20;  // 接球加20分
+                score += 20;
                 updateScore();
             }
         }
