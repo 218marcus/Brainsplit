@@ -1,26 +1,38 @@
 <!DOCTYPE html>
 <html lang="zh-TW"><head><meta charset="UTF-8"><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Brainsplit</title>
 <style>
-/* 原有样式保持不变，新增段位相关样式 */
 *{margin:0;padding:0;box-sizing:border-box;user-select:none}
 body{background:#0b0b16;font-family:'Segoe UI','PingFang TC','Microsoft YaHei',sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;color:#e8e8f0;padding:6px;touch-action:none}
 .game-container{width:100%;max-width:900px;background:#12121f;border-radius:20px;padding:12px;box-shadow:0 12px 40px rgba(0,0,0,.8);border:1px solid #2a2a44}
 .header{display:flex;justify-content:space-between;align-items:center;padding-bottom:8px;border-bottom:1px solid #2a2a44;margin-bottom:10px;flex-wrap:wrap;gap:4px 8px}
-.title{display:flex;align-items:center;gap:10px}
+.title{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .logo-wrapper{width:36px;height:36px;position:relative;flex-shrink:0}
 .logo-brain{width:100%;height:100%;border-radius:50%;background:linear-gradient(to right,#6366f1 50%,#8b5cf6 50%);position:relative;overflow:hidden;box-shadow:0 0 20px rgba(99,102,241,.3)}
 .logo-brain::after{content:'';position:absolute;left:50%;top:0;width:2px;height:100%;background:#fff;transform:translateX(-50%);box-shadow:0 0 8px rgba(255,255,255,.4)}
 .logo-brain .lightning{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:18px;color:#fff;text-shadow:0 0 12px rgba(255,255,255,.6);line-height:1}
 .brand{font-size:22px;font-weight:700;letter-spacing:1px;background:linear-gradient(135deg,#a78bfa,#60a5fa,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.title-right{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.rank-display{display:flex;align-items:center;gap:6px;background:#1c1c32;padding:2px 12px 2px 8px;border-radius:30px;border:1px solid #3a3a5a;font-size:14px;font-weight:600;white-space:nowrap}
+.rank-icon{font-size:20px;line-height:1}
+.rank-name{color:#c4c4e6}
+.rank-color-bronze{color:#cd7f32}
+.rank-color-silver{color:#c0c0c0}
+.rank-color-gold{color:#ffd700}
+.rank-color-platinum{color:#e5e4e2}
+.rank-color-diamond{color:#4fc3f7}
+.rank-color-master{color:#9c27b0}
+.rank-color-legend{color:#ff6f00}
+.rank-color-unranked{color:#6b6b9a}
 .title-score{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .score-display{font-size:16px;font-weight:600;background:#1c1c32;padding:4px 14px;border-radius:30px;border:1px solid #3a3a5a}
 .score-display span{color:#fcd34d;font-size:18px;min-width:40px;display:inline-block;text-align:center}
-.btn-group{display:flex;gap:6px}
+.btn-group{display:flex;gap:6px;flex-wrap:wrap}
 .btn{padding:4px 14px;border:none;border-radius:30px;font-size:13px;font-weight:600;cursor:pointer;background:#2a2a4a;color:#b0b0d0;border:1px solid #3a3a5a;touch-action:manipulation}
 .btn-primary{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none}
 .btn-danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border:none}
 .btn-info{background:linear-gradient(135deg,#34d399,#10b981);color:#fff;border:none}
 .btn-lang{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;font-size:12px;padding:4px 12px}
+.btn-rank{background:linear-gradient(135deg,#8b5cf6,#a78bfa);color:#fff;border:none;font-size:12px;padding:4px 12px}
 .btn:disabled{opacity:.35;cursor:not-allowed}
 .game-body{display:flex;gap:6px;min-height:380px;position:relative;flex-direction:row!important}
 .left-panel{flex:1 1 0;min-width:0;padding:8px 6px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#141425;border-radius:16px;border:1px solid #22223e;position:relative;order:1}
@@ -73,20 +85,25 @@ body{background:#0b0b16;font-family:'Segoe UI','PingFang TC','Microsoft YaHei',s
 .help-section ul{padding-left:18px;list-style-type:disc}
 .help-section ul li{margin:2px 0}
 .help-section .highlight{color:#fcd34d;font-weight:600}
-@media(max-width:560px){.game-container{padding:6px;border-radius:14px}.brand{font-size:18px}.logo-wrapper{width:28px;height:28px}.logo-brain .lightning{font-size:14px}.score-display{font-size:13px;padding:2px 10px}.score-display span{font-size:14px;min-width:30px}.btn{font-size:11px;padding:3px 10px}.btn-lang{font-size:10px;padding:2px 8px}.game-body{min-height:300px;gap:4px}.left-panel,.right-panel{padding:4px;border-radius:12px}.panel-label{font-size:8px;top:2px;left:6px;padding:0 8px}.status-badge{font-size:8px;top:2px;right:6px;padding:0 8px}.stroop-prompt{font-size:10px;padding:2px 8px;min-height:24px;margin-bottom:4px}.stroop-word{font-size:28px;min-height:40px;margin-bottom:4px}.stroop-options{gap:8px}.option-btn{min-width:50px;max-width:70px;padding:6px 0;font-size:13px;border-radius:10px}.option-btn .key-hint{font-size:8px;line-height:14px;padding:0 6px}#gameCanvas{min-height:140px;border-radius:8px}.mobile-touch-hint{font-size:7px;padding:1px 8px}.divider{width:2px}.divider::after{font-size:10px}.gameover-title{font-size:20px}.gameover-score{font-size:18px}.gameover-score span{font-size:24px}.gameover-btn{font-size:14px;padding:6px 20px}.timer-display{font-size:12px;padding:1px 10px}.event-title{font-size:24px}.event-sub{font-size:14px}.help-box{padding:20px}.help-title{font-size:22px}}
+.rank-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px}
+.rank-overlay.show{display:flex}
+.rank-box{background:#1a1a30;max-width:480px;width:100%;border-radius:24px;padding:24px 28px;border:1px solid #3a3a5a;box-shadow:0 20px 60px rgba(0,0,0,.8);max-height:80vh;overflow-y:auto}
+.rank-box::-webkit-scrollbar{width:4px}
+.rank-box::-webkit-scrollbar-track{background:transparent}
+.rank-box::-webkit-scrollbar-thumb{background:#6366f1;border-radius:8px}
+.rank-close{float:right;font-size:28px;color:#6b6b9a;cursor:pointer;background:none;border:none;transition:color .2s}
+.rank-close:hover{color:#e8e8f0}
+.rank-title{font-size:24px;font-weight:800;margin-bottom:16px;text-align:center;background:linear-gradient(135deg,#a78bfa,#60a5fa,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.rank-table{width:100%;border-collapse:collapse}
+.rank-table th,.rank-table td{padding:8px 6px;text-align:center;border-bottom:1px solid #2a2a4e}
+.rank-table th{color:#fcd34d;font-weight:600;font-size:13px}
+.rank-table td{font-size:14px;color:#c4c4e6}
+.rank-table .rank-icon-td{font-size:22px}
+.rank-table .rank-name-td{font-weight:600}
+.rank-table .rank-score-td{color:#b0b0d0}
+@media(max-width:560px){.rank-box{padding:16px}.rank-title{font-size:20px}.rank-table th,.rank-table td{padding:4px 4px;font-size:12px}.rank-table .rank-icon-td{font-size:18px}}
+@media(max-width:560px){.game-container{padding:6px;border-radius:14px}.brand{font-size:18px}.logo-wrapper{width:28px;height:28px}.logo-brain .lightning{font-size:14px}.score-display{font-size:13px;padding:2px 10px}.score-display span{font-size:14px;min-width:30px}.btn{font-size:11px;padding:3px 10px}.btn-lang,.btn-rank{font-size:10px;padding:2px 8px}.game-body{min-height:300px;gap:4px}.left-panel,.right-panel{padding:4px;border-radius:12px}.panel-label{font-size:8px;top:2px;left:6px;padding:0 8px}.status-badge{font-size:8px;top:2px;right:6px;padding:0 8px}.stroop-prompt{font-size:10px;padding:2px 8px;min-height:24px;margin-bottom:4px}.stroop-word{font-size:28px;min-height:40px;margin-bottom:4px}.stroop-options{gap:8px}.option-btn{min-width:50px;max-width:70px;padding:6px 0;font-size:13px;border-radius:10px}.option-btn .key-hint{font-size:8px;line-height:14px;padding:0 6px}#gameCanvas{min-height:140px;border-radius:8px}.mobile-touch-hint{font-size:7px;padding:1px 8px}.divider{width:2px}.divider::after{font-size:10px}.gameover-title{font-size:20px}.gameover-score{font-size:18px}.gameover-score span{font-size:24px}.gameover-btn{font-size:14px;padding:6px 20px}.timer-display{font-size:12px;padding:1px 10px}.event-title{font-size:24px}.event-sub{font-size:14px}.help-box{padding:20px}.help-title{font-size:22px}}
 @media(max-width:400px){.stroop-word{font-size:22px;min-height:34px}.option-btn{min-width:40px;max-width:60px;padding:4px 0;font-size:11px}#gameCanvas{min-height:100px}}
-/* 段位显示样式 */
-.rank-display{display:flex;align-items:center;gap:8px;background:#1c1c32;padding:2px 12px 2px 8px;border-radius:30px;border:1px solid #3a3a5a;font-size:14px;font-weight:600;margin-left:4px;white-space:nowrap}
-.rank-icon{font-size:20px;line-height:1}
-.rank-name{color:#c4c4e6}
-.rank-color-bronze{color:#cd7f32}
-.rank-color-silver{color:#c0c0c0}
-.rank-color-gold{color:#ffd700}
-.rank-color-platinum{color:#e5e4e2}
-.rank-color-diamond{color:#4fc3f7}
-.rank-color-master{color:#9c27b0}
-.rank-color-legend{color:#ff6f00}
-.rank-color-god{background:linear-gradient(135deg,#ff6b6b,#feca57,#48dbfb,#ff9ff3);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 </style>
 </head>
 <body>
@@ -97,13 +114,14 @@ body{background:#0b0b16;font-family:'Segoe UI','PingFang TC','Microsoft YaHei',s
 <span class="brand" data-lang="brand">Brainsplit</span>
 <div class="rank-display" id="rankDisplay">
 <span class="rank-icon" id="rankIcon">🧠</span>
-<span class="rank-name" id="rankName">Bronze</span>
+<span class="rank-name" id="rankName">Unranked</span>
 </div>
 </div>
 <div class="title-score">
 <div class="score-display">🏆 <span id=scoreDisplay>0</span></div>
 <div class="btn-group">
 <button class="btn btn-primary" id=btnStart data-lang="start">▶ Start</button>
+<button class="btn btn-rank" id=btnRank>🏅</button>
 <button class="btn btn-lang" id=btnLang>🌐 中/EN</button>
 <button class="btn btn-info" id=btnHelp data-lang="help">📖 Help</button>
 <button class="btn btn-danger" id=btnReset data-lang="reset">⟳</button>
@@ -118,11 +136,11 @@ body{background:#0b0b16;font-family:'Segoe UI','PingFang TC','Microsoft YaHei',s
 <div class=gameover-sub data-lang="gameover_sub">Both brains lost</div>
 <div class=gameover-score>Score <span id=finalScore>0</span></div>
 <div class="rank-result" style="margin:8px 0;display:flex;align-items:center;gap:12px;font-size:18px;">
-<span style="font-weight:600;">Rank:</span>
+<span style="font-weight:600;" data-lang="rank_label">Rank:</span>
 <span id="rankResultIcon" style="font-size:32px;">🧠</span>
-<span id="rankResultName" style="font-weight:700;color:#fcd34d;">Bronze</span>
+<span id="rankResultName" style="font-weight:700;color:#fcd34d;">Unranked</span>
 </div>
-<div style="font-size:14px;color:#b0b0d0;margin-bottom:8px;" id="rankProgress">Next rank in 500 pts</div>
+<div style="font-size:14px;color:#b0b0d0;margin-bottom:8px;" id="rankProgress">Score 100 to rank up</div>
 <button class=gameover-btn id=btnGameoverRestart data-lang="retry">🔄 Retry</button>
 </div>
 <div class="event-overlay" id=eventOverlay><div class=event-title id=eventTitle>⚡ Event Triggered</div><div class=event-sub id=eventSub>+1 ball</div></div></div>
@@ -133,8 +151,11 @@ body{background:#0b0b16;font-family:'Segoe UI','PingFang TC','Microsoft YaHei',s
 <div class=help-section><h3 data-lang="help_controls_title">🖱️ Controls</h3><ul><li><span class=highlight data-lang="help_left">Left Brain</span> <span data-lang="help_left_desc">Press <kbd>A</kbd> / <kbd>S</kbd> to answer (initial 9s, -1s per 400pts, min 5s)</span></li><li><span class=highlight data-lang="help_right">Right Brain</span> <span data-lang="help_right_desc">Press <kbd>←</kbd> / <kbd>→</kbd> or swipe to control paddle</span></li><li data-lang="help_touch">Mobile/tablet: tap left buttons, swipe right to control paddle</li></ul></div>
 <div class=help-section><h3 data-lang="help_score_title">🏆 Scoring</h3><ul><li data-lang="help_score_left">Left correct: <span class=highlight>+50 pts</span></li><li data-lang="help_score_right">Right catch: <span class=highlight>+10 pts</span></li><li data-lang="help_score_survive">No extra survival bonus</li></ul></div>
 <div class=help-section><h3 data-lang="help_events_title">⚡ Random Events (every 400 pts)</h3><ul><li data-lang="help_event_add">+1 ball (max 6)</li><li data-lang="help_event_swap">Swap sides (2s delay)</li><li data-lang="help_event_number">Number sort (5s, +50 if correct, wrong/timeout = Game Over)</li><li data-lang="help_event_gravity">Gravity flip (paddle to top, miss top = lose)</li></ul></div>
-<div class=help-section><h3 data-lang="help_special_title">💡 Special</h3><p data-lang="help_special_text">Normal mode: bottom lose; Flip mode: top lose. Both top/bottom walls bounce (top in normal, bottom in flip).</p></div>
-</div></div>
+<div class=help-section><h3 data-lang="help_special_title">💡 Special</h3><p data-lang="help_special_text">Normal mode: bottom lose; Flip mode: top lose. Both top/bottom walls bounce (top in normal, bottom in flip).</p></div></div></div>
+<!-- 段位表模態框 -->
+<div class="rank-overlay" id="rankOverlay"><div class=rank-box><button class=rank-close id=rankClose>✕</button><div class=rank-title data-lang="rank_title">🏅 Rank Requirements</div>
+<table class=rank-table><thead><tr><th data-lang="rank_icon">Icon</th><th data-lang="rank_name">Rank</th><th data-lang="rank_score">Score</th></tr></thead>
+<tbody id="rankTableBody"></tbody></table></div></div>
 <script>
 (function(){
 'use strict';
@@ -142,7 +163,7 @@ body{background:#0b0b16;font-family:'Segoe UI','PingFang TC','Microsoft YaHei',s
 const $=id=>document.getElementById(id);
 const D=document;
 const scoreDisplay=$('scoreDisplay'), finalScore=$('finalScore');
-const btnStart=$('btnStart'), btnReset=$('btnReset'), btnHelp=$('btnHelp'), helpOverlay=$('helpOverlay'), helpClose=$('helpClose'), btnGameoverRestart=$('btnGameoverRestart'), btnLang=$('btnLang');
+const btnStart=$('btnStart'), btnReset=$('btnReset'), btnHelp=$('btnHelp'), helpOverlay=$('helpOverlay'), helpClose=$('helpClose'), btnGameoverRestart=$('btnGameoverRestart'), btnLang=$('btnLang'), btnRank=$('btnRank'), rankOverlay=$('rankOverlay'), rankClose=$('rankClose'), rankTableBody=$('rankTableBody');
 const stroopPrompt=$('stroopPrompt'), stroopWord=$('stroopWord'), optA=$('optA'), optS=$('optS'), optALabel=$('optALabel'), optSLabel=$('optSLabel');
 const statusBadge=$('statusBadge'), statusBadgeRight=$('statusBadgeRight'), gameoverOverlay=$('gameoverOverlay'), touchHint=$('touchHint');
 const canvas=$('gameCanvas'), ctx=canvas.getContext('2d'), timerDisplay=$('timerDisplay'), eventOverlay=$('eventOverlay'), eventTitle=$('eventTitle'), eventSub=$('eventSub');
@@ -150,20 +171,19 @@ const leftLabel=$('leftLabel'), rightLabel=$('rightLabel'), leftPanel=$('leftPan
 const helpTitle=$('helpTitle');
 const rankIcon=$('rankIcon'), rankName=$('rankName'), rankResultIcon=$('rankResultIcon'), rankResultName=$('rankResultName'), rankProgress=$('rankProgress');
 
-// ----- 段位定义 -----
+// ----- 段位定義（0分無段位，100~499青銅，500~999白銀，1000~1999黃金，2000~3499鉑金，3500~4999鑽石，5000+傳說） -----
 const RANKS = [
-    { name: 'Bronze', name_zh: '青銅', icon: '🥉', color: 'rank-color-bronze', minScore: 0 },
+    { name: 'Unranked', name_zh: '無段位', icon: '🧠', color: 'rank-color-unranked', minScore: 0 },
+    { name: 'Bronze', name_zh: '青銅', icon: '🥉', color: 'rank-color-bronze', minScore: 100 },
     { name: 'Silver', name_zh: '白銀', icon: '🥈', color: 'rank-color-silver', minScore: 500 },
     { name: 'Gold', name_zh: '黃金', icon: '🥇', color: 'rank-color-gold', minScore: 1000 },
     { name: 'Platinum', name_zh: '鉑金', icon: '💎', color: 'rank-color-platinum', minScore: 2000 },
     { name: 'Diamond', name_zh: '鑽石', icon: '💠', color: 'rank-color-diamond', minScore: 3500 },
-    { name: 'Master', name_zh: '大師', icon: '👑', color: 'rank-color-master', minScore: 5000 },
-    { name: 'Legend', name_zh: '傳說', icon: '🔥', color: 'rank-color-legend', minScore: 7500 },
-    { name: 'God', name_zh: '神腦', icon: '🌌', color: 'rank-color-god', minScore: 10000 }
+    { name: 'Legend', name_zh: '傳說', icon: '🔥', color: 'rank-color-legend', minScore: 5000 }
 ];
 
 function getRank(score){
-    let r = RANKS[0];
+    let r = RANKS[0]; // 默認無段位
     for(let i=RANKS.length-1; i>=0; i--){
         if(score >= RANKS[i].minScore){
             r = RANKS[i];
@@ -172,11 +192,9 @@ function getRank(score){
     }
     return r;
 }
-
 function getRankName(rank, lang){
     return lang === 'zh' ? rank.name_zh : rank.name;
 }
-
 function getRankColorClass(rank){ return rank.color; }
 
 // ----- i18n -----
@@ -234,6 +252,11 @@ const i18n = {
         task_meaning: 'Click Meaning',
         sort_larger: 'larger',
         sort_smaller: 'smaller',
+        rank_title: '🏅 Rank Requirements',
+        rank_icon: 'Icon',
+        rank_name: 'Rank',
+        rank_score: 'Score',
+        rank_label: 'Rank:',
         colorNames: {
             '紅色': 'Red',
             '藍色': 'Blue',
@@ -298,7 +321,12 @@ const i18n = {
         task_color: '點顏色',
         task_meaning: '點意思',
         sort_larger: '較大',
-        sort_smaller: '較小'
+        sort_smaller: '較小',
+        rank_title: '🏅 段位需求',
+        rank_icon: '圖標',
+        rank_name: '段位',
+        rank_score: '分數',
+        rank_label: '段位：'
     }
 };
 
@@ -349,7 +377,7 @@ function updateBallRadius(){
     else ballRadius = 24;
 }
 
-// ----- 段位显示更新 -----
+// ----- 段位顯示更新 -----
 function updateRankDisplay(){
     const rank = getRank(highScore);
     const name = getRankName(rank, lang);
@@ -364,7 +392,7 @@ function updateRankResult(score){
     rankResultIcon.textContent = rank.icon;
     rankResultName.textContent = name;
     rankResultName.className = 'rank-name ' + rank.color;
-    // 显示下一段位进度
+    // 顯示下一段位進度
     const nextRankIndex = RANKS.indexOf(rank) + 1;
     if(nextRankIndex < RANKS.length){
         const nextRank = RANKS[nextRankIndex];
@@ -374,6 +402,17 @@ function updateRankResult(score){
     } else {
         rankProgress.textContent = lang === 'zh' ? '已達最高段位！' : 'Max rank reached!';
     }
+}
+
+// ----- 段位表渲染 -----
+function renderRankTable(){
+    const t = i18n[lang];
+    let html = '';
+    RANKS.forEach(r => {
+        const name = getRankName(r, lang);
+        html += `<tr><td class="rank-icon-td">${r.icon}</td><td class="rank-name-td" style="color:${r.color}">${name}</td><td class="rank-score-td">${r.minScore === 0 ? '-' : r.minScore}</td></tr>`;
+    });
+    rankTableBody.innerHTML = html;
 }
 
 // ----- i18n update -----
@@ -390,6 +429,17 @@ function updateLanguage(){
         }
     });
     helpTitle.textContent = t.help_title;
+    // 更新段位表标题
+    document.querySelector('.rank-title').textContent = t.rank_title;
+    // 更新段位表表头
+    const ths = document.querySelectorAll('#rankTableBody').previousElementSibling?.querySelectorAll('th') || [];
+    if(ths.length === 3){
+        ths[0].textContent = t.rank_icon;
+        ths[1].textContent = t.rank_name;
+        ths[2].textContent = t.rank_score;
+    }
+    // 重繪段位表
+    renderRankTable();
     if(!stroopData && gameState!==STATE.PLAYING){
         stroopPrompt.innerHTML = t.stroop_prompt_default;
     }
@@ -441,6 +491,14 @@ btnLang.addEventListener('click', ()=>{
     helpTitle.textContent = i18n[lang].help_title;
     if(stroopData || isNumberSort) renderStroop();
 });
+
+// ----- 段位表按鈕 -----
+btnRank.addEventListener('click', ()=>{
+    rankOverlay.classList.add('show');
+    renderRankTable();
+});
+rankClose.addEventListener('click', ()=>rankOverlay.classList.remove('show'));
+rankOverlay.addEventListener('click', (e)=>e.target===rankOverlay&&rankOverlay.classList.remove('show'));
 
 // ----- Stroop -----
 function genStroop(){
@@ -750,7 +808,7 @@ function triggerGameOver(){
         highScore = score;
         localStorage.setItem('brainsplit_highScore', highScore.toString());
         updateRankDisplay();
-        // 显示晋升动画（简单效果）
+        // 显示晋升动画
         rankResultIcon.style.transition = 'transform 0.3s';
         rankResultIcon.style.transform = 'scale(1.5)';
         setTimeout(()=>{ rankResultIcon.style.transform = 'scale(1)'; }, 500);
@@ -840,6 +898,8 @@ function init(){
     helpTitle.textContent = i18n[lang].help_title;
     // 初始化段位显示
     updateRankDisplay();
+    // 渲染段位表
+    renderRankTable();
     animFrameId=requestAnimationFrame(gameLoop);
     renderStroop(); renderPhysics();
 }
