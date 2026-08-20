@@ -588,39 +588,127 @@ function clearCurrentEvent(){
     if(activeEvent==='number'){endNumberSort();activeEvent=null;}
     speedScale=1;speedScaleTarget=1;speedScaleAnim=false;speedScaleAnimStart=null;timersPaused=false;
 }
-function triggerRandomEvent(){
-    if(gameState!==STATE.PLAYING)return;
-    clearCurrentEvent();
-    startSpeedAnim(0.2,1.5,1); timersPaused=true;
-    const type=randomInt(1,4);
+function triggerRandomEvent() {
+    if (gameState !== STATE.PLAYING) return;
+
+    const type = randomInt(1, 4);
     const t = i18n[lang];
-    const names=['', t.event_add, t.event_swap, t.event_number, t.event_gravity];
-    const descs=['', t.event_overlay_add, t.event_overlay_swap, t.event_overlay_number, t.event_overlay_gravity];
-    showEventOverlay(names[type], descs[type]);
-    if(type===2){
-        activeEvent='swap'; statusBadge.textContent='⏳'; statusBadge.className='status-badge event';
-        if(swapTimeoutId)clearTimeout(swapTimeoutId); swapPending=true;
-        swapTimeoutId=setTimeout(()=>{
-            if(gameState!==STATE.PLAYING)return;
-            if(activeEvent==='swap'){isControlSwapped=true;leftPanel.style.order='2';rightPanel.style.order='1';statusBadge.textContent='🔄';statusBadge.className='status-badge event';leftLabel.textContent=t.right_label;rightLabel.textContent=t.left_label;swapPending=false;swapTimeoutId=null;startSpeedAnim(1,1,speedScale);timersPaused=false;}
-        },SWAP_DELAY);
-    }else{
-        if(type===4 && isGravityReversed){
-            startSpeedAnim(1,1,speedScale);timersPaused=false;activeEvent=null;statusBadge.textContent=t.status_playing;statusBadge.className='status-badge playing';statusBadgeRight.textContent=t.status_playing;statusBadgeRight.className='status-badge playing';leftLabel.textContent=isControlSwapped?t.right_label:t.left_label;rightLabel.textContent=isControlSwapped?t.left_label:t.right_label;if(eventTimeoutId){clearTimeout(eventTimeoutId);eventTimeoutId=null;}lastEventScore+=EVENT_INTERVAL;return;
-        }
-        if(type===1)activeEvent=null;else if(type===3)activeEvent='number';else if(type===4)activeEvent='gravity';
-        if(eventTimeoutId)clearTimeout(eventTimeoutId);
-        eventTimeoutId=setTimeout(()=>{
-            if(gameState!==STATE.PLAYING)return;
-            switch(type){
-                case 1:maxBalls=Math.min(6,maxBalls+1);statusBadge.textContent=t.status_playing;statusBadge.className='status-badge playing';break;
-                case 3:startNumberSort();break;
-                case 4:isGravityReversed=true;statusBadgeRight.textContent='🌀';statusBadgeRight.className='status-badge event';paddle.y=10;for(let b of balls)b.vy=-b.vy;break;
+
+    // ----- 特殊处理：若已是重力反转且再次触发反转事件，则延迟清除（恢复） -----
+    if (type === 4 && isGravityReversed) {
+        // 显示事件名称，启动慢动作
+        startSpeedAnim(0.2, 1.5, 1);
+        timersPaused = true;
+        const eventName = lang === 'zh' ? '🌀 重力反轉 (恢復)' : '🌀 Gravity Flip (Reset)';
+        const eventDesc = lang === 'zh' ? '擋板即將恢復正常！' : 'Paddle will reset!';
+        showEventOverlay(eventName, eventDesc);
+
+        // 清除旧的计时器
+        if (eventTimeoutId) { clearTimeout(eventTimeoutId); eventTimeoutId = null; }
+
+        // 设定 2 秒后恢复
+        eventTimeoutId = setTimeout(() => {
+            if (gameState !== STATE.PLAYING) return;
+
+            // 恢复重力
+            isGravityReversed = false;
+            paddle.y = canvasH - paddle.h - 12;
+
+            // 更新右脑状态徽章
+            statusBadgeRight.textContent = t.status_playing;
+            statusBadgeRight.className = 'status-badge playing';
+
+            // 反转所有球的垂直速度（因为之前反转时已取反，现在再取反恢复）
+            for (let b of balls) {
+                b.vy = -b.vy;
             }
-            startSpeedAnim(1,1,speedScale);timersPaused=false;eventTimeoutId=null;
-        },EVENT_DELAY);
+
+            // 恢复速度
+            startSpeedAnim(1, 1, speedScale);
+            timersPaused = false;
+            activeEvent = null;
+            eventTimeoutId = null;
+
+            // 更新标签
+            leftLabel.textContent = isControlSwapped ? t.right_label : t.left_label;
+            rightLabel.textContent = isControlSwapped ? t.left_label : t.right_label;
+
+            // 更新事件得分阈值
+            lastEventScore += EVENT_INTERVAL;
+        }, EVENT_DELAY);
+
+        // 结束本次事件触发（不继续执行下面的逻辑）
+        return;
     }
-    lastEventScore+=EVENT_INTERVAL;
+
+    // ----- 其他事件（非重力反转的二次触发）正常流程 -----
+    // 清除当前事件（对于非反转事件，会清除旧的反转状态，但不会清除我们上面特殊处理的）
+    clearCurrentEvent();
+
+    // 启动慢动作
+    startSpeedAnim(0.2, 1.5, 1);
+    timersPaused = true;
+
+    // 显示事件名称
+    const names = ['', t.event_add, t.event_swap, t.event_number, t.event_gravity];
+    const descs = ['', t.event_overlay_add, t.event_overlay_swap, t.event_overlay_number, t.event_overlay_gravity];
+    showEventOverlay(names[type], descs[type]);
+
+    if (type === 2) {
+        // 交换事件
+        activeEvent = 'swap';
+        statusBadge.textContent = '⏳';
+        statusBadge.className = 'status-badge event';
+        if (swapTimeoutId) clearTimeout(swapTimeoutId);
+        swapPending = true;
+        swapTimeoutId = setTimeout(() => {
+            if (gameState !== STATE.PLAYING) return;
+            if (activeEvent === 'swap') {
+                isControlSwapped = true;
+                leftPanel.style.order = '2';
+                rightPanel.style.order = '1';
+                statusBadge.textContent = '🔄';
+                statusBadge.className = 'status-badge event';
+                leftLabel.textContent = t.right_label;
+                rightLabel.textContent = t.left_label;
+                swapPending = false;
+                swapTimeoutId = null;
+                startSpeedAnim(1, 1, speedScale);
+                timersPaused = false;
+            }
+        }, SWAP_DELAY);
+    } else {
+        // 其他事件（增加球、数字排序、重力反转首次触发）
+        if (type === 1) activeEvent = null;
+        else if (type === 3) activeEvent = 'number';
+        else if (type === 4) activeEvent = 'gravity';
+
+        if (eventTimeoutId) clearTimeout(eventTimeoutId);
+        eventTimeoutId = setTimeout(() => {
+            if (gameState !== STATE.PLAYING) return;
+            switch (type) {
+                case 1:
+                    maxBalls = Math.min(6, maxBalls + 1);
+                    statusBadge.textContent = t.status_playing;
+                    statusBadge.className = 'status-badge playing';
+                    break;
+                case 3:
+                    startNumberSort();
+                    break;
+                case 4:
+                    isGravityReversed = true;
+                    statusBadgeRight.textContent = '🌀';
+                    statusBadgeRight.className = 'status-badge event';
+                    paddle.y = 10;
+                    for (let b of balls) b.vy = -b.vy;
+                    break;
+            }
+            startSpeedAnim(1, 1, speedScale);
+            timersPaused = false;
+            eventTimeoutId = null;
+        }, EVENT_DELAY);
+    }
+    lastEventScore += EVENT_INTERVAL;
 }
 function showEventOverlay(title,sub){eventTitle.textContent=title;eventSub.textContent=sub;eventOverlay.classList.add('show');setTimeout(()=>eventOverlay.classList.remove('show'),1500);}
 
